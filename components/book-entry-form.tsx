@@ -31,7 +31,8 @@ export function BookEntryForm({ selectedBook, onSubmit, onCancel, initialData }:
     coverImage: initialData?.coverImage || (selectedBook?.cover_i ? getBookCoverUrl(selectedBook.cover_i, 'M') : ""),
     type: initialData?.type || "Ebook" as const,
     pages: initialData?.pages || null,
-    minutes: initialData?.minutes || null,
+    hours: initialData?.minutes ? Math.floor(initialData.minutes / 60) : 0,
+    minutes: initialData?.minutes ? initialData.minutes % 60 : 0,
     dateStarted: initialData?.dateStarted ? new Date(initialData.dateStarted) : null,
     dateCompleted: initialData?.dateCompleted ? new Date(initialData.dateCompleted) : null,
     notes: initialData?.notes || "",
@@ -59,7 +60,7 @@ export function BookEntryForm({ selectedBook, onSubmit, onCancel, initialData }:
       coverImage: formData.coverImage,
       type: formData.type,
       pages: formData.type === 'Ebook' ? formData.pages : null,
-      minutes: formData.type === 'Audiobook' ? formData.minutes : null,
+      minutes: formData.type === 'Audiobook' ? (formData.hours * 60 + formData.minutes) : null,
       daysRead,
       dateStarted: formData.dateStarted?.toISOString() || null,
       dateCompleted: formData.dateCompleted?.toISOString() || null,
@@ -141,15 +142,32 @@ export function BookEntryForm({ selectedBook, onSubmit, onCancel, initialData }:
         )}
 
         {formData.type === 'Audiobook' && (
-          <div className="space-y-2">
-            <Label htmlFor="minutes">Minutes *</Label>
-            <Input
-              id="minutes"
-              type="number"
-              value={formData.minutes || ""}
-              onChange={(e) => setFormData({ ...formData, minutes: parseInt(e.target.value) || null })}
-              required
-            />
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="hours">Hours *</Label>
+              <Input
+                id="hours"
+                type="number"
+                min="0"
+                value={formData.hours === 0 ? '' : formData.hours}
+                onChange={(e) => setFormData({ ...formData, hours: e.target.value === '' ? 0 : parseInt(e.target.value) || 0 })}
+                placeholder="0"
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="minutes">Minutes *</Label>
+              <Input
+                id="minutes"
+                type="number"
+                min="0"
+                max="59"
+                value={formData.minutes === 0 ? '' : formData.minutes}
+                onChange={(e) => setFormData({ ...formData, minutes: e.target.value === '' ? 0 : parseInt(e.target.value) || 0 })}
+                placeholder="0"
+                required
+              />
+            </div>
           </div>
         )}
 

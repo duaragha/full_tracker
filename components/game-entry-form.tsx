@@ -154,8 +154,9 @@ export function GameEntryForm({ selectedGame, onSubmit, onCancel, initialData }:
             type="number"
             min="0"
             max="59"
-            value={formData.minutesPlayed}
-            onChange={(e) => setFormData({ ...formData, minutesPlayed: parseInt(e.target.value) || 0 })}
+            value={formData.minutesPlayed === 0 ? '' : formData.minutesPlayed}
+            onChange={(e) => setFormData({ ...formData, minutesPlayed: e.target.value === '' ? 0 : parseInt(e.target.value) || 0 })}
+            placeholder="0"
             required
           />
         </div>
