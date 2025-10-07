@@ -4,7 +4,7 @@ import { Car, PhevEntry, PhevStats, CarSummary, MonthlyGroup, YearlyGroup } from
 // Create a connection pool
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL || process.env.POSTGRES_URL,
-  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : undefined
+  ssl: false // Railway internal network doesn't need SSL
 })
 
 // Helper to normalize date fields to strings and numbers
