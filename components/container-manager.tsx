@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import { Container } from "@/types/inventory"
-import { addContainer, updateContainer } from "@/lib/store/inventory-store"
+import { addContainer, updateContainer } from "@/lib/db/inventory-store"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -36,13 +36,13 @@ export function ContainerManager({ open, onOpenChange, onContainerAdded, areaId,
     }
   }, [editingContainer, open])
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
     if (editingContainer) {
-      updateContainer(editingContainer.id, formData)
+      await updateContainer(Number(editingContainer.id), formData)
     } else {
-      addContainer({ ...formData, areaId })
+      await addContainer({ ...formData, areaId })
     }
 
     onContainerAdded()

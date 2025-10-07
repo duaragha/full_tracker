@@ -3,10 +3,10 @@
 import * as React from "react"
 import Link from "next/link"
 import { Gamepad2, BookOpen, TrendingUp, Clock, Tv, Film } from "lucide-react"
-import { getGames, calculateTotalDays as calculateGameDays, calculateTotalHours } from "@/lib/store/games-store"
-import { getBooks, calculateTotalPages, calculateTotalMinutes, calculateTotalDays as calculateBookDays } from "@/lib/store/books-store"
-import { getTVShows, calculateTotalEpisodesWatched, calculateTotalMinutesWatched, calculateTotalDaysTracking } from "@/lib/store/tvshows-store"
-import { getMovies, calculateTotalMovies, calculateTotalRuntime } from "@/lib/store/movies-store"
+import { getGames, calculateTotalDays as calculateGameDays, calculateTotalHours } from "@/lib/db/games-store"
+import { getBooks, calculateTotalPages, calculateTotalMinutes, calculateTotalDays as calculateBookDays } from "@/lib/db/books-store"
+import { getTVShows, calculateTotalEpisodes as calculateTotalEpisodesWatched, calculateTotalMinutes as calculateTotalMinutesWatched, calculateTotalDays as calculateTotalDaysTracking } from "@/lib/db/tvshows-store"
+import { getMovies, calculateTotalRuntime } from "@/lib/db/movies-store"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
@@ -19,16 +19,25 @@ export default function Dashboard() {
   const [movies, setMovies] = React.useState<any[]>([])
 
   React.useEffect(() => {
-    setGames(getGames())
-    setBooks(getBooks())
-    setTVShows(getTVShows())
-    setMovies(getMovies())
+    const loadData = async () => {
+      const [gamesData, booksData, tvshowsData, moviesData] = await Promise.all([
+        getGames(),
+        getBooks(),
+        getTVShows(),
+        getMovies()
+      ])
+      setGames(gamesData)
+      setBooks(booksData)
+      setTVShows(tvshowsData)
+      setMovies(moviesData)
+    }
+    loadData()
   }, [])
 
   const gamesCount = games.length
   const booksCount = books.length
   const tvshowsCount = tvshows.length
-  const moviesCount = calculateTotalMovies(movies)
+  const moviesCount = movies.length
   const totalGameHours = calculateTotalHours(games)
   const totalGameDays = calculateGameDays(games)
   const totalBookPages = calculateTotalPages(books)

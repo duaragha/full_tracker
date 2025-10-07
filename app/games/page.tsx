@@ -3,7 +3,7 @@
 import * as React from "react"
 import { Plus, Pencil, Trash2 } from "lucide-react"
 import { Game, GameSearchResult } from "@/types/game"
-import { getGames, addGame, updateGame, deleteGame, calculateTotalDays, calculateTotalHours, calculateAveragePercentage } from "@/lib/store/games-store"
+import { getGames, addGame, updateGame, deleteGame, calculateTotalDays, calculateTotalHours, calculateAveragePercentage } from "@/lib/db/games-store"
 import { GameSearch } from "@/components/game-search"
 import { GameEntryForm } from "@/components/game-entry-form"
 import { Button } from "@/components/ui/button"
@@ -25,7 +25,11 @@ export default function GamesPage() {
   const [sortOrder, setSortOrder] = React.useState<"asc" | "desc">("asc")
 
   React.useEffect(() => {
-    setGames(getGames())
+    const loadGames = async () => {
+      const data = await getGames()
+      setGames(data)
+    }
+    loadGames()
   }, [])
 
   const handleGameSelect = (game: GameSearchResult) => {
@@ -34,13 +38,14 @@ export default function GamesPage() {
     setShowForm(true)
   }
 
-  const handleSubmit = (gameData: Omit<Game, 'id' | 'createdAt' | 'updatedAt'>) => {
+  const handleSubmit = async (gameData: Omit<Game, 'id' | 'createdAt' | 'updatedAt'>) => {
     if (editingGame) {
-      updateGame(editingGame.id, gameData)
+      await updateGame(Number(editingGame.id), gameData)
     } else {
-      addGame(gameData)
+      await addGame(gameData)
     }
-    setGames(getGames())
+    const data = await getGames()
+    setGames(data)
     setShowForm(false)
     setSelectedGame(null)
     setEditingGame(null)
@@ -52,10 +57,11 @@ export default function GamesPage() {
     setShowForm(true)
   }
 
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
     if (confirm("Are you sure you want to delete this game?")) {
-      deleteGame(id)
-      setGames(getGames())
+      await deleteGame(Number(id))
+      const data = await getGames()
+      setGames(data)
     }
   }
 

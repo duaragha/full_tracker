@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import { InventoryItem, Area, Container } from "@/types/inventory"
-import { addItem, updateItem } from "@/lib/store/inventory-store"
+import { addInventoryItem, updateInventoryItem } from "@/lib/db/inventory-store"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -86,7 +86,7 @@ export function ItemForm({ open, onOpenChange, onItemAdded, areas, containers, s
     }
   }, [editingItem, open, selectedArea, selectedContainer])
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
     const itemData = {
@@ -110,9 +110,9 @@ export function ItemForm({ open, onOpenChange, onItemAdded, areas, containers, s
     }
 
     if (editingItem) {
-      updateItem(editingItem.id, itemData)
+      await updateInventoryItem(Number(editingItem.id), itemData)
     } else {
-      addItem(itemData)
+      await addInventoryItem(itemData)
     }
 
     onItemAdded()

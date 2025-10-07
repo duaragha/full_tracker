@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import { Area } from "@/types/inventory"
-import { addArea, updateArea, deleteArea } from "@/lib/store/inventory-store"
+import { addArea, updateArea, deleteArea } from "@/lib/db/inventory-store"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -33,13 +33,13 @@ export function AreaManager({ open, onOpenChange, onAreaAdded, editingArea }: Ar
     }
   }, [editingArea, open])
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
     if (editingArea) {
-      updateArea(editingArea.id, formData)
+      await updateArea(Number(editingArea.id), formData)
     } else {
-      addArea(formData)
+      await addArea(formData)
     }
 
     onAreaAdded()

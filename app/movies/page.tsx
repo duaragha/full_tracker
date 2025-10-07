@@ -8,11 +8,9 @@ import {
   addMovie,
   updateMovie,
   deleteMovie,
-  calculateTotalMovies,
   calculateTotalRuntime,
   calculateAverageRating,
-  calculateMoviesThisYear,
-} from "@/lib/store/movies-store"
+} from "@/lib/db/movies-store"
 import { MovieSearch } from "@/components/movie-search"
 import { MovieEntryForm } from "@/components/movie-entry-form"
 import { Button } from "@/components/ui/button"
@@ -33,7 +31,11 @@ export default function MoviesPage() {
   const [sortOrder, setSortOrder] = React.useState<"asc" | "desc">("asc")
 
   React.useEffect(() => {
-    setMovies(getMovies())
+    const loadMovies = async () => {
+      const data = await getMovies()
+      setMovies(data)
+    }
+    loadMovies()
   }, [])
 
   const handleMovieSelect = (movie: MovieSearchResult) => {
@@ -42,13 +44,14 @@ export default function MoviesPage() {
     setShowForm(true)
   }
 
-  const handleSubmit = (movieData: Omit<Movie, 'id' | 'createdAt' | 'updatedAt'>) => {
+  const handleSubmit = async (movieData: Omit<Movie, 'id' | 'createdAt' | 'updatedAt'>) => {
     if (editingMovie) {
-      updateMovie(editingMovie.id, movieData)
+      await updateMovie(Number(editingMovie.id), movieData)
     } else {
-      addMovie(movieData)
+      await addMovie(movieData)
     }
-    setMovies(getMovies())
+    const data = await getMovies()
+    setMovies(data)
     setShowForm(false)
     setSelectedMovie(null)
     setEditingMovie(null)
@@ -60,10 +63,11 @@ export default function MoviesPage() {
     setShowForm(true)
   }
 
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
     if (confirm("Are you sure you want to delete this movie?")) {
-      deleteMovie(id)
-      setMovies(getMovies())
+      await deleteMovie(Number(id))
+      const data = await getMovies()
+      setMovies(data)
     }
   }
 
@@ -107,10 +111,13 @@ export default function MoviesPage() {
     return sorted
   }, [movies, searchQuery, sortBy, sortOrder])
 
-  const totalMovies = calculateTotalMovies(movies)
+  const totalMovies = movies.length
   const totalRuntime = calculateTotalRuntime(movies)
   const avgRating = calculateAverageRating(movies)
-  const moviesThisYear = calculateMoviesThisYear(movies)
+  const moviesThisYear = movies.filter(m => {
+    const watchedDate = m.dateWatched ? new Date(m.dateWatched) : null
+    return watchedDate && watchedDate.getFullYear() === new Date().getFullYear()
+  }).length
   const totalHours = Math.floor(totalRuntime / 60)
   const totalMinutes = totalRuntime % 60
 

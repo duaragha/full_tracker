@@ -6,18 +6,13 @@ import { Area, Container, InventoryItem } from "@/types/inventory"
 import {
   getAreas,
   getContainers,
-  getItems,
+  getInventoryItems,
   deleteArea,
   deleteContainer,
-  deleteItem,
-  getContainersByArea,
-  getItemsByContainer,
-  calculateTotalItems,
-  calculateItemsUsedInLastYear,
-  calculateTotalCost,
-  calculateGiftsReceived,
-  calculateItemsToDiscard,
-} from "@/lib/store/inventory-store"
+  deleteInventoryItem,
+  calculateTotalValue,
+  calculateTotalSoldValue,
+} from "@/lib/db/inventory-store"
 import { AreaManager } from "@/components/area-manager"
 import { ContainerManager } from "@/components/container-manager"
 import { ItemForm } from "@/components/item-form"
@@ -50,10 +45,15 @@ export default function InventoryPage() {
   const [sortBy, setSortBy] = React.useState<"name" | "cost" | "purchasedWhen">("name")
   const [sortOrder, setSortOrder] = React.useState<"asc" | "desc">("asc")
 
-  const loadData = () => {
-    setAreas(getAreas())
-    setContainers(getContainers())
-    setItems(getItems())
+  const loadData = async () => {
+    const [areasData, containersData, itemsData] = await Promise.all([
+      getAreas(),
+      getContainers(),
+      getInventoryItems()
+    ])
+    setAreas(areasData)
+    setContainers(containersData)
+    setItems(itemsData)
   }
 
   React.useEffect(() => {
@@ -100,11 +100,11 @@ export default function InventoryPage() {
     return sorted
   }, [items, selectedArea, selectedContainer, searchQuery, sortBy, sortOrder])
 
-  const totalItems = calculateTotalItems(items)
-  const itemsUsedInLastYear = calculateItemsUsedInLastYear(items)
-  const totalCost = calculateTotalCost(items)
-  const giftsReceived = calculateGiftsReceived(items)
-  const itemsToDiscard = calculateItemsToDiscard(items)
+  const totalItems = items.length
+  const itemsUsedInLastYear = items.filter(i => i.usedInLastYear).length
+  const totalCost = calculateTotalValue(items)
+  const giftsReceived = items.filter(i => i.isGift).length
+  const itemsToDiscard = items.filter(i => !i.usedInLastYear && i.kept).length
 
   const getAreaName = (areaId: string) => areas.find(a => a.id === areaId)?.name || "Unknown"
   const getContainerName = (containerId: string) => containers.find(c => c.id === containerId)?.name || "Unknown"
@@ -133,10 +133,10 @@ export default function InventoryPage() {
     setShowAreaDialog(true)
   }
 
-  const handleDeleteArea = (id: string) => {
+  const handleDeleteArea = async (id: string) => {
     if (confirm("Delete this area and all its containers and items?")) {
-      deleteArea(id)
-      loadData()
+      await deleteArea(Number(id))
+      await loadData()
       if (selectedArea === id) {
         setSelectedArea(null)
         setSelectedContainer(null)
@@ -155,10 +155,10 @@ export default function InventoryPage() {
     setShowContainerDialog(true)
   }
 
-  const handleDeleteContainer = (id: string) => {
+  const handleDeleteContainer = async (id: string) => {
     if (confirm("Delete this container and all its items?")) {
-      deleteContainer(id)
-      loadData()
+      await deleteContainer(Number(id))
+      await loadData()
       if (selectedContainer === id) {
         setSelectedContainer(null)
       }
@@ -175,10 +175,10 @@ export default function InventoryPage() {
     setShowItemDialog(true)
   }
 
-  const handleDeleteItem = (id: string) => {
+  const handleDeleteItem = async (id: string) => {
     if (confirm("Delete this item?")) {
-      deleteItem(id)
-      loadData()
+      await deleteInventoryItem(Number(id))
+      await loadData()
     }
   }
 

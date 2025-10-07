@@ -2,7 +2,6 @@
 
 import * as React from "react"
 import { Season, Episode } from "@/types/tvshow"
-import { markEpisodeWatched } from "@/lib/store/tvshows-store"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"

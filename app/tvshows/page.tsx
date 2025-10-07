@@ -8,11 +8,10 @@ import {
   addTVShow,
   updateTVShow,
   deleteTVShow,
-  calculateTotalShows,
-  calculateTotalEpisodesWatched,
-  calculateTotalMinutesWatched,
-  calculateTotalDaysTracking,
-} from "@/lib/store/tvshows-store"
+  calculateTotalEpisodes,
+  calculateTotalMinutes,
+  calculateTotalDays,
+} from "@/lib/db/tvshows-store"
 import { TVShowSearch } from "@/components/tvshow-search"
 import { TVShowEntryForm } from "@/components/tvshow-entry-form"
 import { EpisodeList } from "@/components/episode-list"
@@ -35,7 +34,11 @@ export default function TVShowsPage() {
   const [sortOrder, setSortOrder] = React.useState<"asc" | "desc">("asc")
 
   React.useEffect(() => {
-    setTVShows(getTVShows())
+    const loadTVShows = async () => {
+      const data = await getTVShows()
+      setTVShows(data)
+    }
+    loadTVShows()
   }, [])
 
   const handleShowSelect = (show: TVShowSearchResult) => {
@@ -44,13 +47,14 @@ export default function TVShowsPage() {
     setShowForm(true)
   }
 
-  const handleSubmit = (showData: Omit<TVShow, 'id' | 'createdAt' | 'updatedAt'>) => {
+  const handleSubmit = async (showData: Omit<TVShow, 'id' | 'createdAt' | 'updatedAt'>) => {
     if (editingShow) {
-      updateTVShow(editingShow.id, showData)
+      await updateTVShow(Number(editingShow.id), showData)
     } else {
-      addTVShow(showData)
+      await addTVShow(showData)
     }
-    setTVShows(getTVShows())
+    const data = await getTVShows()
+    setTVShows(data)
     setShowForm(false)
     setSelectedShow(null)
     setEditingShow(null)
@@ -62,10 +66,11 @@ export default function TVShowsPage() {
     setShowForm(true)
   }
 
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
     if (confirm("Are you sure you want to delete this TV show?")) {
-      deleteTVShow(id)
-      setTVShows(getTVShows())
+      await deleteTVShow(Number(id))
+      const data = await getTVShows()
+      setTVShows(data)
     }
   }
 
@@ -118,10 +123,10 @@ export default function TVShowsPage() {
     return sorted
   }, [tvshows, searchQuery, sortBy, sortOrder])
 
-  const totalShows = calculateTotalShows(tvshows)
-  const totalEpisodesWatched = calculateTotalEpisodesWatched(tvshows)
-  const totalMinutesWatched = calculateTotalMinutesWatched(tvshows)
-  const totalDaysTracking = calculateTotalDaysTracking(tvshows)
+  const totalShows = tvshows.length
+  const totalEpisodesWatched = calculateTotalEpisodes(tvshows)
+  const totalMinutesWatched = calculateTotalMinutes(tvshows)
+  const totalDaysTracking = calculateTotalDays(tvshows)
   const totalHours = Math.floor(totalMinutesWatched / 60)
   const remainingMinutes = totalMinutesWatched % 60
 

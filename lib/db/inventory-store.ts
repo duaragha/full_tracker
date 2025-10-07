@@ -1,0 +1,205 @@
+import { Pool } from 'pg'
+import { InventoryItem, Container, Area } from '@/types/inventory'
+
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL || process.env.POSTGRES_URL,
+  ssl: false,
+  max: 20,
+  idleTimeoutMillis: 30000,
+  connectionTimeoutMillis: 10000,
+})
+
+function normalizeInventoryItem(item: any): InventoryItem {
+  return {
+    ...item,
+    usedInLastYear: Boolean(item.used_in_last_year),
+    location: item.location || { areaId: '', containerId: '' },
+    cost: Number(item.cost),
+    isGift: Boolean(item.is_gift),
+    giftFrom: item.gift_from,
+    purchasedWhere: item.purchased_where,
+    purchasedWhen: item.purchased_when instanceof Date ? item.purchased_when.toISOString().split('T')[0] : item.purchased_when,
+    keepUntil: item.keep_until instanceof Date ? item.keep_until.toISOString().split('T')[0] : item.keep_until,
+    soldDate: item.sold_date instanceof Date ? item.sold_date.toISOString().split('T')[0] : item.sold_date,
+    soldPrice: item.sold_price ? Number(item.sold_price) : null,
+    createdAt: item.created_at,
+    updatedAt: item.updated_at,
+  }
+}
+
+function normalizeContainer(container: any): Container {
+  return {
+    ...container,
+    areaId: container.area_id,
+    createdAt: container.created_at,
+    updatedAt: container.updated_at,
+  }
+}
+
+function normalizeArea(area: any): Area {
+  return {
+    ...area,
+    createdAt: area.created_at,
+    updatedAt: area.updated_at,
+  }
+}
+
+// Inventory Items
+export async function getInventoryItems(): Promise<InventoryItem[]> {
+  const result = await pool.query<any>(
+    'SELECT * FROM inventory ORDER BY created_at DESC'
+  )
+  return result.rows.map(normalizeInventoryItem)
+}
+
+export async function addInventoryItem(item: Omit<InventoryItem, 'id' | 'createdAt' | 'updatedAt'>): Promise<InventoryItem> {
+  const result = await pool.query<any>(
+    `INSERT INTO inventory (
+      name, used_in_last_year, location, type, cost, is_gift, gift_from,
+      purchased_where, purchased_when, keep_until, kept, sold_date,
+      sold_price, notes, photo, created_at, updated_at
+    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, NOW(), NOW())
+    RETURNING *`,
+    [
+      item.name,
+      item.usedInLastYear,
+      item.location,
+      item.type,
+      item.cost,
+      item.isGift,
+      item.giftFrom,
+      item.purchasedWhere,
+      item.purchasedWhen,
+      item.keepUntil,
+      item.kept,
+      item.soldDate,
+      item.soldPrice,
+      item.notes,
+      item.photo,
+    ]
+  )
+  return normalizeInventoryItem(result.rows[0])
+}
+
+export async function updateInventoryItem(id: number, item: Partial<InventoryItem>): Promise<void> {
+  await pool.query(
+    `UPDATE inventory SET
+      name = COALESCE($1, name),
+      used_in_last_year = COALESCE($2, used_in_last_year),
+      location = COALESCE($3, location),
+      type = COALESCE($4, type),
+      cost = COALESCE($5, cost),
+      is_gift = COALESCE($6, is_gift),
+      gift_from = $7,
+      purchased_where = COALESCE($8, purchased_where),
+      purchased_when = COALESCE($9, purchased_when),
+      keep_until = $10,
+      kept = COALESCE($11, kept),
+      sold_date = $12,
+      sold_price = $13,
+      notes = COALESCE($14, notes),
+      photo = $15,
+      updated_at = NOW()
+    WHERE id = $16`,
+    [
+      item.name,
+      item.usedInLastYear,
+      item.location,
+      item.type,
+      item.cost,
+      item.isGift,
+      item.giftFrom,
+      item.purchasedWhere,
+      item.purchasedWhen,
+      item.keepUntil,
+      item.kept,
+      item.soldDate,
+      item.soldPrice,
+      item.notes,
+      item.photo,
+      id,
+    ]
+  )
+}
+
+export async function deleteInventoryItem(id: number): Promise<void> {
+  await pool.query('DELETE FROM inventory WHERE id = $1', [id])
+}
+
+// Containers
+export async function getContainers(): Promise<Container[]> {
+  const result = await pool.query<any>(
+    'SELECT * FROM containers ORDER BY created_at DESC'
+  )
+  return result.rows.map(normalizeContainer)
+}
+
+export async function addContainer(container: Omit<Container, 'id' | 'createdAt' | 'updatedAt'>): Promise<Container> {
+  const result = await pool.query<any>(
+    `INSERT INTO containers (
+      name, type, color, area_id, created_at, updated_at
+    ) VALUES ($1, $2, $3, $4, NOW(), NOW())
+    RETURNING *`,
+    [container.name, container.type, container.color, container.areaId]
+  )
+  return normalizeContainer(result.rows[0])
+}
+
+export async function updateContainer(id: number, container: Partial<Container>): Promise<void> {
+  await pool.query(
+    `UPDATE containers SET
+      name = COALESCE($1, name),
+      type = COALESCE($2, type),
+      color = $3,
+      area_id = COALESCE($4, area_id),
+      updated_at = NOW()
+    WHERE id = $5`,
+    [container.name, container.type, container.color, container.areaId, id]
+  )
+}
+
+export async function deleteContainer(id: number): Promise<void> {
+  await pool.query('DELETE FROM containers WHERE id = $1', [id])
+}
+
+// Areas
+export async function getAreas(): Promise<Area[]> {
+  const result = await pool.query<any>(
+    'SELECT * FROM areas ORDER BY created_at DESC'
+  )
+  return result.rows.map(normalizeArea)
+}
+
+export async function addArea(area: Omit<Area, 'id' | 'createdAt' | 'updatedAt'>): Promise<Area> {
+  const result = await pool.query<any>(
+    `INSERT INTO areas (
+      name, type, created_at, updated_at
+    ) VALUES ($1, $2, NOW(), NOW())
+    RETURNING *`,
+    [area.name, area.type]
+  )
+  return normalizeArea(result.rows[0])
+}
+
+export async function updateArea(id: number, area: Partial<Area>): Promise<void> {
+  await pool.query(
+    `UPDATE areas SET
+      name = COALESCE($1, name),
+      type = COALESCE($2, type),
+      updated_at = NOW()
+    WHERE id = $3`,
+    [area.name, area.type, id]
+  )
+}
+
+export async function deleteArea(id: number): Promise<void> {
+  await pool.query('DELETE FROM areas WHERE id = $1', [id])
+}
+
+export function calculateTotalValue(items: InventoryItem[]): number {
+  return items.filter(i => i.kept).reduce((total, item) => total + (item.cost || 0), 0)
+}
+
+export function calculateTotalSoldValue(items: InventoryItem[]): number {
+  return items.filter(i => !i.kept && i.soldPrice).reduce((total, item) => total + (item.soldPrice || 0), 0)
+}

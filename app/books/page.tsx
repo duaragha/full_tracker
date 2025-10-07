@@ -3,7 +3,7 @@
 import * as React from "react"
 import { Plus, Pencil, Trash2 } from "lucide-react"
 import { Book, BookSearchResult } from "@/types/book"
-import { getBooks, addBook, updateBook, deleteBook, calculateTotalPages, calculateTotalMinutes, calculateTotalDays } from "@/lib/store/books-store"
+import { getBooks, addBook, updateBook, deleteBook, calculateTotalPages, calculateTotalMinutes, calculateTotalDays } from "@/lib/db/books-store"
 import { BookSearch } from "@/components/book-search"
 import { BookEntryForm } from "@/components/book-entry-form"
 import { Button } from "@/components/ui/button"
@@ -25,7 +25,11 @@ export default function BooksPage() {
   const [sortOrder, setSortOrder] = React.useState<"asc" | "desc">("asc")
 
   React.useEffect(() => {
-    setBooks(getBooks())
+    const loadBooks = async () => {
+      const data = await getBooks()
+      setBooks(data)
+    }
+    loadBooks()
   }, [])
 
   const handleBookSelect = (book: BookSearchResult) => {
@@ -34,13 +38,14 @@ export default function BooksPage() {
     setShowForm(true)
   }
 
-  const handleSubmit = (bookData: Omit<Book, 'id' | 'createdAt' | 'updatedAt'>) => {
+  const handleSubmit = async (bookData: Omit<Book, 'id' | 'createdAt' | 'updatedAt'>) => {
     if (editingBook) {
-      updateBook(editingBook.id, bookData)
+      await updateBook(Number(editingBook.id), bookData)
     } else {
-      addBook(bookData)
+      await addBook(bookData)
     }
-    setBooks(getBooks())
+    const data = await getBooks()
+    setBooks(data)
     setShowForm(false)
     setSelectedBook(null)
     setEditingBook(null)
@@ -52,10 +57,11 @@ export default function BooksPage() {
     setShowForm(true)
   }
 
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
     if (confirm("Are you sure you want to delete this book?")) {
-      deleteBook(id)
-      setBooks(getBooks())
+      await deleteBook(Number(id))
+      const data = await getBooks()
+      setBooks(data)
     }
   }
 
