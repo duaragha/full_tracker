@@ -104,9 +104,9 @@ export default function BooksPage() {
     return sorted
   }, [books, typeFilter, searchQuery, sortBy, sortOrder])
 
-  const totalPages = calculateTotalPages(books)
-  const totalMinutes = calculateTotalMinutes(books)
-  const totalDays = calculateTotalDays(books)
+  const totalPages = books.reduce((total, book) => total + (book.pages || 0), 0)
+  const totalMinutes = books.reduce((total, book) => total + (book.hours * 60 + book.minutes || 0), 0)
+  const totalDays = books.reduce((sum, b) => sum + b.daysRead, 0)
   const totalHours = Math.floor(totalMinutes / 60)
   const remainingMinutes = totalMinutes % 60
 
