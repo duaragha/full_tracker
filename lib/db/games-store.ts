@@ -19,7 +19,9 @@ function normalizeGame(game: any): Game {
   return {
     id: String(game.id),
     title: game.title || '',
+    developer: game.developer || '',
     publisher: game.publisher || '',
+    genres: game.genres || [],
     releaseDate: game.release_date || '',
     coverImage: game.cover_image || '',
     status: game.status || 'Playing',
@@ -49,14 +51,16 @@ export async function getGames(): Promise<Game[]> {
 export async function addGame(game: Omit<Game, 'id' | 'createdAt' | 'updatedAt'>): Promise<Game> {
   const result = await pool.query<any>(
     `INSERT INTO games (
-      title, publisher, release_date, cover_image, status, percentage,
+      title, developer, publisher, genres, release_date, cover_image, status, percentage,
       started_date, completed_date, days_played, hours_played, minutes_played,
       platform, console, store, price, notes, created_at, updated_at
-    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, NOW(), NOW())
+    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, NOW(), NOW())
     RETURNING *`,
     [
       game.title,
+      game.developer,
       game.publisher,
+      game.genres,
       game.releaseDate,
       game.coverImage,
       game.status,
@@ -80,26 +84,30 @@ export async function updateGame(id: number, game: Partial<Game>): Promise<void>
   await pool.query(
     `UPDATE games SET
       title = COALESCE($1, title),
-      publisher = COALESCE($2, publisher),
-      release_date = COALESCE($3, release_date),
-      cover_image = COALESCE($4, cover_image),
-      status = COALESCE($5, status),
-      percentage = COALESCE($6, percentage),
-      started_date = $7,
-      completed_date = $8,
-      days_played = COALESCE($9, days_played),
-      hours_played = COALESCE($10, hours_played),
-      minutes_played = COALESCE($11, minutes_played),
-      console = COALESCE($12, console),
-      platform = COALESCE($12, platform),
-      store = COALESCE($13, store),
-      price = COALESCE($14, price),
-      notes = COALESCE($15, notes),
+      developer = COALESCE($2, developer),
+      publisher = COALESCE($3, publisher),
+      genres = COALESCE($4, genres),
+      release_date = COALESCE($5, release_date),
+      cover_image = COALESCE($6, cover_image),
+      status = COALESCE($7, status),
+      percentage = COALESCE($8, percentage),
+      started_date = $9,
+      completed_date = $10,
+      days_played = COALESCE($11, days_played),
+      hours_played = COALESCE($12, hours_played),
+      minutes_played = COALESCE($13, minutes_played),
+      console = COALESCE($14, console),
+      platform = COALESCE($14, platform),
+      store = COALESCE($15, store),
+      price = COALESCE($16, price),
+      notes = COALESCE($17, notes),
       updated_at = NOW()
-    WHERE id = $16`,
+    WHERE id = $18`,
     [
       game.title,
+      game.developer,
       game.publisher,
+      game.genres,
       game.releaseDate,
       game.coverImage,
       game.status,

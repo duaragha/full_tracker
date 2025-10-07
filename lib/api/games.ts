@@ -21,7 +21,7 @@ export async function searchGames(query: string): Promise<GameSearchResult[]> {
   }
 }
 
-export async function getGameDetails(id: number): Promise<GameSearchResult | null> {
+export async function getGameDetails(id: number): Promise<any | null> {
   try {
     const response = await fetch(
       `${RAWG_API_URL}/games/${id}?key=${RAWG_API_KEY}`
@@ -31,7 +31,15 @@ export async function getGameDetails(id: number): Promise<GameSearchResult | nul
       throw new Error('Failed to fetch game details')
     }
 
-    return await response.json()
+    const data = await response.json()
+
+    // Return with developers and genres included
+    return {
+      ...data,
+      developers: data.developers || [],
+      publishers: data.publishers || [],
+      genres: data.genres || [],
+    }
   } catch (error) {
     console.error('Error fetching game details:', error)
     return null

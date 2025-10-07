@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import { Game, GameSearchResult } from "@/types/game"
+import { getGameDetails } from "@/lib/api/games"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
@@ -25,6 +26,8 @@ export function GameEntryForm({ selectedGame, onSubmit, onCancel, initialData }:
   const [formData, setFormData] = React.useState({
     title: initialData?.title || selectedGame?.name || "",
     publisher: initialData?.publisher || selectedGame?.publishers?.[0]?.name || "",
+    developer: initialData?.developer || selectedGame?.developers?.[0]?.name || "",
+    genres: initialData?.genres || [],
     releaseDate: initialData?.releaseDate || selectedGame?.released || "",
     coverImage: initialData?.coverImage || selectedGame?.background_image || "",
     status: initialData?.status || "Playing" as const,
@@ -70,6 +73,9 @@ export function GameEntryForm({ selectedGame, onSubmit, onCancel, initialData }:
       store: formData.store,
       price: formData.price,
       pricePerHour,
+      developer: formData.developer,
+      publisher: formData.publisher,
+      genres: formData.genres,
       notes: formData.notes,
     })
   }

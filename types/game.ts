@@ -2,6 +2,8 @@ export interface Game {
   id: string
   title: string
   publisher: string
+  developer: string
+  genres: string[]
   releaseDate: string
   coverImage: string
   status: 'Playing' | 'Completed' | 'Stopped'
