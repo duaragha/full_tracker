@@ -10,40 +10,67 @@ const pool = new Pool({
 })
 
 function normalizeGame(game: any): Game {
+  const hoursPlayed = Number(game.hours_played || 0)
+  const minutesPlayed = Number(game.minutes_played || 0)
+  const totalHours = hoursPlayed + minutesPlayed / 60
+  const price = Number(game.price || 0)
+  const pricePerHour = totalHours > 0 ? price / totalHours : 0
+
   return {
-    ...game,
-    started_date: game.started_date instanceof Date ? game.started_date.toISOString().split('T')[0] : game.started_date,
-    completed_date: game.completed_date instanceof Date ? game.completed_date.toISOString().split('T')[0] : game.completed_date,
-    hours_played: Number(game.hours_played),
-    rating: game.rating ? Number(game.rating) : null,
+    id: String(game.id),
+    title: game.title || '',
+    publisher: game.publisher || '',
+    releaseDate: game.release_date || '',
+    coverImage: game.cover_image || '',
+    status: game.status || 'Playing',
+    percentage: Number(game.percentage || 0),
+    dateStarted: game.started_date instanceof Date ? game.started_date.toISOString().split('T')[0] : game.started_date,
+    dateCompleted: game.completed_date instanceof Date ? game.completed_date.toISOString().split('T')[0] : game.completed_date,
+    daysPlayed: Number(game.days_played || 0),
+    hoursPlayed,
+    minutesPlayed,
+    console: game.platform || game.console || '',
+    store: game.store || '',
+    price,
+    pricePerHour,
+    notes: game.notes || '',
+    createdAt: game.created_at,
+    updatedAt: game.updated_at,
   }
 }
 
 export async function getGames(): Promise<Game[]> {
-  const result = await pool.query<Game>(
+  const result = await pool.query<any>(
     'SELECT * FROM games ORDER BY created_at DESC'
   )
   return result.rows.map(normalizeGame)
 }
 
 export async function addGame(game: Omit<Game, 'id' | 'createdAt' | 'updatedAt'>): Promise<Game> {
-  const result = await pool.query<Game>(
+  const result = await pool.query<any>(
     `INSERT INTO games (
-      title, platform, status, rating, hours_played, started_date,
-      completed_date, notes, genre, cover_image, created_at, updated_at
-    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NOW(), NOW())
+      title, publisher, release_date, cover_image, status, percentage,
+      started_date, completed_date, days_played, hours_played, minutes_played,
+      platform, console, store, price, notes, created_at, updated_at
+    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, NOW(), NOW())
     RETURNING *`,
     [
       game.title,
-      game.platform,
-      game.status,
-      game.rating,
-      game.hoursPlayed,
-      game.startedDate,
-      game.completedDate,
-      game.notes,
-      game.genre,
+      game.publisher,
+      game.releaseDate,
       game.coverImage,
+      game.status,
+      game.percentage,
+      game.dateStarted,
+      game.dateCompleted,
+      game.daysPlayed,
+      game.hoursPlayed,
+      game.minutesPlayed,
+      game.console,
+      game.console,
+      game.store,
+      game.price,
+      game.notes,
     ]
   )
   return normalizeGame(result.rows[0])
@@ -53,28 +80,39 @@ export async function updateGame(id: number, game: Partial<Game>): Promise<void>
   await pool.query(
     `UPDATE games SET
       title = COALESCE($1, title),
-      platform = COALESCE($2, platform),
-      status = COALESCE($3, status),
-      rating = $4,
-      hours_played = COALESCE($5, hours_played),
-      started_date = $6,
-      completed_date = $7,
-      notes = COALESCE($8, notes),
-      genre = COALESCE($9, genre),
-      cover_image = COALESCE($10, cover_image),
+      publisher = COALESCE($2, publisher),
+      release_date = COALESCE($3, release_date),
+      cover_image = COALESCE($4, cover_image),
+      status = COALESCE($5, status),
+      percentage = COALESCE($6, percentage),
+      started_date = $7,
+      completed_date = $8,
+      days_played = COALESCE($9, days_played),
+      hours_played = COALESCE($10, hours_played),
+      minutes_played = COALESCE($11, minutes_played),
+      console = COALESCE($12, console),
+      platform = COALESCE($12, platform),
+      store = COALESCE($13, store),
+      price = COALESCE($14, price),
+      notes = COALESCE($15, notes),
       updated_at = NOW()
-    WHERE id = $11`,
+    WHERE id = $16`,
     [
       game.title,
-      game.platform,
-      game.status,
-      game.rating,
-      game.hoursPlayed,
-      game.startedDate,
-      game.completedDate,
-      game.notes,
-      game.genre,
+      game.publisher,
+      game.releaseDate,
       game.coverImage,
+      game.status,
+      game.percentage,
+      game.dateStarted,
+      game.dateCompleted,
+      game.daysPlayed,
+      game.hoursPlayed,
+      game.minutesPlayed,
+      game.console,
+      game.store,
+      game.price,
+      game.notes,
       id,
     ]
   )
@@ -85,24 +123,15 @@ export async function deleteGame(id: number): Promise<void> {
 }
 
 export function calculateTotalHours(games: Game[]): number {
-  return games.reduce((total, game) => total + (game.hoursPlayed || 0), 0)
+  return games.reduce((total, game) => total + (game.hoursPlayed || 0) + (game.minutesPlayed || 0) / 60, 0)
 }
 
 export function calculateTotalDays(games: Game[]): number {
-  return games.reduce((total, game) => {
-    if (game.startedDate) {
-      const start = new Date(game.startedDate)
-      const end = game.completedDate ? new Date(game.completedDate) : new Date()
-      const days = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24))
-      return total + days
-    }
-    return total
-  }, 0)
+  return games.reduce((total, game) => total + (game.daysPlayed || 0), 0)
 }
 
 export function calculateAveragePercentage(games: Game[]): number {
-  const rated = games.filter(g => g.rating)
-  if (rated.length === 0) return 0
-  const sum = rated.reduce((total, game) => total + (game.rating || 0), 0)
-  return Math.round((sum / rated.length) * 10)
+  if (games.length === 0) return 0
+  const sum = games.reduce((total, game) => total + (game.percentage || 0), 0)
+  return Math.round(sum / games.length)
 }
