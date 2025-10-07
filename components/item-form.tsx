@@ -10,11 +10,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Calendar } from "@/components/ui/calendar"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { cn } from "@/lib/utils"
-import { CalendarIcon } from "lucide-react"
-import { format } from "date-fns"
+import { DatePicker } from "@/components/ui/date-picker"
 
 interface ItemFormProps {
   open: boolean
@@ -217,54 +213,20 @@ export function ItemForm({ open, onOpenChange, onItemAdded, areas, containers, s
 
             <div className="space-y-2">
               <Label>When Purchased *</Label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className={cn(
-                      "w-full justify-start text-left font-normal",
-                      !formData.purchasedWhen && "text-muted-foreground"
-                    )}
-                  >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {formData.purchasedWhen ? format(formData.purchasedWhen, "PPP") : "Pick a date"}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0">
-                  <Calendar
-                    mode="single"
-                    selected={formData.purchasedWhen || undefined}
-                    onSelect={(date) => setFormData({ ...formData, purchasedWhen: date || null })}
-                  />
-                </PopoverContent>
-              </Popover>
+              <DatePicker
+                date={formData.purchasedWhen}
+                onDateChange={(date) => setFormData({ ...formData, purchasedWhen: date })}
+                placeholder="Pick purchase date"
+              />
             </div>
 
             <div className="space-y-2">
               <Label>Keep Until (optional)</Label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className={cn(
-                      "w-full justify-start text-left font-normal",
-                      !formData.keepUntil && "text-muted-foreground"
-                    )}
-                  >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {formData.keepUntil ? format(formData.keepUntil, "PPP") : "Pick a date"}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0">
-                  <Calendar
-                    mode="single"
-                    selected={formData.keepUntil || undefined}
-                    onSelect={(date) => setFormData({ ...formData, keepUntil: date || null })}
-                  />
-                </PopoverContent>
-              </Popover>
+              <DatePicker
+                date={formData.keepUntil}
+                onDateChange={(date) => setFormData({ ...formData, keepUntil: date })}
+                placeholder="Pick expiration date"
+              />
             </div>
           </div>
 

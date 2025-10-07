@@ -7,11 +7,8 @@ import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Input } from "@/components/ui/input"
-import { Calendar } from "@/components/ui/calendar"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { cn } from "@/lib/utils"
-import { CalendarIcon, Loader2, Star } from "lucide-react"
-import { format } from "date-fns"
+import { DatePicker } from "@/components/ui/date-picker"
+import { Loader2, Star } from "lucide-react"
 
 interface MovieEntryFormProps {
   selectedMovie: MovieSearchResult | null
@@ -140,28 +137,11 @@ export function MovieEntryForm({ selectedMovie, onSubmit, onCancel, initialData 
       <div className="space-y-4">
         <div className="space-y-2">
           <Label>Date Watched</Label>
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button
-                type="button"
-                variant="outline"
-                className={cn(
-                  "w-full justify-start text-left font-normal",
-                  !formData.dateWatched && "text-muted-foreground"
-                )}
-              >
-                <CalendarIcon className="mr-2 h-4 w-4" />
-                {formData.dateWatched ? format(formData.dateWatched, "PPP") : "Pick a date"}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0">
-              <Calendar
-                mode="single"
-                selected={formData.dateWatched || undefined}
-                onSelect={(date) => setFormData({ ...formData, dateWatched: date || null })}
-              />
-            </PopoverContent>
-          </Popover>
+          <DatePicker
+            date={formData.dateWatched}
+            onDateChange={(date) => setFormData({ ...formData, dateWatched: date })}
+            placeholder="Pick date watched"
+          />
         </div>
 
         <div className="space-y-2">

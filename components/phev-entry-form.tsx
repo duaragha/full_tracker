@@ -5,11 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { Calendar } from "@/components/ui/calendar"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { CalendarIcon } from "lucide-react"
-import { format } from "date-fns"
-import { cn } from "@/lib/utils"
+import { DatePicker } from "@/components/ui/date-picker"
 
 interface PhevEntryFormProps {
   activeCarId: number | null
@@ -73,28 +69,11 @@ export function PhevEntryForm({ activeCarId, onSubmit }: PhevEntryFormProps) {
       <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-4">
         <div className="space-y-2">
           <Label htmlFor="date">Date *</Label>
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button
-                type="button"
-                variant="outline"
-                className={cn(
-                  "w-full justify-start text-left font-normal",
-                  !formData.date && "text-muted-foreground"
-                )}
-              >
-                <CalendarIcon className="mr-2 h-4 w-4" />
-                {formData.date ? format(formData.date, "PPP") : "Pick a date"}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0">
-              <Calendar
-                mode="single"
-                selected={formData.date || undefined}
-                onSelect={(date) => setFormData({ ...formData, date: date || null })}
-              />
-            </PopoverContent>
-          </Popover>
+          <DatePicker
+            date={formData.date}
+            onDateChange={(date) => setFormData({ ...formData, date })}
+            placeholder="Pick entry date"
+          />
         </div>
 
         <div className="space-y-2">

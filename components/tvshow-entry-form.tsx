@@ -6,11 +6,8 @@ import { getTVShowDetails, getAllSeasons, getPosterUrl, getBackdropUrl } from "@
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { Calendar } from "@/components/ui/calendar"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { cn } from "@/lib/utils"
-import { CalendarIcon, Loader2 } from "lucide-react"
-import { format } from "date-fns"
+import { DatePicker } from "@/components/ui/date-picker"
+import { Loader2 } from "lucide-react"
 
 interface TVShowEntryFormProps {
   selectedShow: TVShowSearchResult | null
@@ -160,55 +157,20 @@ export function TVShowEntryForm({ selectedShow, onSubmit, onCancel, initialData 
       <div className="grid gap-4 md:grid-cols-2">
         <div className="space-y-2">
           <Label>Date I Started Watching</Label>
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button
-                type="button"
-                variant="outline"
-                className={cn(
-                  "w-full justify-start text-left font-normal",
-                  !formData.dateIStarted && "text-muted-foreground"
-                )}
-              >
-                <CalendarIcon className="mr-2 h-4 w-4" />
-                {formData.dateIStarted ? format(formData.dateIStarted, "PPP") : "Pick a date"}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0">
-              <Calendar
-                mode="single"
-                selected={formData.dateIStarted || undefined}
-                onSelect={(date) => setFormData({ ...formData, dateIStarted: date || null })}
-              />
-            </PopoverContent>
-          </Popover>
+          <DatePicker
+            date={formData.dateIStarted}
+            onDateChange={(date) => setFormData({ ...formData, dateIStarted: date })}
+            placeholder="Pick start date"
+          />
         </div>
 
         <div className="space-y-2">
           <Label>Date I Finished Watching</Label>
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button
-                type="button"
-                variant="outline"
-                className={cn(
-                  "w-full justify-start text-left font-normal",
-                  !formData.dateIEnded && "text-muted-foreground"
-                )}
-              >
-                <CalendarIcon className="mr-2 h-4 w-4" />
-                {formData.dateIEnded ? format(formData.dateIEnded, "PPP") : "Pick a date"}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0">
-              <Calendar
-                mode="single"
-                selected={formData.dateIEnded || undefined}
-                onSelect={(date) => setFormData({ ...formData, dateIEnded: date || null })}
-                disabled={(date) => formData.dateIStarted ? date < formData.dateIStarted : false}
-              />
-            </PopoverContent>
-          </Popover>
+          <DatePicker
+            date={formData.dateIEnded}
+            onDateChange={(date) => setFormData({ ...formData, dateIEnded: date })}
+            placeholder="Pick end date"
+          />
         </div>
       </div>
 

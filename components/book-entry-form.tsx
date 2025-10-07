@@ -8,11 +8,7 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
-import { Calendar } from "@/components/ui/calendar"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { cn } from "@/lib/utils"
-import { CalendarIcon } from "lucide-react"
-import { format } from "date-fns"
+import { DatePicker } from "@/components/ui/date-picker"
 
 interface BookEntryFormProps {
   selectedBook: BookSearchResult | null
@@ -173,55 +169,20 @@ export function BookEntryForm({ selectedBook, onSubmit, onCancel, initialData }:
 
         <div className="space-y-2">
           <Label>Date Started *</Label>
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button
-                type="button"
-                variant="outline"
-                className={cn(
-                  "w-full justify-start text-left font-normal",
-                  !formData.dateStarted && "text-muted-foreground"
-                )}
-              >
-                <CalendarIcon className="mr-2 h-4 w-4" />
-                {formData.dateStarted ? format(formData.dateStarted, "PPP") : "Pick a date"}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0">
-              <Calendar
-                mode="single"
-                selected={formData.dateStarted || undefined}
-                onSelect={(date) => setFormData({ ...formData, dateStarted: date || null })}
-              />
-            </PopoverContent>
-          </Popover>
+          <DatePicker
+            date={formData.dateStarted}
+            onDateChange={(date) => setFormData({ ...formData, dateStarted: date })}
+            placeholder="Pick start date"
+          />
         </div>
 
         <div className="space-y-2">
           <Label>Date Completed</Label>
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button
-                type="button"
-                variant="outline"
-                className={cn(
-                  "w-full justify-start text-left font-normal",
-                  !formData.dateCompleted && "text-muted-foreground"
-                )}
-              >
-                <CalendarIcon className="mr-2 h-4 w-4" />
-                {formData.dateCompleted ? format(formData.dateCompleted, "PPP") : "Pick a date"}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0">
-              <Calendar
-                mode="single"
-                selected={formData.dateCompleted || undefined}
-                onSelect={(date) => setFormData({ ...formData, dateCompleted: date || null })}
-                disabled={(date) => formData.dateStarted ? date < formData.dateStarted : false}
-              />
-            </PopoverContent>
-          </Popover>
+          <DatePicker
+            date={formData.dateCompleted}
+            onDateChange={(date) => setFormData({ ...formData, dateCompleted: date })}
+            placeholder="Pick completion date"
+          />
         </div>
       </div>
 

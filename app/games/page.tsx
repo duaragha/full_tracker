@@ -4,6 +4,7 @@ import * as React from "react"
 import { Plus, Pencil, Trash2 } from "lucide-react"
 import { Game, GameSearchResult } from "@/types/game"
 import { getGamesAction, addGameAction, updateGameAction, deleteGameAction } from "@/app/actions/games"
+import { getGameDetails } from "@/lib/api/games"
 import { GameSearch } from "@/components/game-search"
 import { GameEntryForm } from "@/components/game-entry-form"
 import { Button } from "@/components/ui/button"
@@ -32,8 +33,19 @@ export default function GamesPage() {
     loadGames()
   }, [])
 
-  const handleGameSelect = (game: GameSearchResult) => {
-    setSelectedGame(game)
+  const handleGameSelect = async (game: GameSearchResult) => {
+    // Fetch full game details including developer and genres
+    const fullDetails = await getGameDetails(game.id)
+    if (fullDetails) {
+      const enhancedGame = {
+        ...game,
+        developers: fullDetails.developers,
+        genres: fullDetails.genres,
+      }
+      setSelectedGame(enhancedGame as any)
+    } else {
+      setSelectedGame(game)
+    }
     setEditingGame(null)
     setShowForm(true)
   }

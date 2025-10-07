@@ -8,12 +8,8 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Calendar } from "@/components/ui/calendar"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Slider } from "@/components/ui/slider"
-import { cn } from "@/lib/utils"
-import { CalendarIcon } from "lucide-react"
-import { format } from "date-fns"
+import { DatePicker } from "@/components/ui/date-picker"
 
 interface GameEntryFormProps {
   selectedGame: GameSearchResult | null
@@ -25,9 +21,9 @@ interface GameEntryFormProps {
 export function GameEntryForm({ selectedGame, onSubmit, onCancel, initialData }: GameEntryFormProps) {
   const [formData, setFormData] = React.useState({
     title: initialData?.title || selectedGame?.name || "",
-    publisher: initialData?.publisher || selectedGame?.publishers?.[0]?.name || "",
-    developer: initialData?.developer || selectedGame?.developers?.[0]?.name || "",
-    genres: initialData?.genres || [],
+    publisher: initialData?.publisher || (selectedGame as any)?.publishers?.[0]?.name || "",
+    developer: initialData?.developer || (selectedGame as any)?.developers?.[0]?.name || "",
+    genres: initialData?.genres || (selectedGame as any)?.genres?.map((g: any) => g.name) || [],
     releaseDate: initialData?.releaseDate || selectedGame?.released || "",
     coverImage: initialData?.coverImage || selectedGame?.background_image || "",
     status: initialData?.status || "Playing" as const,
@@ -104,6 +100,25 @@ export function GameEntryForm({ selectedGame, onSubmit, onCancel, initialData }:
         </div>
 
         <div className="space-y-2">
+          <Label htmlFor="developer">Developer</Label>
+          <Input
+            id="developer"
+            value={formData.developer}
+            onChange={(e) => setFormData({ ...formData, developer: e.target.value })}
+          />
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="genres">Genres</Label>
+          <Input
+            id="genres"
+            value={formData.genres.join(', ')}
+            onChange={(e) => setFormData({ ...formData, genres: e.target.value.split(',').map(g => g.trim()).filter(g => g) })}
+            placeholder="Action, RPG, Adventure"
+          />
+        </div>
+
+        <div className="space-y-2">
           <Label htmlFor="status">Status *</Label>
           <Select
             value={formData.status}
@@ -169,55 +184,20 @@ export function GameEntryForm({ selectedGame, onSubmit, onCancel, initialData }:
 
         <div className="space-y-2">
           <Label>Date Started *</Label>
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button
-                type="button"
-                variant="outline"
-                className={cn(
-                  "w-full justify-start text-left font-normal",
-                  !formData.dateStarted && "text-muted-foreground"
-                )}
-              >
-                <CalendarIcon className="mr-2 h-4 w-4" />
-                {formData.dateStarted ? format(formData.dateStarted, "PPP") : "Pick a date"}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0">
-              <Calendar
-                mode="single"
-                selected={formData.dateStarted || undefined}
-                onSelect={(date) => setFormData({ ...formData, dateStarted: date || null })}
-              />
-            </PopoverContent>
-          </Popover>
+          <DatePicker
+            date={formData.dateStarted}
+            onDateChange={(date) => setFormData({ ...formData, dateStarted: date })}
+            placeholder="Pick start date"
+          />
         </div>
 
         <div className="space-y-2">
           <Label>Date Completed</Label>
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button
-                type="button"
-                variant="outline"
-                className={cn(
-                  "w-full justify-start text-left font-normal",
-                  !formData.dateCompleted && "text-muted-foreground"
-                )}
-              >
-                <CalendarIcon className="mr-2 h-4 w-4" />
-                {formData.dateCompleted ? format(formData.dateCompleted, "PPP") : "Pick a date"}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0">
-              <Calendar
-                mode="single"
-                selected={formData.dateCompleted || undefined}
-                onSelect={(date) => setFormData({ ...formData, dateCompleted: date || null })}
-                disabled={(date) => formData.dateStarted ? date < formData.dateStarted : false}
-              />
-            </PopoverContent>
-          </Popover>
+          <DatePicker
+            date={formData.dateCompleted}
+            onDateChange={(date) => setFormData({ ...formData, dateCompleted: date })}
+            placeholder="Pick completion date"
+          />
         </div>
 
         <div className="space-y-2">
