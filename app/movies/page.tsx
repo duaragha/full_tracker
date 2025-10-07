@@ -3,14 +3,7 @@
 import * as React from "react"
 import { Plus, Pencil, Trash2, Star } from "lucide-react"
 import { Movie, MovieSearchResult } from "@/types/movie"
-import {
-  getMovies,
-  addMovie,
-  updateMovie,
-  deleteMovie,
-  calculateTotalRuntime,
-  calculateAverageRating,
-} from "@/lib/db/movies-store"
+import { getMoviesAction, addMovieAction, updateMovieAction, deleteMovieAction } from "@/app/actions/movies"
 import { MovieSearch } from "@/components/movie-search"
 import { MovieEntryForm } from "@/components/movie-entry-form"
 import { Button } from "@/components/ui/button"
@@ -32,7 +25,7 @@ export default function MoviesPage() {
 
   React.useEffect(() => {
     const loadMovies = async () => {
-      const data = await getMovies()
+      const data = await getMoviesAction()
       setMovies(data)
     }
     loadMovies()
@@ -46,11 +39,11 @@ export default function MoviesPage() {
 
   const handleSubmit = async (movieData: Omit<Movie, 'id' | 'createdAt' | 'updatedAt'>) => {
     if (editingMovie) {
-      await updateMovie(Number(editingMovie.id), movieData)
+      await updateMovieAction(Number(editingMovie.id), movieData)
     } else {
-      await addMovie(movieData)
+      await addMovieAction(movieData)
     }
-    const data = await getMovies()
+    const data = await getMoviesAction()
     setMovies(data)
     setShowForm(false)
     setSelectedMovie(null)
@@ -65,8 +58,8 @@ export default function MoviesPage() {
 
   const handleDelete = async (id: string) => {
     if (confirm("Are you sure you want to delete this movie?")) {
-      await deleteMovie(Number(id))
-      const data = await getMovies()
+      await deleteMovieAction(Number(id))
+      const data = await getMoviesAction()
       setMovies(data)
     }
   }
@@ -112,8 +105,9 @@ export default function MoviesPage() {
   }, [movies, searchQuery, sortBy, sortOrder])
 
   const totalMovies = movies.length
-  const totalRuntime = calculateTotalRuntime(movies)
-  const avgRating = calculateAverageRating(movies)
+  const totalRuntime = movies.reduce((total, movie) => total + (movie.runtime || 0), 0)
+  const rated = movies.filter(m => m.rating)
+  const avgRating = rated.length > 0 ? Math.round((rated.reduce((total, movie) => total + (movie.rating || 0), 0) / rated.length) * 10) : 0
   const moviesThisYear = movies.filter(m => {
     const watchedDate = m.dateWatched ? new Date(m.dateWatched) : null
     return watchedDate && watchedDate.getFullYear() === new Date().getFullYear()

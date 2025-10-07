@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import { InventoryItem, Area, Container } from "@/types/inventory"
-import { addInventoryItem, updateInventoryItem } from "@/lib/db/inventory-store"
+import { addInventoryItemActionAction, updateInventoryItemActionAction } from "@/app/actions/inventory"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -110,9 +110,9 @@ export function ItemForm({ open, onOpenChange, onItemAdded, areas, containers, s
     }
 
     if (editingItem) {
-      await updateInventoryItem(Number(editingItem.id), itemData)
+      await updateInventoryItemAction(Number(editingItem.id), itemData)
     } else {
-      await addInventoryItem(itemData)
+      await addInventoryItemAction(itemData)
     }
 
     onItemAdded()

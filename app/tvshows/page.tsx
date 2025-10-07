@@ -3,15 +3,7 @@
 import * as React from "react"
 import { Plus, Pencil, Trash2, List } from "lucide-react"
 import { TVShow, TVShowSearchResult } from "@/types/tvshow"
-import {
-  getTVShows,
-  addTVShow,
-  updateTVShow,
-  deleteTVShow,
-  calculateTotalEpisodes,
-  calculateTotalMinutes,
-  calculateTotalDays,
-} from "@/lib/db/tvshows-store"
+import { getTVShowsAction, addTVShowAction, updateTVShowAction, deleteTVShowAction } from "@/app/actions/tvshows"
 import { TVShowSearch } from "@/components/tvshow-search"
 import { TVShowEntryForm } from "@/components/tvshow-entry-form"
 import { EpisodeList } from "@/components/episode-list"
@@ -35,7 +27,7 @@ export default function TVShowsPage() {
 
   React.useEffect(() => {
     const loadTVShows = async () => {
-      const data = await getTVShows()
+      const data = await getTVShowsAction()
       setTVShows(data)
     }
     loadTVShows()
@@ -49,11 +41,11 @@ export default function TVShowsPage() {
 
   const handleSubmit = async (showData: Omit<TVShow, 'id' | 'createdAt' | 'updatedAt'>) => {
     if (editingShow) {
-      await updateTVShow(Number(editingShow.id), showData)
+      await updateTVShowAction(Number(editingShow.id), showData)
     } else {
-      await addTVShow(showData)
+      await addTVShowAction(showData)
     }
-    const data = await getTVShows()
+    const data = await getTVShowsAction()
     setTVShows(data)
     setShowForm(false)
     setSelectedShow(null)
@@ -68,8 +60,8 @@ export default function TVShowsPage() {
 
   const handleDelete = async (id: string) => {
     if (confirm("Are you sure you want to delete this TV show?")) {
-      await deleteTVShow(Number(id))
-      const data = await getTVShows()
+      await deleteTVShowAction(Number(id))
+      const data = await getTVShowsAction()
       setTVShows(data)
     }
   }
@@ -124,9 +116,9 @@ export default function TVShowsPage() {
   }, [tvshows, searchQuery, sortBy, sortOrder])
 
   const totalShows = tvshows.length
-  const totalEpisodesWatched = calculateTotalEpisodes(tvshows)
-  const totalMinutesWatched = calculateTotalMinutes(tvshows)
-  const totalDaysTracking = calculateTotalDays(tvshows)
+  const totalEpisodesWatched = tvshows.reduce((total, show) => total + (show.watchedEpisodes || 0), 0)
+  const totalMinutesWatched = tvshows.reduce((total, show) => total + (show.totalMinutes || 0), 0)
+  const totalDaysTracking = tvshows.reduce((total, show) => total + (show.daysTracking || 0), 0)
   const totalHours = Math.floor(totalMinutesWatched / 60)
   const remainingMinutes = totalMinutesWatched % 60
 

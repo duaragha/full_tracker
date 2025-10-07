@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import { Area } from "@/types/inventory"
-import { addArea, updateArea, deleteArea } from "@/lib/db/inventory-store"
+import { addAreaActionAction, updateAreaActionAction } from "@/app/actions/inventory"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -37,9 +37,9 @@ export function AreaManager({ open, onOpenChange, onAreaAdded, editingArea }: Ar
     e.preventDefault()
 
     if (editingArea) {
-      await updateArea(Number(editingArea.id), formData)
+      await updateAreaAction(Number(editingArea.id), formData)
     } else {
-      await addArea(formData)
+      await addAreaAction(formData)
     }
 
     onAreaAdded()

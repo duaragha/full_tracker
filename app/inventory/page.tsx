@@ -4,15 +4,13 @@ import * as React from "react"
 import { Plus, Pencil, Trash2, ChevronRight, ChevronDown, Package as PackageIcon } from "lucide-react"
 import { Area, Container, InventoryItem } from "@/types/inventory"
 import {
-  getAreas,
-  getContainers,
-  getInventoryItems,
-  deleteArea,
-  deleteContainer,
-  deleteInventoryItem,
-  calculateTotalValue,
-  calculateTotalSoldValue,
-} from "@/lib/db/inventory-store"
+  getAreasAction,
+  getContainersAction,
+  getInventoryItemsAction,
+  deleteAreaAction,
+  deleteContainerAction,
+  deleteInventoryItemAction,
+} from "@/app/actions/inventory"
 import { AreaManager } from "@/components/area-manager"
 import { ContainerManager } from "@/components/container-manager"
 import { ItemForm } from "@/components/item-form"
@@ -47,9 +45,9 @@ export default function InventoryPage() {
 
   const loadData = async () => {
     const [areasData, containersData, itemsData] = await Promise.all([
-      getAreas(),
-      getContainers(),
-      getInventoryItems()
+      getAreasAction(),
+      getContainersAction(),
+      getInventoryItemsAction()
     ])
     setAreas(areasData)
     setContainers(containersData)
@@ -102,7 +100,7 @@ export default function InventoryPage() {
 
   const totalItems = items.length
   const itemsUsedInLastYear = items.filter(i => i.usedInLastYear).length
-  const totalCost = calculateTotalValue(items)
+  const totalCost = items.filter(i => i.kept).reduce((total, item) => total + (item.cost || 0), 0)
   const giftsReceived = items.filter(i => i.isGift).length
   const itemsToDiscard = items.filter(i => !i.usedInLastYear && i.kept).length
 
@@ -135,7 +133,7 @@ export default function InventoryPage() {
 
   const handleDeleteArea = async (id: string) => {
     if (confirm("Delete this area and all its containers and items?")) {
-      await deleteArea(Number(id))
+      await deleteAreaAction(Number(id))
       await loadData()
       if (selectedArea === id) {
         setSelectedArea(null)
@@ -157,7 +155,7 @@ export default function InventoryPage() {
 
   const handleDeleteContainer = async (id: string) => {
     if (confirm("Delete this container and all its items?")) {
-      await deleteContainer(Number(id))
+      await deleteContainerAction(Number(id))
       await loadData()
       if (selectedContainer === id) {
         setSelectedContainer(null)
@@ -177,7 +175,7 @@ export default function InventoryPage() {
 
   const handleDeleteItem = async (id: string) => {
     if (confirm("Delete this item?")) {
-      await deleteInventoryItem(Number(id))
+      await deleteInventoryItemAction(Number(id))
       await loadData()
     }
   }

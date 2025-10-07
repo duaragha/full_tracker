@@ -3,7 +3,7 @@
 import * as React from "react"
 import { Plus, Pencil, Trash2 } from "lucide-react"
 import { Book, BookSearchResult } from "@/types/book"
-import { getBooks, addBook, updateBook, deleteBook, calculateTotalPages, calculateTotalMinutes, calculateTotalDays } from "@/lib/db/books-store"
+import { getBooksAction, addBookAction, updateBookAction, deleteBookAction } from "@/app/actions/books"
 import { BookSearch } from "@/components/book-search"
 import { BookEntryForm } from "@/components/book-entry-form"
 import { Button } from "@/components/ui/button"
@@ -26,7 +26,7 @@ export default function BooksPage() {
 
   React.useEffect(() => {
     const loadBooks = async () => {
-      const data = await getBooks()
+      const data = await getBooksAction()
       setBooks(data)
     }
     loadBooks()
@@ -40,11 +40,11 @@ export default function BooksPage() {
 
   const handleSubmit = async (bookData: Omit<Book, 'id' | 'createdAt' | 'updatedAt'>) => {
     if (editingBook) {
-      await updateBook(Number(editingBook.id), bookData)
+      await updateBookAction(Number(editingBook.id), bookData)
     } else {
-      await addBook(bookData)
+      await addBookAction(bookData)
     }
-    const data = await getBooks()
+    const data = await getBooksAction()
     setBooks(data)
     setShowForm(false)
     setSelectedBook(null)
@@ -59,8 +59,8 @@ export default function BooksPage() {
 
   const handleDelete = async (id: string) => {
     if (confirm("Are you sure you want to delete this book?")) {
-      await deleteBook(Number(id))
-      const data = await getBooks()
+      await deleteBookAction(Number(id))
+      const data = await getBooksAction()
       setBooks(data)
     }
   }

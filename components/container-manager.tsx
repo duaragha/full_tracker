@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import { Container } from "@/types/inventory"
-import { addContainer, updateContainer } from "@/lib/db/inventory-store"
+import { addContainerActionAction, updateContainerActionAction } from "@/app/actions/inventory"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -40,9 +40,9 @@ export function ContainerManager({ open, onOpenChange, onContainerAdded, areaId,
     e.preventDefault()
 
     if (editingContainer) {
-      await updateContainer(Number(editingContainer.id), formData)
+      await updateContainerAction(Number(editingContainer.id), formData)
     } else {
-      await addContainer({ ...formData, areaId })
+      await addContainerAction({ ...formData, areaId })
     }
 
     onContainerAdded()

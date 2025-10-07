@@ -3,7 +3,7 @@
 import * as React from "react"
 import { Plus, Pencil, Trash2 } from "lucide-react"
 import { Game, GameSearchResult } from "@/types/game"
-import { getGames, addGame, updateGame, deleteGame, calculateTotalDays, calculateTotalHours, calculateAveragePercentage } from "@/lib/db/games-store"
+import { getGamesAction, addGameAction, updateGameAction, deleteGameAction } from "@/app/actions/games"
 import { GameSearch } from "@/components/game-search"
 import { GameEntryForm } from "@/components/game-entry-form"
 import { Button } from "@/components/ui/button"
@@ -26,7 +26,7 @@ export default function GamesPage() {
 
   React.useEffect(() => {
     const loadGames = async () => {
-      const data = await getGames()
+      const data = await getGamesAction()
       setGames(data)
     }
     loadGames()
@@ -40,11 +40,11 @@ export default function GamesPage() {
 
   const handleSubmit = async (gameData: Omit<Game, 'id' | 'createdAt' | 'updatedAt'>) => {
     if (editingGame) {
-      await updateGame(Number(editingGame.id), gameData)
+      await updateGameAction(Number(editingGame.id), gameData)
     } else {
-      await addGame(gameData)
+      await addGameAction(gameData)
     }
-    const data = await getGames()
+    const data = await getGamesAction()
     setGames(data)
     setShowForm(false)
     setSelectedGame(null)
@@ -59,8 +59,8 @@ export default function GamesPage() {
 
   const handleDelete = async (id: string) => {
     if (confirm("Are you sure you want to delete this game?")) {
-      await deleteGame(Number(id))
-      const data = await getGames()
+      await deleteGameAction(Number(id))
+      const data = await getGamesAction()
       setGames(data)
     }
   }
@@ -102,9 +102,9 @@ export default function GamesPage() {
     return sorted
   }, [games, statusFilter, searchQuery, sortBy, sortOrder])
 
-  const totalDays = calculateTotalDays(games)
-  const totalHours = calculateTotalHours(games)
-  const avgPercentage = calculateAveragePercentage(games)
+  const totalDays = games.reduce((sum, g) => sum + g.daysPlayed, 0)
+  const totalHours = games.reduce((sum, g) => sum + g.hoursPlayed + g.minutesPlayed / 60, 0)
+  const avgPercentage = games.length > 0 ? Math.round(games.reduce((sum, g) => sum + g.percentage, 0) / games.length) : 0
 
   const getStatusColor = (status: Game['status']) => {
     switch (status) {

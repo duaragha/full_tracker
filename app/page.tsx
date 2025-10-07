@@ -3,10 +3,10 @@
 import * as React from "react"
 import Link from "next/link"
 import { Gamepad2, BookOpen, TrendingUp, Clock, Tv, Film } from "lucide-react"
-import { getGames, calculateTotalDays as calculateGameDays, calculateTotalHours } from "@/lib/db/games-store"
-import { getBooks, calculateTotalPages, calculateTotalMinutes, calculateTotalDays as calculateBookDays } from "@/lib/db/books-store"
-import { getTVShows, calculateTotalEpisodes as calculateTotalEpisodesWatched, calculateTotalMinutes as calculateTotalMinutesWatched, calculateTotalDays as calculateTotalDaysTracking } from "@/lib/db/tvshows-store"
-import { getMovies, calculateTotalRuntime } from "@/lib/db/movies-store"
+import { getGamesAction } from "@/app/actions/games"
+import { getBooksAction } from "@/app/actions/books"
+import { getTVShowsAction } from "@/app/actions/tvshows"
+import { getMoviesAction } from "@/app/actions/movies"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
@@ -21,10 +21,10 @@ export default function Dashboard() {
   React.useEffect(() => {
     const loadData = async () => {
       const [gamesData, booksData, tvshowsData, moviesData] = await Promise.all([
-        getGames(),
-        getBooks(),
-        getTVShows(),
-        getMovies()
+        getGamesAction(),
+        getBooksAction(),
+        getTVShowsAction(),
+        getMoviesAction()
       ])
       setGames(gamesData)
       setBooks(booksData)
@@ -38,15 +38,15 @@ export default function Dashboard() {
   const booksCount = books.length
   const tvshowsCount = tvshows.length
   const moviesCount = movies.length
-  const totalGameHours = calculateTotalHours(games)
-  const totalGameDays = calculateGameDays(games)
-  const totalBookPages = calculateTotalPages(books)
-  const totalBookMinutes = calculateTotalMinutes(books)
-  const totalBookDays = calculateBookDays(games)
-  const totalTVEpisodes = calculateTotalEpisodesWatched(tvshows)
-  const totalTVMinutes = calculateTotalMinutesWatched(tvshows)
-  const totalTVDays = calculateTotalDaysTracking(tvshows)
-  const totalMovieRuntime = calculateTotalRuntime(movies)
+  const totalGameHours = games.reduce((sum, g) => sum + g.hoursPlayed + g.minutesPlayed / 60, 0)
+  const totalGameDays = games.reduce((sum, g) => sum + g.daysPlayed, 0)
+  const totalBookPages = books.reduce((total, book) => total + (book.pages || 0), 0)
+  const totalBookMinutes = books.reduce((total, book) => total + (book.hours * 60 + book.minutes || 0), 0)
+  const totalBookDays = books.reduce((sum, b) => sum + b.daysRead, 0)
+  const totalTVEpisodes = tvshows.reduce((total, show) => total + (show.watchedEpisodes || 0), 0)
+  const totalTVMinutes = tvshows.reduce((total, show) => total + (show.totalMinutes || 0), 0)
+  const totalTVDays = tvshows.reduce((total, show) => total + (show.daysTracking || 0), 0)
+  const totalMovieRuntime = movies.reduce((total, movie) => total + (movie.runtime || 0), 0)
 
   const gameStatusData = [
     { status: 'Playing', count: games.filter(g => g.status === 'Playing').length, color: '#3b82f6' },
