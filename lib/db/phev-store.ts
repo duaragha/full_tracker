@@ -1,10 +1,13 @@
 import { Pool } from 'pg'
 import { Car, PhevEntry, PhevStats, CarSummary, MonthlyGroup, YearlyGroup } from '@/types/phev'
 
-// Create a connection pool
+// Create a connection pool with lazy connection
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL || process.env.POSTGRES_URL,
-  ssl: false // Railway internal network doesn't need SSL
+  ssl: false, // Railway internal network doesn't need SSL
+  max: 20,
+  idleTimeoutMillis: 30000,
+  connectionTimeoutMillis: 10000,
 })
 
 // Helper to normalize date fields to strings and numbers
