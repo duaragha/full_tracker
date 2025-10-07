@@ -240,13 +240,12 @@ export function GameEntryForm({ selectedGame, onSubmit, onCancel, initialData }:
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="notes">Notes *</Label>
+        <Label htmlFor="notes">Notes</Label>
         <Textarea
           id="notes"
           value={formData.notes}
           onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
           rows={4}
-          required
         />
       </div>
 
