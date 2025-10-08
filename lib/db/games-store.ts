@@ -123,7 +123,7 @@ export async function updateGame(id: number, game: Partial<Game>): Promise<void>
       game.console,
       game.store,
       game.price,
-      game.isGift !== undefined ? game.isGift : null,
+      game.isGift,
       game.notes,
       id,
     ]

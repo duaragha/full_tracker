@@ -39,7 +39,7 @@ export async function bulkImportInventoryAction(items: InventoryImportItem[]) {
       try {
         // Check if area exists
         const existing = await pool.query(
-          'SELECT id FROM areas WHERE name = $1',
+          'SELECT id FROM inventory_areas WHERE name = $1',
           [areaName]
         )
 
@@ -48,7 +48,7 @@ export async function bulkImportInventoryAction(items: InventoryImportItem[]) {
         } else {
           // Create new area
           const result = await pool.query(
-            'INSERT INTO areas (name) VALUES ($1) RETURNING id',
+            'INSERT INTO inventory_areas (name) VALUES ($1) RETURNING id',
             [areaName]
           )
           areaIds.set(areaName, result.rows[0].id)
@@ -74,7 +74,7 @@ export async function bulkImportInventoryAction(items: InventoryImportItem[]) {
       try {
         // Check if container exists in this area
         const existing = await pool.query(
-          'SELECT id FROM containers WHERE name = $1 AND area_id = $2',
+          'SELECT id FROM inventory_containers WHERE name = $1 AND area_id = $2',
           [containerName, areaId]
         )
 
@@ -83,7 +83,7 @@ export async function bulkImportInventoryAction(items: InventoryImportItem[]) {
         } else {
           // Create new container
           const result = await pool.query(
-            'INSERT INTO containers (name, area_id) VALUES ($1, $2) RETURNING id',
+            'INSERT INTO inventory_containers (name, area_id) VALUES ($1, $2) RETURNING id',
             [containerName, areaId]
           )
           containerIds.set(key, result.rows[0].id)
@@ -143,8 +143,8 @@ export async function wipeInventoryAction() {
   try {
     // Delete in order: items -> containers -> areas
     await pool.query('DELETE FROM inventory_items')
-    await pool.query('DELETE FROM containers')
-    await pool.query('DELETE FROM areas')
+    await pool.query('DELETE FROM inventory_containers')
+    await pool.query('DELETE FROM inventory_areas')
 
     return { success: true, message: 'All inventory data cleared' }
   } catch (error) {
