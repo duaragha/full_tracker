@@ -11,17 +11,22 @@ const pool = new Pool({
 
 function normalizeInventoryItem(item: any): InventoryItem {
   return {
-    ...item,
+    id: String(item.id),
+    name: item.name,
     usedInLastYear: Boolean(item.used_in_last_year),
     location: item.location || { areaId: '', containerId: '' },
-    cost: Number(item.cost),
+    type: item.type || '',
+    cost: Number(item.cost || 0),
     isGift: Boolean(item.is_gift),
-    giftFrom: item.gift_from,
-    purchasedWhere: item.purchased_where,
-    purchasedWhen: item.purchased_when instanceof Date ? item.purchased_when.toISOString().split('T')[0] : item.purchased_when,
+    giftFrom: item.gift_from || null,
+    purchasedWhere: item.purchased_where || '',
+    purchasedWhen: item.purchased_when instanceof Date ? item.purchased_when.toISOString().split('T')[0] : item.purchased_when || '',
     keepUntil: item.keep_until instanceof Date ? item.keep_until.toISOString().split('T')[0] : item.keep_until,
+    kept: Boolean(item.kept),
     soldDate: item.sold_date instanceof Date ? item.sold_date.toISOString().split('T')[0] : item.sold_date,
     soldPrice: item.sold_price ? Number(item.sold_price) : null,
+    notes: item.notes || '',
+    photo: item.photo,
     createdAt: item.created_at,
     updatedAt: item.updated_at,
   }
@@ -29,8 +34,11 @@ function normalizeInventoryItem(item: any): InventoryItem {
 
 function normalizeContainer(container: any): Container {
   return {
-    ...container,
-    areaId: container.area_id,
+    id: String(container.id),
+    name: container.name,
+    type: container.type || '',
+    color: container.color,
+    areaId: String(container.area_id),
     createdAt: container.created_at,
     updatedAt: container.updated_at,
   }
@@ -38,7 +46,9 @@ function normalizeContainer(container: any): Container {
 
 function normalizeArea(area: any): Area {
   return {
-    ...area,
+    id: String(area.id),
+    name: area.name,
+    type: area.type || '',
     createdAt: area.created_at,
     updatedAt: area.updated_at,
   }
