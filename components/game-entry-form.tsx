@@ -157,19 +157,20 @@ export function GameEntryForm({ selectedGame, onSubmit, onCancel, initialData }:
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="hoursPlayed">Hours Played *</Label>
+          <Label htmlFor="hoursPlayed">Hours Played {formData.status !== 'Playing' && '*'}</Label>
           <Input
             id="hoursPlayed"
             type="number"
             min="0"
-            value={formData.hoursPlayed}
-            onChange={(e) => setFormData({ ...formData, hoursPlayed: parseInt(e.target.value) || 0 })}
-            required
+            value={formData.hoursPlayed === 0 ? '' : formData.hoursPlayed}
+            onChange={(e) => setFormData({ ...formData, hoursPlayed: e.target.value === '' ? 0 : parseInt(e.target.value) || 0 })}
+            placeholder="0"
+            required={formData.status !== 'Playing'}
           />
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="minutesPlayed">Minutes Played *</Label>
+          <Label htmlFor="minutesPlayed">Minutes Played {formData.status !== 'Playing' && '*'}</Label>
           <Input
             id="minutesPlayed"
             type="number"
@@ -178,7 +179,7 @@ export function GameEntryForm({ selectedGame, onSubmit, onCancel, initialData }:
             value={formData.minutesPlayed === 0 ? '' : formData.minutesPlayed}
             onChange={(e) => setFormData({ ...formData, minutesPlayed: e.target.value === '' ? 0 : parseInt(e.target.value) || 0 })}
             placeholder="0"
-            required
+            required={formData.status !== 'Playing'}
           />
         </div>
 
@@ -218,8 +219,9 @@ export function GameEntryForm({ selectedGame, onSubmit, onCancel, initialData }:
             type="number"
             min="0"
             step="0.01"
-            value={formData.price}
-            onChange={(e) => setFormData({ ...formData, price: parseFloat(e.target.value) || 0 })}
+            value={formData.price === 0 ? '' : formData.price}
+            onChange={(e) => setFormData({ ...formData, price: e.target.value === '' ? 0 : parseFloat(e.target.value) || 0 })}
+            placeholder="0.00"
             required
           />
         </div>
