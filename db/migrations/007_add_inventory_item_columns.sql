@@ -1,0 +1,10 @@
+-- Add missing columns to inventory_items table
+ALTER TABLE inventory_items
+  ADD COLUMN IF NOT EXISTS type TEXT,
+  ADD COLUMN IF NOT EXISTS area_id INTEGER REFERENCES inventory_areas(id) ON DELETE CASCADE,
+  ADD COLUMN IF NOT EXISTS price NUMERIC(10, 2),
+  ADD COLUMN IF NOT EXISTS is_gift BOOLEAN DEFAULT FALSE,
+  ADD COLUMN IF NOT EXISTS gift_recipient TEXT,
+  ADD COLUMN IF NOT EXISTS purchased_where TEXT,
+  ADD COLUMN IF NOT EXISTS purchased_when DATE,
+  ADD COLUMN IF NOT EXISTS keep_until DATE;
