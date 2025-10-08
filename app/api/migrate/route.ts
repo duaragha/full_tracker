@@ -7,11 +7,42 @@ const pool = new Pool({
 
 export async function GET() {
   try {
+    // Align inventory areas with application fields
+    await pool.query(`
+      ALTER TABLE inventory_areas
+        ADD COLUMN IF NOT EXISTS type TEXT;
+
+      UPDATE inventory_areas
+      SET type = COALESCE(type, 'Room');
+
+      ALTER TABLE inventory_areas
+        ALTER COLUMN type SET DEFAULT 'Room';
+    `)
+
+    // Align inventory containers with application fields
+    await pool.query(`
+      ALTER TABLE inventory_containers
+        ADD COLUMN IF NOT EXISTS type TEXT,
+        ADD COLUMN IF NOT EXISTS color TEXT;
+
+      UPDATE inventory_containers
+      SET type = COALESCE(type, 'Box');
+
+      UPDATE inventory_containers
+      SET color = COALESCE(color, '');
+
+      ALTER TABLE inventory_containers
+        ALTER COLUMN type SET DEFAULT 'Box';
+
+      ALTER TABLE inventory_containers
+        ALTER COLUMN color SET DEFAULT '';
+    `)
+
     // Run migration 007 - Add all missing inventory columns
     await pool.query(`
       ALTER TABLE inventory_items
         ADD COLUMN IF NOT EXISTS used_in_last_year BOOLEAN DEFAULT FALSE,
-        ADD COLUMN IF NOT EXISTS location JSONB,
+        ADD COLUMN IF NOT EXISTS location JSONB DEFAULT '{"areaId":"","containerId":""}'::jsonb,
         ADD COLUMN IF NOT EXISTS type TEXT,
         ADD COLUMN IF NOT EXISTS cost NUMERIC(10, 2) DEFAULT 0,
         ADD COLUMN IF NOT EXISTS is_gift BOOLEAN DEFAULT FALSE,
@@ -23,13 +54,49 @@ export async function GET() {
         ADD COLUMN IF NOT EXISTS sold_date DATE,
         ADD COLUMN IF NOT EXISTS sold_price NUMERIC(10, 2),
         ADD COLUMN IF NOT EXISTS photo TEXT;
-    `)
 
-    // Update existing rows to have default location if null
-    await pool.query(`
       UPDATE inventory_items
-      SET location = '{"areaId":"","containerId":""}'
-      WHERE location IS NULL;
+      SET location = COALESCE(location, '{"areaId":"","containerId":""}'::jsonb);
+
+      UPDATE inventory_items
+      SET cost = COALESCE(cost, 0);
+
+      UPDATE inventory_items
+      SET used_in_last_year = COALESCE(used_in_last_year, FALSE);
+
+      UPDATE inventory_items
+      SET is_gift = COALESCE(is_gift, FALSE);
+
+      UPDATE inventory_items
+      SET kept = COALESCE(kept, TRUE);
+
+      DO $$
+      BEGIN
+        IF EXISTS (
+          SELECT 1
+          FROM information_schema.columns
+          WHERE table_schema = 'public'
+            AND table_name = 'inventory_items'
+            AND column_name = 'price'
+        ) THEN
+          EXECUTE 'UPDATE inventory_items SET cost = COALESCE(cost, price)';
+          EXECUTE 'ALTER TABLE inventory_items DROP COLUMN price';
+        END IF;
+      END $$;
+
+      DO $$
+      BEGIN
+        IF EXISTS (
+          SELECT 1
+          FROM information_schema.columns
+          WHERE table_schema = 'public'
+            AND table_name = 'inventory_items'
+            AND column_name = 'gift_recipient'
+        ) THEN
+          EXECUTE 'UPDATE inventory_items SET gift_from = COALESCE(gift_from, gift_recipient)';
+          EXECUTE 'ALTER TABLE inventory_items DROP COLUMN gift_recipient';
+        END IF;
+      END $$;
     `)
 
     // Run migration 006 (is_gift for games)

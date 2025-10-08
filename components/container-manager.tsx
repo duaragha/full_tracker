@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import { Container } from "@/types/inventory"
-import { addContainerActionAction, updateContainerActionAction } from "@/app/actions/inventory"
+import { addContainerAction, updateContainerAction } from "@/app/actions/inventory"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
