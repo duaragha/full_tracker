@@ -262,7 +262,7 @@ export default function InventoryPage() {
         </Card>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-4">
+      <div className="grid gap-6 md:grid-cols-5">
         {/* Left Sidebar - Tree View */}
         <Card className="md:col-span-1">
           <CardHeader>
@@ -407,7 +407,7 @@ export default function InventoryPage() {
         </Card>
 
         {/* Main Content - Items Table */}
-        <Card className="md:col-span-3">
+        <Card className="md:col-span-4">
           <CardHeader>
             <div className="flex flex-col gap-4">
               <div className="flex items-center justify-between">
