@@ -47,14 +47,14 @@ function normalizeArea(area: any): Area {
 // Inventory Items
 export async function getInventoryItems(): Promise<InventoryItem[]> {
   const result = await pool.query<any>(
-    'SELECT * FROM inventory ORDER BY created_at DESC'
+    'SELECT * FROM inventory_items ORDER BY created_at DESC'
   )
   return result.rows.map(normalizeInventoryItem)
 }
 
 export async function addInventoryItem(item: Omit<InventoryItem, 'id' | 'createdAt' | 'updatedAt'>): Promise<InventoryItem> {
   const result = await pool.query<any>(
-    `INSERT INTO inventory (
+    `INSERT INTO inventory_items (
       name, used_in_last_year, location, type, cost, is_gift, gift_from,
       purchased_where, purchased_when, keep_until, kept, sold_date,
       sold_price, notes, photo, created_at, updated_at
@@ -83,7 +83,7 @@ export async function addInventoryItem(item: Omit<InventoryItem, 'id' | 'created
 
 export async function updateInventoryItem(id: number, item: Partial<InventoryItem>): Promise<void> {
   await pool.query(
-    `UPDATE inventory SET
+    `UPDATE inventory_items SET
       name = COALESCE($1, name),
       used_in_last_year = COALESCE($2, used_in_last_year),
       location = COALESCE($3, location),
@@ -123,20 +123,20 @@ export async function updateInventoryItem(id: number, item: Partial<InventoryIte
 }
 
 export async function deleteInventoryItem(id: number): Promise<void> {
-  await pool.query('DELETE FROM inventory WHERE id = $1', [id])
+  await pool.query('DELETE FROM inventory_items WHERE id = $1', [id])
 }
 
 // Containers
 export async function getContainers(): Promise<Container[]> {
   const result = await pool.query<any>(
-    'SELECT * FROM containers ORDER BY created_at DESC'
+    'SELECT * FROM inventory_containers ORDER BY created_at DESC'
   )
   return result.rows.map(normalizeContainer)
 }
 
 export async function addContainer(container: Omit<Container, 'id' | 'createdAt' | 'updatedAt'>): Promise<Container> {
   const result = await pool.query<any>(
-    `INSERT INTO containers (
+    `INSERT INTO inventory_containers (
       name, type, color, area_id, created_at, updated_at
     ) VALUES ($1, $2, $3, $4, NOW(), NOW())
     RETURNING *`,
@@ -147,7 +147,7 @@ export async function addContainer(container: Omit<Container, 'id' | 'createdAt'
 
 export async function updateContainer(id: number, container: Partial<Container>): Promise<void> {
   await pool.query(
-    `UPDATE containers SET
+    `UPDATE inventory_containers SET
       name = COALESCE($1, name),
       type = COALESCE($2, type),
       color = $3,
@@ -159,20 +159,20 @@ export async function updateContainer(id: number, container: Partial<Container>)
 }
 
 export async function deleteContainer(id: number): Promise<void> {
-  await pool.query('DELETE FROM containers WHERE id = $1', [id])
+  await pool.query('DELETE FROM inventory_containers WHERE id = $1', [id])
 }
 
 // Areas
 export async function getAreas(): Promise<Area[]> {
   const result = await pool.query<any>(
-    'SELECT * FROM areas ORDER BY created_at DESC'
+    'SELECT * FROM inventory_areas ORDER BY created_at DESC'
   )
   return result.rows.map(normalizeArea)
 }
 
 export async function addArea(area: Omit<Area, 'id' | 'createdAt' | 'updatedAt'>): Promise<Area> {
   const result = await pool.query<any>(
-    `INSERT INTO areas (
+    `INSERT INTO inventory_areas (
       name, type, created_at, updated_at
     ) VALUES ($1, $2, NOW(), NOW())
     RETURNING *`,
@@ -183,7 +183,7 @@ export async function addArea(area: Omit<Area, 'id' | 'createdAt' | 'updatedAt'>
 
 export async function updateArea(id: number, area: Partial<Area>): Promise<void> {
   await pool.query(
-    `UPDATE areas SET
+    `UPDATE inventory_areas SET
       name = COALESCE($1, name),
       type = COALESCE($2, type),
       updated_at = NOW()
@@ -193,7 +193,7 @@ export async function updateArea(id: number, area: Partial<Area>): Promise<void>
 }
 
 export async function deleteArea(id: number): Promise<void> {
-  await pool.query('DELETE FROM areas WHERE id = $1', [id])
+  await pool.query('DELETE FROM inventory_areas WHERE id = $1', [id])
 }
 
 export function calculateTotalValue(items: InventoryItem[]): number {
