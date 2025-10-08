@@ -27,3 +27,23 @@ export async function getGamesStatsAction() {
     avgPercentage: calculateAveragePercentage(games),
   }
 }
+
+export async function bulkImportGamesAction(games: Omit<Game, 'id' | 'createdAt' | 'updatedAt'>[]) {
+  const results = {
+    success: 0,
+    failed: 0,
+    errors: [] as string[],
+  }
+
+  for (const game of games) {
+    try {
+      await addGame(game)
+      results.success++
+    } catch (error) {
+      results.failed++
+      results.errors.push(`Failed to import "${game.title}": ${error instanceof Error ? error.message : 'Unknown error'}`)
+    }
+  }
+
+  return results
+}

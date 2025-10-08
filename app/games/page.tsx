@@ -3,10 +3,11 @@
 import * as React from "react"
 import { Plus, Pencil, Trash2 } from "lucide-react"
 import { Game, GameSearchResult } from "@/types/game"
-import { getGamesAction, addGameAction, updateGameAction, deleteGameAction } from "@/app/actions/games"
+import { getGamesAction, addGameAction, updateGameAction, deleteGameAction, bulkImportGamesAction } from "@/app/actions/games"
 import { getGameDetails } from "@/lib/api/games"
 import { GameSearch } from "@/components/game-search"
 import { GameEntryForm } from "@/components/game-entry-form"
+import { GamesExcelUpload } from "@/components/games-excel-upload"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
@@ -75,6 +76,19 @@ export default function GamesPage() {
       const data = await getGamesAction()
       setGames(data)
     }
+  }
+
+  const handleBulkImport = async (gamesToImport: Omit<Game, 'id' | 'createdAt' | 'updatedAt'>[]) => {
+    const results = await bulkImportGamesAction(gamesToImport)
+
+    if (results.errors.length > 0) {
+      alert(`Import completed with errors:\n${results.success} succeeded, ${results.failed} failed\n\n${results.errors.join('\n')}`)
+    } else {
+      alert(`Successfully imported ${results.success} games!`)
+    }
+
+    const data = await getGamesAction()
+    setGames(data)
   }
 
   const filteredAndSortedGames = React.useMemo(() => {
@@ -166,15 +180,19 @@ export default function GamesPage() {
         </Card>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Search for a Game</CardTitle>
-          <CardDescription>Find games from the RAWG database</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <GameSearch onSelectGame={handleGameSelect} />
-        </CardContent>
-      </Card>
+      <div className="grid gap-4 md:grid-cols-2">
+        <Card>
+          <CardHeader>
+            <CardTitle>Search for a Game</CardTitle>
+            <CardDescription>Find games from the RAWG database</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <GameSearch onSelectGame={handleGameSelect} />
+          </CardContent>
+        </Card>
+
+        <GamesExcelUpload onImport={handleBulkImport} />
+      </div>
 
       <Card>
         <CardHeader>
