@@ -45,3 +45,28 @@ export async function getGameDetails(id: number): Promise<any | null> {
     return null
   }
 }
+
+export async function searchGameByTitle(title: string): Promise<any | null> {
+  try {
+    const response = await fetch(
+      `${RAWG_API_URL}/games?key=${RAWG_API_KEY}&search=${encodeURIComponent(title)}&page_size=1`
+    )
+
+    if (!response.ok) {
+      throw new Error('Failed to search game')
+    }
+
+    const data = await response.json()
+    const game = data.results?.[0]
+
+    if (!game) {
+      return null
+    }
+
+    // Get full details for the first match
+    return await getGameDetails(game.id)
+  } catch (error) {
+    console.error('Error searching game by title:', error)
+    return null
+  }
+}

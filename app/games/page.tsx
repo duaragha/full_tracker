@@ -1,9 +1,9 @@
 "use client"
 
 import * as React from "react"
-import { Plus, Pencil, Trash2 } from "lucide-react"
+import { Plus, Pencil, Trash2, Download } from "lucide-react"
 import { Game, GameSearchResult } from "@/types/game"
-import { getGamesAction, addGameAction, updateGameAction, deleteGameAction, bulkImportGamesAction } from "@/app/actions/games"
+import { getGamesAction, addGameAction, updateGameAction, deleteGameAction, bulkImportGamesAction, enrichGamesWithRAWGDataAction } from "@/app/actions/games"
 import { getGameDetails } from "@/lib/api/games"
 import { GameSearch } from "@/components/game-search"
 import { GameEntryForm } from "@/components/game-entry-form"
@@ -25,6 +25,7 @@ export default function GamesPage() {
   const [searchQuery, setSearchQuery] = React.useState("")
   const [sortBy, setSortBy] = React.useState<"title" | "progress" | "hours" | "days">("title")
   const [sortOrder, setSortOrder] = React.useState<"asc" | "desc">("asc")
+  const [isEnriching, setIsEnriching] = React.useState(false)
 
   React.useEffect(() => {
     const loadGames = async () => {
@@ -91,6 +92,40 @@ export default function GamesPage() {
     setGames(data)
   }
 
+  const handleEnrichGames = async () => {
+    if (!confirm(`This will search RAWG for missing data (developer, genres, cover images) for all games. This may take a few minutes. Continue?`)) {
+      return
+    }
+
+    setIsEnriching(true)
+    try {
+      const results = await enrichGamesWithRAWGDataAction()
+
+      const message = [
+        `Enrichment completed!`,
+        `Updated: ${results.updated}`,
+        `Skipped (already complete): ${results.skipped}`,
+        `Failed: ${results.failed}`,
+      ]
+
+      if (results.errors.length > 0) {
+        message.push(`\nErrors:\n${results.errors.slice(0, 10).join('\n')}`)
+        if (results.errors.length > 10) {
+          message.push(`\n... and ${results.errors.length - 10} more errors`)
+        }
+      }
+
+      alert(message.join('\n'))
+
+      const data = await getGamesAction()
+      setGames(data)
+    } catch (error) {
+      alert(`Failed to enrich games: ${error instanceof Error ? error.message : 'Unknown error'}`)
+    } finally {
+      setIsEnriching(false)
+    }
+  }
+
   const filteredAndSortedGames = React.useMemo(() => {
     let filtered = statusFilter === "All"
       ? games
@@ -147,10 +182,20 @@ export default function GamesPage() {
           <h1 className="text-3xl font-bold tracking-tight">Games Tracker</h1>
           <p className="text-muted-foreground">Track your gaming journey</p>
         </div>
-        <Button onClick={() => setShowForm(true)}>
-          <Plus className="mr-2 h-4 w-4" />
-          Add Game Manually
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            onClick={handleEnrichGames}
+            disabled={isEnriching || games.length === 0}
+          >
+            <Download className="mr-2 h-4 w-4" />
+            {isEnriching ? 'Enriching...' : 'Enrich Missing Data'}
+          </Button>
+          <Button onClick={() => setShowForm(true)}>
+            <Plus className="mr-2 h-4 w-4" />
+            Add Game Manually
+          </Button>
+        </div>
       </div>
 
       <div className="grid gap-4 md:grid-cols-4">
