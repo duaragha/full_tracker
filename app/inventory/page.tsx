@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { Plus, Pencil, Trash2, ChevronRight, ChevronDown, Package as PackageIcon } from "lucide-react"
+import { Plus, Pencil, Trash2, ChevronRight, ChevronDown, Package as PackageIcon, AlertTriangle } from "lucide-react"
 import { Area, Container, InventoryItem } from "@/types/inventory"
 import {
   getAreasAction,
@@ -54,6 +54,36 @@ export default function InventoryPage() {
     setItems(itemsData)
   }
 
+  const handleWipeInventory = async () => {
+    const confirmation = window.confirm(
+      `⚠️ WARNING: This will delete ALL inventory items, containers, and areas.\n\nThis includes:\n- ${items.length} items\n- ${containers.length} containers\n- ${areas.length} areas\n\nThis action CANNOT be undone!\n\nClick OK to continue, then type DELETE in the next prompt.`
+    )
+
+    if (!confirmation) return
+
+    const deleteConfirmation = window.prompt('Type DELETE to confirm:')
+    if (deleteConfirmation !== 'DELETE') {
+      alert('Wipe cancelled. You must type DELETE exactly.')
+      return
+    }
+
+    try {
+      // Delete in order: items -> containers -> areas
+      for (const item of items) {
+        await deleteInventoryItemAction(Number(item.id))
+      }
+      for (const container of containers) {
+        await deleteContainerAction(Number(container.id))
+      }
+      for (const area of areas) {
+        await deleteAreaAction(Number(area.id))
+      }
+      alert('All inventory data has been cleared.')
+      await loadData()
+    } catch (error) {
+      alert(`Failed to wipe inventory: ${error instanceof Error ? error.message : 'Unknown error'}`)
+    }
+  }
 
   React.useEffect(() => {
     setMounted(true)
@@ -184,9 +214,19 @@ export default function InventoryPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Room Inventory</h1>
-        <p className="text-muted-foreground">Organize and track all your belongings</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Room Inventory</h1>
+          <p className="text-muted-foreground">Organize and track all your belongings</p>
+        </div>
+        <Button
+          variant="destructive"
+          onClick={handleWipeInventory}
+          disabled={items.length === 0}
+        >
+          <AlertTriangle className="mr-2 h-4 w-4" />
+          Clear All Inventory
+        </Button>
       </div>
 
       <div className="grid gap-4 md:grid-cols-5">
