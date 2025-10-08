@@ -135,15 +135,20 @@ export async function deleteGame(id: number): Promise<void> {
 }
 
 export function calculateTotalHours(games: Game[]): number {
-  return games.reduce((total, game) => total + (game.hoursPlayed || 0) + (game.minutesPlayed || 0) / 60, 0)
+  return games
+    .filter(game => game.status !== 'Stopped')
+    .reduce((total, game) => total + (game.hoursPlayed || 0) + (game.minutesPlayed || 0) / 60, 0)
 }
 
 export function calculateTotalDays(games: Game[]): number {
-  return games.reduce((total, game) => total + (game.daysPlayed || 0), 0)
+  return games
+    .filter(game => game.status !== 'Stopped')
+    .reduce((total, game) => total + (game.daysPlayed || 0), 0)
 }
 
 export function calculateAveragePercentage(games: Game[]): number {
-  if (games.length === 0) return 0
-  const sum = games.reduce((total, game) => total + (game.percentage || 0), 0)
-  return Math.round(sum / games.length)
+  const activeGames = games.filter(game => game.status !== 'Stopped')
+  if (activeGames.length === 0) return 0
+  const sum = activeGames.reduce((total, game) => total + (game.percentage || 0), 0)
+  return Math.round(sum / activeGames.length)
 }

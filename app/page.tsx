@@ -34,12 +34,13 @@ export default function Dashboard() {
     loadData()
   }, [])
 
+  const activeGames = games.filter(g => g.status !== 'Stopped')
   const gamesCount = games.length
   const booksCount = books.length
   const tvshowsCount = tvshows.length
   const moviesCount = movies.length
-  const totalGameHours = games.reduce((sum, g) => sum + g.hoursPlayed + g.minutesPlayed / 60, 0)
-  const totalGameDays = games.reduce((sum, g) => sum + g.daysPlayed, 0)
+  const totalGameHours = activeGames.reduce((sum, g) => sum + g.hoursPlayed + g.minutesPlayed / 60, 0)
+  const totalGameDays = activeGames.reduce((sum, g) => sum + g.daysPlayed, 0)
   const totalBookPages = books.reduce((total, book) => total + (book.pages || 0), 0)
   const totalBookMinutes = books.reduce((total, book) => total + (book.hours * 60 + book.minutes || 0), 0)
   const totalBookDays = books.reduce((sum, b) => sum + b.daysRead, 0)
