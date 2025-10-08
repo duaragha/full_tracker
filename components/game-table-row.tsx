@@ -34,8 +34,8 @@ export const GameTableRow = React.memo(({ game, onEdit, onDelete, getStatusColor
       <TableCell>{game.hoursPlayed}h {game.minutesPlayed}m</TableCell>
       <TableCell>{game.daysPlayed}</TableCell>
       <TableCell>{game.console}</TableCell>
-      <TableCell>${game.price.toFixed(2)}</TableCell>
-      <TableCell>{game.pricePerHour.toFixed(2)}</TableCell>
+      <TableCell>{game.isGift ? 'Gift' : `$${game.price.toFixed(2)}`}</TableCell>
+      <TableCell>{game.isGift ? 'Gift' : game.pricePerHour.toFixed(2)}</TableCell>
       <TableCell>
         <div className="flex gap-2">
           <Button

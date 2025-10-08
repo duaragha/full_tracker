@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { Plus, Pencil, Trash2, ChevronRight, ChevronDown, Package as PackageIcon } from "lucide-react"
+import { Plus, Pencil, Trash2, ChevronRight, ChevronDown, Package as PackageIcon, AlertTriangle } from "lucide-react"
 import { Area, Container, InventoryItem } from "@/types/inventory"
 import {
   getAreasAction,
@@ -11,9 +11,12 @@ import {
   deleteContainerAction,
   deleteInventoryItemAction,
 } from "@/app/actions/inventory"
+import { bulkImportInventoryAction, wipeInventoryAction } from "@/app/actions/inventory-import"
+import { InventoryImportItem } from "@/lib/parsers/inventory-location-parser"
 import { AreaManager } from "@/components/area-manager"
 import { ContainerManager } from "@/components/container-manager"
 import { ItemForm } from "@/components/item-form"
+import { InventoryExcelUpload } from "@/components/inventory-excel-upload"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
@@ -52,6 +55,40 @@ export default function InventoryPage() {
     setAreas(areasData)
     setContainers(containersData)
     setItems(itemsData)
+  }
+
+  const handleBulkImport = async (importItems: InventoryImportItem[]) => {
+    const results = await bulkImportInventoryAction(importItems)
+
+    if (results.errors.length > 0) {
+      alert(`Import completed with errors:\n${results.success} succeeded, ${results.failed} failed\n\nAreas created: ${results.areasCreated}\nContainers created: ${results.containersCreated}\n\n${results.errors.slice(0, 5).join('\n')}${results.errors.length > 5 ? `\n... and ${results.errors.length - 5} more errors` : ''}`)
+    } else {
+      alert(`Successfully imported ${results.success} items!\n\nAreas created: ${results.areasCreated}\nContainers created: ${results.containersCreated}`)
+    }
+
+    await loadData()
+  }
+
+  const handleWipeInventory = async () => {
+    const confirmation = window.confirm(
+      `⚠️ WARNING: This will delete ALL inventory items, containers, and areas.\n\nThis includes:\n- ${items.length} items\n- ${containers.length} containers\n- ${areas.length} areas\n\nThis action CANNOT be undone!\n\nClick OK to continue, then type DELETE in the next prompt.`
+    )
+
+    if (!confirmation) return
+
+    const deleteConfirmation = window.prompt('Type DELETE to confirm:')
+    if (deleteConfirmation !== 'DELETE') {
+      alert('Wipe cancelled. You must type DELETE exactly.')
+      return
+    }
+
+    try {
+      await wipeInventoryAction()
+      alert('All inventory data has been cleared.')
+      await loadData()
+    } catch (error) {
+      alert(`Failed to wipe inventory: ${error instanceof Error ? error.message : 'Unknown error'}`)
+    }
   }
 
   React.useEffect(() => {
@@ -187,6 +224,14 @@ export default function InventoryPage() {
           <h1 className="text-3xl font-bold tracking-tight">Room Inventory</h1>
           <p className="text-muted-foreground">Organize and track all your belongings</p>
         </div>
+        <Button
+          variant="destructive"
+          onClick={handleWipeInventory}
+          disabled={items.length === 0}
+        >
+          <AlertTriangle className="mr-2 h-4 w-4" />
+          Clear All Inventory
+        </Button>
       </div>
 
       <div className="grid gap-4 md:grid-cols-5">
@@ -221,6 +266,8 @@ export default function InventoryPage() {
           </CardHeader>
         </Card>
       </div>
+
+      <InventoryExcelUpload onImport={handleBulkImport} />
 
       <div className="grid gap-6 md:grid-cols-4">
         {/* Left Sidebar - Tree View */}

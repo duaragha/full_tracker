@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Slider } from "@/components/ui/slider"
 import { DatePicker } from "@/components/ui/date-picker"
+import { Checkbox } from "@/components/ui/checkbox"
 
 interface GameEntryFormProps {
   selectedGame: GameSearchResult | null
@@ -35,6 +36,7 @@ export function GameEntryForm({ selectedGame, onSubmit, onCancel, initialData }:
     console: initialData?.console || selectedGame?.platforms?.[0]?.platform?.name || "",
     store: initialData?.store || "",
     price: initialData?.price || 0,
+    isGift: initialData?.isGift || false,
     notes: initialData?.notes || "",
   })
 
@@ -69,6 +71,7 @@ export function GameEntryForm({ selectedGame, onSubmit, onCancel, initialData }:
       store: formData.store,
       price: formData.price,
       pricePerHour,
+      isGift: formData.isGift,
       developer: formData.developer,
       publisher: formData.publisher,
       genres: formData.genres,
@@ -206,6 +209,19 @@ export function GameEntryForm({ selectedGame, onSubmit, onCancel, initialData }:
         </div>
 
         <div className="space-y-2">
+          <div className="flex items-center space-x-2 mb-2">
+            <Checkbox
+              id="isGift"
+              checked={formData.isGift}
+              onCheckedChange={(checked) => setFormData({ ...formData, isGift: checked === true })}
+            />
+            <Label htmlFor="isGift" className="font-normal cursor-pointer">
+              This game was a gift
+            </Label>
+          </div>
+        </div>
+
+        <div className="space-y-2">
           <Label htmlFor="price">Price ($)</Label>
           <Input
             id="price"
@@ -215,6 +231,7 @@ export function GameEntryForm({ selectedGame, onSubmit, onCancel, initialData }:
             value={formData.price === 0 ? '' : formData.price}
             onChange={(e) => setFormData({ ...formData, price: e.target.value === '' ? 0 : parseFloat(e.target.value) || 0 })}
             placeholder="0.00"
+            disabled={formData.isGift}
           />
         </div>
       </div>

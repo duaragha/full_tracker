@@ -35,6 +35,7 @@ function normalizeGame(game: any): Game {
     store: game.store || '',
     price,
     pricePerHour,
+    isGift: Boolean(game.is_gift || false),
     notes: game.notes || '',
     createdAt: game.created_at,
     updatedAt: game.updated_at,
@@ -53,8 +54,8 @@ export async function addGame(game: Omit<Game, 'id' | 'createdAt' | 'updatedAt'>
     `INSERT INTO games (
       title, developer, publisher, genres, release_date, cover_image, status, percentage,
       started_date, completed_date, days_played, hours_played, minutes_played,
-      platform, console, store, price, notes, created_at, updated_at
-    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, NOW(), NOW())
+      platform, console, store, price, is_gift, notes, created_at, updated_at
+    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, NOW(), NOW())
     RETURNING *`,
     [
       game.title,
@@ -74,6 +75,7 @@ export async function addGame(game: Omit<Game, 'id' | 'createdAt' | 'updatedAt'>
       game.console,
       game.store,
       game.price,
+      game.isGift || false,
       game.notes,
     ]
   )
@@ -100,9 +102,10 @@ export async function updateGame(id: number, game: Partial<Game>): Promise<void>
       platform = COALESCE($14, platform),
       store = COALESCE($15, store),
       price = COALESCE($16, price),
-      notes = COALESCE($17, notes),
+      is_gift = COALESCE($17, is_gift),
+      notes = COALESCE($18, notes),
       updated_at = NOW()
-    WHERE id = $18`,
+    WHERE id = $19`,
     [
       game.title,
       game.developer,
@@ -120,6 +123,7 @@ export async function updateGame(id: number, game: Partial<Game>): Promise<void>
       game.console,
       game.store,
       game.price,
+      game.isGift !== undefined ? game.isGift : null,
       game.notes,
       id,
     ]

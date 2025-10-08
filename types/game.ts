@@ -17,6 +17,7 @@ export interface Game {
   store: string
   price: number
   pricePerHour: number
+  isGift: boolean
   notes: string
   createdAt: string
   updatedAt: string

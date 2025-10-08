@@ -79,6 +79,7 @@ export function GamesExcelUpload({ onImport }: GamesExcelUploadProps) {
           store: row['Where'] || '',
           price,
           pricePerHour,
+          isGift: false, // Default to false for Excel imports
           notes: row['Notes'] || '',
         }
       })
