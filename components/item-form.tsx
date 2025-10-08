@@ -100,7 +100,7 @@ export function ItemForm({ open, onOpenChange, onItemAdded, areas, containers, s
       type: formData.type,
       cost: parseFloat(formData.cost) || 0,
       isGift: formData.isGift,
-      giftFrom: formData.isGift ? formData.giftFrom : null,
+      giftFrom: formData.giftFrom || null,
       purchasedWhere: formData.purchasedWhere,
       purchasedWhen: formData.purchasedWhen?.toISOString() || "",
       keepUntil: formData.keepUntil?.toISOString() || null,
@@ -251,17 +251,15 @@ export function ItemForm({ open, onOpenChange, onItemAdded, areas, containers, s
               <Label htmlFor="isGift" className="cursor-pointer">This is a gift</Label>
             </div>
 
-            {formData.isGift && (
-              <div className="space-y-2 ml-6">
-                <Label htmlFor="giftFrom">Gift From</Label>
-                <Input
-                  id="giftFrom"
-                  value={formData.giftFrom}
-                  onChange={(e) => setFormData({ ...formData, giftFrom: e.target.value })}
-                  placeholder="Who gave this gift?"
-                />
-              </div>
-            )}
+            <div className="space-y-2">
+              <Label htmlFor="giftFrom">From (Person/Friend/Store)</Label>
+              <Input
+                id="giftFrom"
+                value={formData.giftFrom}
+                onChange={(e) => setFormData({ ...formData, giftFrom: e.target.value })}
+                placeholder="Who did you get this from? (e.g., John, Mom, Estate Sale)"
+              />
+            </div>
 
             <div className="flex items-center space-x-2">
               <Checkbox
