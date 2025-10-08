@@ -69,7 +69,7 @@ export function PhevEntryForm({ activeCarId, onSubmit }: PhevEntryFormProps) {
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-4">
         <div className="space-y-2">
-          <Label htmlFor="date">Date *</Label>
+          <Label htmlFor="date">Date</Label>
           <DatePicker
             date={formData.date}
             onDateChange={(date) => setFormData({ ...formData, date })}
@@ -78,26 +78,24 @@ export function PhevEntryForm({ activeCarId, onSubmit }: PhevEntryFormProps) {
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="cost">Charging Cost ($) *</Label>
+          <Label htmlFor="cost">Charging Cost ($)</Label>
           <Input
             id="cost"
             type="number"
             step="0.01"
             value={formData.cost}
             onChange={(e) => setFormData({ ...formData, cost: e.target.value })}
-            required
           />
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="km_driven">KM Driven *</Label>
+          <Label htmlFor="km_driven">KM Driven</Label>
           <Input
             id="km_driven"
             type="number"
             step="0.1"
             value={formData.km_driven}
             onChange={(e) => setFormData({ ...formData, km_driven: e.target.value })}
-            required
           />
         </div>
 

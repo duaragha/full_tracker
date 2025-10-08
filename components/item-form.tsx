@@ -132,18 +132,17 @@ export function ItemForm({ open, onOpenChange, onItemAdded, areas, containers, s
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2">
-              <Label htmlFor="name">Item Name *</Label>
+              <Label htmlFor="name">Item Name</Label>
               <Input
                 id="name"
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                required
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="type">Type *</Label>
-              <Select value={formData.type} onValueChange={(value) => setFormData({ ...formData, type: value })} required>
+              <Label htmlFor="type">Type</Label>
+              <Select value={formData.type} onValueChange={(value) => setFormData({ ...formData, type: value })}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select type" />
                 </SelectTrigger>
@@ -156,11 +155,10 @@ export function ItemForm({ open, onOpenChange, onItemAdded, areas, containers, s
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="areaId">Area *</Label>
+              <Label htmlFor="areaId">Area</Label>
               <Select
                 value={formData.areaId}
                 onValueChange={(value) => setFormData({ ...formData, areaId: value, containerId: "" })}
-                required
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select area" />
@@ -189,7 +187,7 @@ export function ItemForm({ open, onOpenChange, onItemAdded, areas, containers, s
 
             {!formData.isGift && (
               <div className="space-y-2">
-                <Label htmlFor="cost">Cost *</Label>
+                <Label htmlFor="cost">Cost</Label>
                 <Input
                   id="cost"
                   type="number"
@@ -202,17 +200,16 @@ export function ItemForm({ open, onOpenChange, onItemAdded, areas, containers, s
             )}
 
             <div className="space-y-2">
-              <Label htmlFor="purchasedWhere">Where Purchased *</Label>
+              <Label htmlFor="purchasedWhere">Where Purchased</Label>
               <Input
                 id="purchasedWhere"
                 value={formData.purchasedWhere}
                 onChange={(e) => setFormData({ ...formData, purchasedWhere: e.target.value })}
-                required
               />
             </div>
 
             <div className="space-y-2">
-              <Label>When Purchased *</Label>
+              <Label>When Purchased</Label>
               <DatePicker
                 date={formData.purchasedWhen}
                 onDateChange={(date) => setFormData({ ...formData, purchasedWhen: date })}

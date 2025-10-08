@@ -80,22 +80,20 @@ export function GameEntryForm({ selectedGame, onSubmit, onCancel, initialData }:
     <form onSubmit={handleSubmit} className="space-y-6">
       <div className="grid gap-4 md:grid-cols-2">
         <div className="space-y-2">
-          <Label htmlFor="title">Title *</Label>
+          <Label htmlFor="title">Title</Label>
           <Input
             id="title"
             value={formData.title}
             onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-            required
           />
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="publisher">Publisher *</Label>
+          <Label htmlFor="publisher">Publisher</Label>
           <Input
             id="publisher"
             value={formData.publisher}
             onChange={(e) => setFormData({ ...formData, publisher: e.target.value })}
-            required
           />
         </div>
 
@@ -119,11 +117,10 @@ export function GameEntryForm({ selectedGame, onSubmit, onCancel, initialData }:
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="status">Status *</Label>
+          <Label htmlFor="status">Status</Label>
           <Select
             value={formData.status}
             onValueChange={(value: any) => setFormData({ ...formData, status: value })}
-            required
           >
             <SelectTrigger>
               <SelectValue />
@@ -137,12 +134,11 @@ export function GameEntryForm({ selectedGame, onSubmit, onCancel, initialData }:
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="console">Console/Platform *</Label>
+          <Label htmlFor="console">Console/Platform</Label>
           <Input
             id="console"
             value={formData.console}
             onChange={(e) => setFormData({ ...formData, console: e.target.value })}
-            required
           />
         </div>
 
@@ -157,7 +153,7 @@ export function GameEntryForm({ selectedGame, onSubmit, onCancel, initialData }:
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="hoursPlayed">Hours Played {formData.status !== 'Playing' && '*'}</Label>
+          <Label htmlFor="hoursPlayed">Hours Played</Label>
           <Input
             id="hoursPlayed"
             type="number"
@@ -165,12 +161,11 @@ export function GameEntryForm({ selectedGame, onSubmit, onCancel, initialData }:
             value={formData.hoursPlayed === 0 ? '' : formData.hoursPlayed}
             onChange={(e) => setFormData({ ...formData, hoursPlayed: e.target.value === '' ? 0 : parseInt(e.target.value) || 0 })}
             placeholder="0"
-            required={formData.status !== 'Playing'}
           />
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="minutesPlayed">Minutes Played {formData.status !== 'Playing' && '*'}</Label>
+          <Label htmlFor="minutesPlayed">Minutes Played</Label>
           <Input
             id="minutesPlayed"
             type="number"
@@ -179,12 +174,11 @@ export function GameEntryForm({ selectedGame, onSubmit, onCancel, initialData }:
             value={formData.minutesPlayed === 0 ? '' : formData.minutesPlayed}
             onChange={(e) => setFormData({ ...formData, minutesPlayed: e.target.value === '' ? 0 : parseInt(e.target.value) || 0 })}
             placeholder="0"
-            required={formData.status !== 'Playing'}
           />
         </div>
 
         <div className="space-y-2">
-          <Label>Date Started *</Label>
+          <Label>Date Started</Label>
           <DatePicker
             date={formData.dateStarted}
             onDateChange={(date) => setFormData({ ...formData, dateStarted: date })}
@@ -202,18 +196,17 @@ export function GameEntryForm({ selectedGame, onSubmit, onCancel, initialData }:
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="store">Store *</Label>
+          <Label htmlFor="store">Store</Label>
           <Input
             id="store"
             value={formData.store}
             onChange={(e) => setFormData({ ...formData, store: e.target.value })}
             placeholder="Steam, Epic, PlayStation..."
-            required
           />
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="price">Price ($) *</Label>
+          <Label htmlFor="price">Price ($)</Label>
           <Input
             id="price"
             type="number"
@@ -222,7 +215,6 @@ export function GameEntryForm({ selectedGame, onSubmit, onCancel, initialData }:
             value={formData.price === 0 ? '' : formData.price}
             onChange={(e) => setFormData({ ...formData, price: e.target.value === '' ? 0 : parseFloat(e.target.value) || 0 })}
             placeholder="0.00"
-            required
           />
         </div>
       </div>

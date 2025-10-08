@@ -68,47 +68,43 @@ export function BookEntryForm({ selectedBook, onSubmit, onCancel, initialData }:
     <form onSubmit={handleSubmit} className="space-y-6">
       <div className="grid gap-4 md:grid-cols-2">
         <div className="space-y-2">
-          <Label htmlFor="title">Title *</Label>
+          <Label htmlFor="title">Title</Label>
           <Input
             id="title"
             value={formData.title}
             onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-            required
           />
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="author">Author *</Label>
+          <Label htmlFor="author">Author</Label>
           <Input
             id="author"
             value={formData.author}
             onChange={(e) => setFormData({ ...formData, author: e.target.value })}
-            required
           />
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="publisher">Publisher *</Label>
+          <Label htmlFor="publisher">Publisher</Label>
           <Input
             id="publisher"
             value={formData.publisher}
             onChange={(e) => setFormData({ ...formData, publisher: e.target.value })}
-            required
           />
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="genre">Genre *</Label>
+          <Label htmlFor="genre">Genre</Label>
           <Input
             id="genre"
             value={formData.genre}
             onChange={(e) => setFormData({ ...formData, genre: e.target.value })}
-            required
           />
         </div>
 
         <div className="space-y-2 md:col-span-2">
-          <Label>Type *</Label>
+          <Label>Type</Label>
           <RadioGroup
             value={formData.type}
             onValueChange={(value: any) => setFormData({ ...formData, type: value })}
@@ -126,13 +122,12 @@ export function BookEntryForm({ selectedBook, onSubmit, onCancel, initialData }:
 
         {formData.type === 'Ebook' && (
           <div className="space-y-2">
-            <Label htmlFor="pages">Pages *</Label>
+            <Label htmlFor="pages">Pages</Label>
             <Input
               id="pages"
               type="number"
               value={formData.pages || ""}
               onChange={(e) => setFormData({ ...formData, pages: parseInt(e.target.value) || null })}
-              required
             />
           </div>
         )}
@@ -140,7 +135,7 @@ export function BookEntryForm({ selectedBook, onSubmit, onCancel, initialData }:
         {formData.type === 'Audiobook' && (
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="hours">Hours *</Label>
+              <Label htmlFor="hours">Hours</Label>
               <Input
                 id="hours"
                 type="number"
@@ -148,11 +143,10 @@ export function BookEntryForm({ selectedBook, onSubmit, onCancel, initialData }:
                 value={formData.hours === 0 ? '' : formData.hours}
                 onChange={(e) => setFormData({ ...formData, hours: e.target.value === '' ? 0 : parseInt(e.target.value) || 0 })}
                 placeholder="0"
-                required
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="minutes">Minutes *</Label>
+              <Label htmlFor="minutes">Minutes</Label>
               <Input
                 id="minutes"
                 type="number"
@@ -161,14 +155,13 @@ export function BookEntryForm({ selectedBook, onSubmit, onCancel, initialData }:
                 value={formData.minutes === 0 ? '' : formData.minutes}
                 onChange={(e) => setFormData({ ...formData, minutes: e.target.value === '' ? 0 : parseInt(e.target.value) || 0 })}
                 placeholder="0"
-                required
               />
             </div>
           </div>
         )}
 
         <div className="space-y-2">
-          <Label>Date Started *</Label>
+          <Label>Date Started</Label>
           <DatePicker
             date={formData.dateStarted}
             onDateChange={(date) => setFormData({ ...formData, dateStarted: date })}
