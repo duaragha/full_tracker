@@ -13,6 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { DatePicker } from "@/components/ui/date-picker"
 import { cn } from "@/lib/utils"
+import { CalendarIcon } from "lucide-react"
 
 interface ItemFormProps {
   open: boolean
