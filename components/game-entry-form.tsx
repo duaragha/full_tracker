@@ -51,7 +51,7 @@ export function GameEntryForm({ selectedGame, onSubmit, onCancel, initialData }:
 
     const daysPlayed = calculateDays()
     const totalHours = formData.hoursPlayed + formData.minutesPlayed / 60
-    const pricePerHour = totalHours > 0 ? formData.price / totalHours : 0
+    const pricePerHour = formData.price > 0 ? totalHours / formData.price : 0
 
     onSubmit({
       title: formData.title,

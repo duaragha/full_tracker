@@ -57,9 +57,9 @@ export function GamesExcelUpload({ onImport }: GamesExcelUploadProps) {
           daysPlayed = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24))
         }
 
-        // Calculate price per hour
+        // Calculate hours per dollar
         const totalHours = hours + minutes / 60
-        const pricePerHour = totalHours > 0 ? price / totalHours : 0
+        const pricePerHour = price > 0 ? totalHours / price : 0
 
         return {
           title: row['Title'] || '',

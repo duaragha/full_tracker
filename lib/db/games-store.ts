@@ -14,7 +14,7 @@ function normalizeGame(game: any): Game {
   const minutesPlayed = Number(game.minutes_played || 0)
   const totalHours = hoursPlayed + minutesPlayed / 60
   const price = Number(game.price || 0)
-  const pricePerHour = totalHours > 0 ? price / totalHours : 0
+  const pricePerHour = price > 0 ? totalHours / price : 0
 
   return {
     id: String(game.id),

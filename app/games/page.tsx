@@ -8,6 +8,7 @@ import { getGameDetails } from "@/lib/api/games"
 import { GameSearch } from "@/components/game-search"
 import { GameEntryForm } from "@/components/game-entry-form"
 import { GamesExcelUpload } from "@/components/games-excel-upload"
+import { GameTableRow } from "@/components/game-table-row"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
@@ -26,6 +27,8 @@ export default function GamesPage() {
   const [sortBy, setSortBy] = React.useState<"title" | "progress" | "hours" | "days">("title")
   const [sortOrder, setSortOrder] = React.useState<"asc" | "desc">("asc")
   const [isEnriching, setIsEnriching] = React.useState(false)
+  const [currentPage, setCurrentPage] = React.useState(1)
+  const itemsPerPage = 20
 
   React.useEffect(() => {
     const loadGames = async () => {
@@ -162,6 +165,18 @@ export default function GamesPage() {
 
     return sorted
   }, [games, statusFilter, searchQuery, sortBy, sortOrder])
+
+  // Pagination
+  const totalPages = Math.ceil(filteredAndSortedGames.length / itemsPerPage)
+  const paginatedGames = React.useMemo(() => {
+    const startIndex = (currentPage - 1) * itemsPerPage
+    return filteredAndSortedGames.slice(startIndex, startIndex + itemsPerPage)
+  }, [filteredAndSortedGames, currentPage, itemsPerPage])
+
+  // Reset to page 1 when filters change
+  React.useEffect(() => {
+    setCurrentPage(1)
+  }, [statusFilter, searchQuery, sortBy, sortOrder])
 
   const totalDays = games.reduce((sum, g) => sum + g.daysPlayed, 0)
   const totalHours = games.reduce((sum, g) => sum + g.hoursPlayed + g.minutesPlayed / 60, 0)
@@ -304,56 +319,72 @@ export default function GamesPage() {
                     <TableHead>Days</TableHead>
                     <TableHead>Console</TableHead>
                     <TableHead>Price</TableHead>
-                    <TableHead>$/Hour</TableHead>
+                    <TableHead>Hrs/$</TableHead>
                     <TableHead>Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredAndSortedGames.map((game) => (
-                    <TableRow key={game.id}>
-                      <TableCell>
-                        {game.coverImage && (
-                          <img
-                            src={game.coverImage}
-                            alt={game.title}
-                            className="h-12 w-12 rounded object-cover"
-                          />
-                        )}
-                      </TableCell>
-                      <TableCell className="font-medium">{game.title}</TableCell>
-                      <TableCell>
-                        <Badge variant={getStatusColor(game.status)}>
-                          {game.status}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>{game.percentage}%</TableCell>
-                      <TableCell>{game.hoursPlayed}h {game.minutesPlayed}m</TableCell>
-                      <TableCell>{game.daysPlayed}</TableCell>
-                      <TableCell>{game.console}</TableCell>
-                      <TableCell>${game.price.toFixed(2)}</TableCell>
-                      <TableCell>${game.pricePerHour.toFixed(2)}</TableCell>
-                      <TableCell>
-                        <div className="flex gap-2">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleEdit(game)}
-                          >
-                            <Pencil className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleDelete(game.id)}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
+                  {paginatedGames.map((game) => (
+                    <GameTableRow
+                      key={game.id}
+                      game={game}
+                      onEdit={handleEdit}
+                      onDelete={handleDelete}
+                      getStatusColor={getStatusColor}
+                    />
                   ))}
                 </TableBody>
               </Table>
+            </div>
+          )}
+
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between px-2 py-4">
+              <div className="text-sm text-muted-foreground">
+                Showing {(currentPage - 1) * itemsPerPage + 1} to {Math.min(currentPage * itemsPerPage, filteredAndSortedGames.length)} of {filteredAndSortedGames.length} games
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                  disabled={currentPage === 1}
+                >
+                  Previous
+                </Button>
+                <div className="flex items-center gap-1">
+                  {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                    let pageNum
+                    if (totalPages <= 5) {
+                      pageNum = i + 1
+                    } else if (currentPage <= 3) {
+                      pageNum = i + 1
+                    } else if (currentPage >= totalPages - 2) {
+                      pageNum = totalPages - 4 + i
+                    } else {
+                      pageNum = currentPage - 2 + i
+                    }
+                    return (
+                      <Button
+                        key={pageNum}
+                        variant={currentPage === pageNum ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => setCurrentPage(pageNum)}
+                      >
+                        {pageNum}
+                      </Button>
+                    )
+                  })}
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                  disabled={currentPage === totalPages}
+                >
+                  Next
+                </Button>
+              </div>
             </div>
           )}
         </CardContent>
