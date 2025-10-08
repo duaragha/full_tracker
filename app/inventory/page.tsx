@@ -107,7 +107,7 @@ export default function InventoryPage() {
 
   const getAreaName = (areaId: string) => areas.find(a => a.id === areaId)?.name || "Unknown"
   const getContainerName = (containerId: string) => containers.find(c => c.id === containerId)?.name || "Unknown"
-  const getContainersByArea = (areaId: string) => containers.filter(c => c.location.areaId === areaId)
+  const getContainersByArea = (areaId: string) => containers.filter(c => c.areaId === areaId)
 
   if (!mounted) {
     return null
