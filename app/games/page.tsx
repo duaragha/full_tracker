@@ -28,7 +28,7 @@ export default function GamesPage() {
   const [sortOrder, setSortOrder] = React.useState<"asc" | "desc">("asc")
   const [isEnriching, setIsEnriching] = React.useState(false)
   const [currentPage, setCurrentPage] = React.useState(1)
-  const itemsPerPage = 20
+  const [itemsPerPage, setItemsPerPage] = React.useState<number>(20)
 
   React.useEffect(() => {
     const loadGames = async () => {
@@ -167,11 +167,13 @@ export default function GamesPage() {
   }, [games, statusFilter, searchQuery, sortBy, sortOrder])
 
   // Pagination
-  const totalPages = Math.ceil(filteredAndSortedGames.length / itemsPerPage)
+  const showAll = itemsPerPage === filteredAndSortedGames.length || itemsPerPage >= 999
+  const totalPages = showAll ? 1 : Math.ceil(filteredAndSortedGames.length / itemsPerPage)
   const paginatedGames = React.useMemo(() => {
+    if (showAll) return filteredAndSortedGames
     const startIndex = (currentPage - 1) * itemsPerPage
     return filteredAndSortedGames.slice(startIndex, startIndex + itemsPerPage)
-  }, [filteredAndSortedGames, currentPage, itemsPerPage])
+  }, [filteredAndSortedGames, currentPage, itemsPerPage, showAll])
 
   // Reset to page 1 when filters change
   React.useEffect(() => {
@@ -338,11 +340,34 @@ export default function GamesPage() {
             </div>
           )}
 
-          {totalPages > 1 && (
-            <div className="flex items-center justify-between px-2 py-4">
+          <div className="flex items-center justify-between px-2 py-4">
+            <div className="flex items-center gap-4">
               <div className="text-sm text-muted-foreground">
-                Showing {(currentPage - 1) * itemsPerPage + 1} to {Math.min(currentPage * itemsPerPage, filteredAndSortedGames.length)} of {filteredAndSortedGames.length} games
+                {showAll
+                  ? `Showing all ${filteredAndSortedGames.length} games`
+                  : `Showing ${(currentPage - 1) * itemsPerPage + 1} to ${Math.min(currentPage * itemsPerPage, filteredAndSortedGames.length)} of ${filteredAndSortedGames.length} games`
+                }
               </div>
+              <Select
+                value={itemsPerPage.toString()}
+                onValueChange={(value) => {
+                  const num = value === "all" ? 9999 : parseInt(value)
+                  setItemsPerPage(num)
+                  setCurrentPage(1)
+                }}
+              >
+                <SelectTrigger className="w-[130px]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="20">20 per page</SelectItem>
+                  <SelectItem value="50">50 per page</SelectItem>
+                  <SelectItem value="100">100 per page</SelectItem>
+                  <SelectItem value="all">Show all</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            {!showAll && totalPages > 1 && (
               <div className="flex gap-2">
                 <Button
                   variant="outline"
@@ -385,8 +410,8 @@ export default function GamesPage() {
                   Next
                 </Button>
               </div>
-            </div>
-          )}
+            )}
+          </div>
         </CardContent>
       </Card>
 
