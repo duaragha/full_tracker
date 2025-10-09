@@ -90,6 +90,11 @@ export default function InventoryPage() {
     loadData()
   }, [])
 
+  // Helper functions
+  const getAreaName = (areaId: string) => areas.find(a => a.id === areaId)?.name || "Unknown"
+  const getContainerName = (containerId: string) => containers.find(c => c.id === containerId)?.name || "Unknown"
+  const getContainersByArea = (areaId: string) => containers.filter(c => c.areaId === areaId)
+
   // All hooks must be called before any conditional returns
   const displayedItems = React.useMemo(() => {
     let filtered = items
@@ -164,17 +169,13 @@ export default function InventoryPage() {
     }
 
     return grouped
-  }, [displayedItems, containers, selectedContainer, selectedArea, getAreaName])
+  }, [displayedItems, containers, selectedContainer, selectedArea, areas])
 
   const totalItems = items.length
   const itemsUsedInLastYear = items.filter(i => i.usedInLastYear).length
   const totalCost = items.filter(i => i.kept).reduce((total, item) => total + (item.cost || 0), 0)
   const giftsReceived = items.filter(i => i.isGift).length
   const itemsToDiscard = items.filter(i => !i.usedInLastYear && i.kept).length
-
-  const getAreaName = (areaId: string) => areas.find(a => a.id === areaId)?.name || "Unknown"
-  const getContainerName = (containerId: string) => containers.find(c => c.id === containerId)?.name || "Unknown"
-  const getContainersByArea = (areaId: string) => containers.filter(c => c.areaId === areaId)
 
   if (!mounted) {
     return null
