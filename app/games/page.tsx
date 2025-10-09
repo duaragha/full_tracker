@@ -184,6 +184,19 @@ export default function GamesPage() {
   const totalHours = games.reduce((sum, g) => sum + g.hoursPlayed + g.minutesPlayed / 60, 0)
   const avgPercentage = games.length > 0 ? Math.round(games.reduce((sum, g) => sum + g.percentage, 0) / games.length) : 0
 
+  // Find oldest and newest games by start date
+  const gamesWithStartDate = games.filter(g => g.dateStarted)
+  const oldestGame = gamesWithStartDate.length > 0
+    ? gamesWithStartDate.reduce((oldest, game) =>
+        new Date(game.dateStarted) < new Date(oldest.dateStarted) ? game : oldest
+      )
+    : null
+  const newestGame = gamesWithStartDate.length > 0
+    ? gamesWithStartDate.reduce((newest, game) =>
+        new Date(game.dateStarted) > new Date(newest.dateStarted) ? game : newest
+      )
+    : null
+
   const getStatusColor = (status: Game['status']) => {
     switch (status) {
       case 'Playing': return 'default'
@@ -215,7 +228,7 @@ export default function GamesPage() {
         </div>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-4">
+      <div className="grid gap-4 md:grid-cols-6">
         <Card>
           <CardHeader>
             <CardTitle>{games.length}</CardTitle>
@@ -238,6 +251,26 @@ export default function GamesPage() {
           <CardHeader>
             <CardTitle>{totalDays}</CardTitle>
             <CardDescription>Total Days</CardDescription>
+          </CardHeader>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-sm truncate">
+              {oldestGame ? oldestGame.title : 'N/A'}
+            </CardTitle>
+            <CardDescription>
+              Oldest Game {oldestGame && `(${new Date(oldestGame.dateStarted).getFullYear()})`}
+            </CardDescription>
+          </CardHeader>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-sm truncate">
+              {newestGame ? newestGame.title : 'N/A'}
+            </CardTitle>
+            <CardDescription>
+              Newest Game {newestGame && `(${new Date(newestGame.dateStarted).getFullYear()})`}
+            </CardDescription>
           </CardHeader>
         </Card>
       </div>
