@@ -129,6 +129,43 @@ export default function InventoryPage() {
     return sorted
   }, [items, selectedArea, selectedContainer, searchQuery, sortBy, sortOrder])
 
+  // Group items by container for "All Items" view
+  const groupedItems = React.useMemo(() => {
+    if (selectedContainer || selectedArea) {
+      // Don't group if filtering by area or container
+      return null
+    }
+
+    // Group items by container
+    const grouped: { container: Container | null; items: InventoryItem[] }[] = []
+
+    // Sort containers by area and name
+    const sortedContainers = [...containers].sort((a, b) => {
+      const areaCompare = getAreaName(a.areaId).localeCompare(getAreaName(b.areaId))
+      if (areaCompare !== 0) return areaCompare
+      return a.name.localeCompare(b.name)
+    })
+
+    sortedContainers.forEach(container => {
+      const containerItems = displayedItems.filter(
+        item => item.location.containerId === container.id
+      )
+      if (containerItems.length > 0) {
+        grouped.push({ container, items: containerItems })
+      }
+    })
+
+    // Add items without a container at the end
+    const noContainerItems = displayedItems.filter(
+      item => !item.location.containerId || item.location.containerId === ''
+    )
+    if (noContainerItems.length > 0) {
+      grouped.push({ container: null, items: noContainerItems })
+    }
+
+    return grouped
+  }, [displayedItems, containers, selectedContainer, selectedArea, getAreaName])
+
   const totalItems = items.length
   const itemsUsedInLastYear = items.filter(i => i.usedInLastYear).length
   const totalCost = items.filter(i => i.kept).reduce((total, item) => total + (item.cost || 0), 0)
@@ -459,7 +496,97 @@ export default function InventoryPage() {
                   ? "No items found. Click 'Add Item' to start tracking!"
                   : "Select an area or container from the left sidebar to view items."}
               </div>
+            ) : groupedItems ? (
+              // Grouped view for "All Items"
+              <div className="space-y-6">
+                {groupedItems.map((group, groupIdx) => (
+                  <div key={groupIdx}>
+                    {/* Container Header */}
+                    <div className="flex items-center gap-3 mb-3 pb-2 border-b">
+                      <PackageIcon className="h-5 w-5 text-primary" />
+                      <div className="flex-1">
+                        <h3 className="font-semibold text-lg">
+                          {group.container ? group.container.name : "No Container"}
+                        </h3>
+                        {group.container && (
+                          <p className="text-sm text-muted-foreground">
+                            {getAreaName(group.container.areaId)} • {group.container.type}
+                            {group.container.brand && ` • ${group.container.brand}`}
+                            {group.container.model && ` ${group.container.model}`}
+                          </p>
+                        )}
+                      </div>
+                      <Badge variant="outline">{group.items.length} items</Badge>
+                      {group.container && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleEditContainer(group.container!)}
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                      )}
+                    </div>
+
+                    {/* Items in this container */}
+                    <div className="overflow-x-auto">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Name</TableHead>
+                            <TableHead>Type</TableHead>
+                            <TableHead>Used Last Year?</TableHead>
+                            <TableHead>Cost</TableHead>
+                            <TableHead>Gift?</TableHead>
+                            <TableHead>From</TableHead>
+                            <TableHead>Where</TableHead>
+                            <TableHead>When</TableHead>
+                            <TableHead>Actions</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {group.items.map((item) => (
+                            <TableRow key={item.id}>
+                              <TableCell className="font-medium">{item.name}</TableCell>
+                              <TableCell>
+                                <Badge variant="secondary">{item.type}</Badge>
+                              </TableCell>
+                              <TableCell>{item.usedInLastYear ? "✓" : "✗"}</TableCell>
+                              <TableCell>${item.cost.toFixed(2)}</TableCell>
+                              <TableCell>{item.isGift ? "✓" : "✗"}</TableCell>
+                              <TableCell>{item.giftFrom || "-"}</TableCell>
+                              <TableCell className="text-sm">{item.purchasedWhere}</TableCell>
+                              <TableCell className="text-sm">
+                                {new Date(item.purchasedWhen).toLocaleDateString()}
+                              </TableCell>
+                              <TableCell>
+                                <div className="flex gap-2">
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={() => handleEditItem(item)}
+                                  >
+                                    <Pencil className="h-4 w-4" />
+                                  </Button>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={() => handleDeleteItem(item.id)}
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
+                                </div>
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  </div>
+                ))}
+              </div>
             ) : (
+              // Regular table view for filtered results
               <div className="overflow-x-auto">
                 <Table>
                   <TableHeader>
