@@ -2,11 +2,12 @@
 
 import * as React from "react"
 import Link from "next/link"
-import { Gamepad2, BookOpen, TrendingUp, Clock, Tv, Film } from "lucide-react"
+import { Gamepad2, BookOpen, TrendingUp, Clock, Tv, Film, Car, DollarSign } from "lucide-react"
 import { getGamesAction } from "@/app/actions/games"
 import { getBooksAction } from "@/app/actions/books"
 import { getTVShowsAction } from "@/app/actions/tvshows"
 import { getMoviesAction } from "@/app/actions/movies"
+import { getPHEVStatsAction, getPHEVCarSummariesAction } from "@/app/actions/phev"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
@@ -17,19 +18,25 @@ export default function Dashboard() {
   const [books, setBooks] = React.useState<any[]>([])
   const [tvshows, setTVShows] = React.useState<any[]>([])
   const [movies, setMovies] = React.useState<any[]>([])
+  const [phevStats, setPHEVStats] = React.useState<any>(null)
+  const [phevCarSummaries, setPHEVCarSummaries] = React.useState<any[]>([])
 
   React.useEffect(() => {
     const loadData = async () => {
-      const [gamesData, booksData, tvshowsData, moviesData] = await Promise.all([
+      const [gamesData, booksData, tvshowsData, moviesData, phevStatsData, phevCarData] = await Promise.all([
         getGamesAction(),
         getBooksAction(),
         getTVShowsAction(),
-        getMoviesAction()
+        getMoviesAction(),
+        getPHEVStatsAction(),
+        getPHEVCarSummariesAction()
       ])
       setGames(gamesData)
       setBooks(booksData)
       setTVShows(tvshowsData)
       setMovies(moviesData)
+      setPHEVStats(phevStatsData)
+      setPHEVCarSummaries(phevCarData)
     }
     loadData()
   }, [])
@@ -79,7 +86,7 @@ export default function Dashboard() {
         <p className="text-muted-foreground">Welcome to your tracking hub</p>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-6">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-8">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Games</CardTitle>
@@ -156,6 +163,36 @@ export default function Dashboard() {
             <div className="text-2xl font-bold">{moviesCount}</div>
             <p className="text-xs text-muted-foreground">
               {Math.floor(totalMovieRuntime / 60)}h {totalMovieRuntime % 60}m watched
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Monthly KMs</CardTitle>
+            <Car className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {phevStats ? `${phevStats.monthlyKm.toFixed(0)} km` : 'Loading...'}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Average per month
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Monthly Cost</CardTitle>
+            <DollarSign className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {phevStats ? `$${phevStats.monthlyCost.toFixed(2)}` : 'Loading...'}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Average per month
             </p>
           </CardContent>
         </Card>

@@ -84,12 +84,13 @@ export function ContainerManager({ open, onOpenChange, onContainerAdded, areaId,
       ...formData,
       cost: formData.cost ? parseFloat(formData.cost) : undefined,
       purchasedDate: formData.purchasedDate?.toISOString() || undefined,
+      areaId: editingContainer?.areaId || areaId, // Include areaId for updates
     }
 
     if (editingContainer) {
       await updateContainerAction(Number(editingContainer.id), containerData)
     } else {
-      await addContainerAction({ ...containerData, areaId })
+      await addContainerAction(containerData)
     }
 
     onContainerAdded()

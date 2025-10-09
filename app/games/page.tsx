@@ -169,6 +169,7 @@ export default function GamesPage() {
   const totalDays = games.reduce((sum, g) => sum + g.daysPlayed, 0)
   const totalHours = games.reduce((sum, g) => sum + g.hoursPlayed + g.minutesPlayed / 60, 0)
   const avgPercentage = games.length > 0 ? Math.round(games.reduce((sum, g) => sum + g.percentage, 0) / games.length) : 0
+  const totalCost = games.reduce((sum, g) => sum + (g.price || 0), 0)
 
   // Find oldest and newest games by start date
   const gamesWithStartDate = games.filter(g => g.dateStarted)
@@ -214,7 +215,7 @@ export default function GamesPage() {
         </div>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-6">
+      <div className="grid gap-4 md:grid-cols-7">
         <Card>
           <CardHeader>
             <CardTitle>{games.length}</CardTitle>
@@ -237,6 +238,12 @@ export default function GamesPage() {
           <CardHeader>
             <CardTitle>{totalDays}</CardTitle>
             <CardDescription>Total Days</CardDescription>
+          </CardHeader>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle>${totalCost.toFixed(2)}</CardTitle>
+            <CardDescription>Total Cost</CardDescription>
           </CardHeader>
         </Card>
         <Card>
