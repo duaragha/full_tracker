@@ -14,6 +14,7 @@ import {
 import { AreaManager } from "@/components/area-manager"
 import { ContainerManager } from "@/components/container-manager"
 import { ItemForm } from "@/components/item-form"
+import { PinAuth } from "@/components/pin-auth"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
@@ -23,6 +24,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 
 export default function InventoryPage() {
   const [mounted, setMounted] = React.useState(false)
+  const [isUnlocked, setIsUnlocked] = React.useState(false)
   const [areas, setAreas] = React.useState<Area[]>([])
   const [containers, setContainers] = React.useState<Container[]>([])
   const [items, setItems] = React.useState<InventoryItem[]>([])
@@ -87,8 +89,18 @@ export default function InventoryPage() {
 
   React.useEffect(() => {
     setMounted(true)
-    loadData()
+    // Check if already unlocked in this session
+    const unlocked = sessionStorage.getItem("inventory_unlocked")
+    if (unlocked === "true") {
+      setIsUnlocked(true)
+      loadData()
+    }
   }, [])
+
+  const handleUnlock = () => {
+    setIsUnlocked(true)
+    loadData()
+  }
 
   // Helper functions
   const getAreaName = (areaId: string) => areas.find(a => a.id === areaId)?.name || "Unknown"
@@ -179,6 +191,11 @@ export default function InventoryPage() {
 
   if (!mounted) {
     return null
+  }
+
+  // Show PIN authentication if not unlocked
+  if (!isUnlocked) {
+    return <PinAuth onUnlock={handleUnlock} />
   }
 
   const toggleArea = (areaId: string) => {
