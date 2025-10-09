@@ -536,7 +536,7 @@ export default function InventoryPage() {
                           <TableRow>
                             <TableHead>Name</TableHead>
                             <TableHead>Type</TableHead>
-                            <TableHead>Used Last Year?</TableHead>
+                            <TableHead>Last Year</TableHead>
                             <TableHead>Cost</TableHead>
                             <TableHead>Gift?</TableHead>
                             <TableHead>From</TableHead>
@@ -594,7 +594,7 @@ export default function InventoryPage() {
                     <TableRow>
                       <TableHead>Name</TableHead>
                       <TableHead>Type</TableHead>
-                      <TableHead>Used Last Year?</TableHead>
+                      <TableHead>Last Year</TableHead>
                       <TableHead>Location</TableHead>
                       <TableHead>Cost</TableHead>
                       <TableHead>Gift?</TableHead>
