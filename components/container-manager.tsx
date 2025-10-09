@@ -80,11 +80,23 @@ export function ContainerManager({ open, onOpenChange, onContainerAdded, areaId,
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    const containerData = {
-      ...formData,
+    // Clean up the data - convert empty strings to undefined for proper NULL handling
+    const containerData: any = {
+      name: formData.name || undefined,
+      type: formData.type || undefined,
+      color: formData.color || undefined,
+      areaId: editingContainer?.areaId || areaId,
+      brand: formData.brand || undefined,
+      model: formData.model || undefined,
+      material: formData.material === "none" || !formData.material ? undefined : formData.material,
+      size: formData.size || undefined,
+      capacity: formData.capacity || undefined,
+      purchasedDate: formData.purchasedDate ? formData.purchasedDate.toISOString().split('T')[0] : undefined,
+      purchasedFrom: formData.purchasedFrom || undefined,
       cost: formData.cost ? parseFloat(formData.cost) : undefined,
-      purchasedDate: formData.purchasedDate?.toISOString() || undefined,
-      areaId: editingContainer?.areaId || areaId, // Include areaId for updates
+      condition: formData.condition === "unknown" || !formData.condition ? undefined : formData.condition,
+      notes: formData.notes || undefined,
+      isOwned: formData.isOwned,
     }
 
     if (editingContainer) {
