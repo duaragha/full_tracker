@@ -39,6 +39,20 @@ function normalizeContainer(container: any): Container {
     type: container.type || '',
     color: container.color,
     areaId: String(container.area_id),
+    // Tracking fields
+    brand: container.brand || undefined,
+    model: container.model || undefined,
+    material: container.material || undefined,
+    size: container.size || undefined,
+    capacity: container.capacity || undefined,
+    purchasedDate: container.purchased_date instanceof Date
+      ? container.purchased_date.toISOString().split('T')[0]
+      : container.purchased_date || undefined,
+    purchasedFrom: container.purchased_from || undefined,
+    cost: container.cost ? Number(container.cost) : undefined,
+    condition: container.condition || undefined,
+    notes: container.notes || undefined,
+    isOwned: container.is_owned !== null ? Boolean(container.is_owned) : true,
     createdAt: container.created_at,
     updatedAt: container.updated_at,
   }
@@ -147,10 +161,28 @@ export async function getContainers(): Promise<Container[]> {
 export async function addContainer(container: Omit<Container, 'id' | 'createdAt' | 'updatedAt'>): Promise<Container> {
   const result = await pool.query<any>(
     `INSERT INTO inventory_containers (
-      name, type, color, area_id, created_at, updated_at
-    ) VALUES ($1, $2, $3, $4, NOW(), NOW())
+      name, type, color, area_id, brand, model, material, size, capacity,
+      purchased_date, purchased_from, cost, condition, notes, is_owned,
+      created_at, updated_at
+    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, NOW(), NOW())
     RETURNING *`,
-    [container.name, container.type, container.color, container.areaId]
+    [
+      container.name,
+      container.type,
+      container.color,
+      container.areaId,
+      container.brand,
+      container.model,
+      container.material,
+      container.size,
+      container.capacity,
+      container.purchasedDate,
+      container.purchasedFrom,
+      container.cost,
+      container.condition,
+      container.notes,
+      container.isOwned !== undefined ? container.isOwned : true,
+    ]
   )
   return normalizeContainer(result.rows[0])
 }
@@ -162,9 +194,37 @@ export async function updateContainer(id: number, container: Partial<Container>)
       type = COALESCE($2, type),
       color = $3,
       area_id = COALESCE($4, area_id),
+      brand = $5,
+      model = $6,
+      material = $7,
+      size = $8,
+      capacity = $9,
+      purchased_date = $10,
+      purchased_from = $11,
+      cost = $12,
+      condition = $13,
+      notes = $14,
+      is_owned = COALESCE($15, is_owned),
       updated_at = NOW()
-    WHERE id = $5`,
-    [container.name, container.type, container.color, container.areaId, id]
+    WHERE id = $16`,
+    [
+      container.name,
+      container.type,
+      container.color,
+      container.areaId,
+      container.brand,
+      container.model,
+      container.material,
+      container.size,
+      container.capacity,
+      container.purchasedDate,
+      container.purchasedFrom,
+      container.cost,
+      container.condition,
+      container.notes,
+      container.isOwned,
+      id,
+    ]
   )
 }
 

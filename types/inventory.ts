@@ -28,6 +28,18 @@ export interface Container {
   type: string // Box, Bag, Drawer, Shelf, Bin
   color?: string
   areaId: string
+  // Tracking fields
+  brand?: string // Brand/manufacturer
+  model?: string // Model name/number
+  material?: string // Plastic, Metal, Fabric, Wood, etc.
+  size?: string // Dimensions or size category (Small, Medium, Large, XL)
+  capacity?: string // Volume or capacity description
+  purchasedDate?: string // When the container was purchased
+  purchasedFrom?: string // Where it was bought
+  cost?: number // How much it cost
+  condition?: string // New, Good, Fair, Poor
+  notes?: string // Additional notes
+  isOwned: boolean // Whether you own it or it's borrowed/rented
   createdAt: string
   updatedAt: string
 }
