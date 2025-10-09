@@ -144,12 +144,12 @@ export function ContainerManager({ open, onOpenChange, onContainerAdded, areaId,
 
                 <div className="space-y-2">
                   <Label htmlFor="material">Material</Label>
-                  <Select value={formData.material} onValueChange={(value) => setFormData({ ...formData, material: value })}>
+                  <Select value={formData.material || "none"} onValueChange={(value) => setFormData({ ...formData, material: value === "none" ? "" : value })}>
                     <SelectTrigger>
                       <SelectValue placeholder="Select material" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">None</SelectItem>
+                      <SelectItem value="none">None</SelectItem>
                       <SelectItem value="Plastic">Plastic</SelectItem>
                       <SelectItem value="Metal">Metal</SelectItem>
                       <SelectItem value="Wood">Wood</SelectItem>
@@ -253,11 +253,12 @@ export function ContainerManager({ open, onOpenChange, onContainerAdded, areaId,
 
                 <div className="space-y-2">
                   <Label htmlFor="condition">Condition</Label>
-                  <Select value={formData.condition} onValueChange={(value) => setFormData({ ...formData, condition: value })}>
+                  <Select value={formData.condition || "unknown"} onValueChange={(value) => setFormData({ ...formData, condition: value === "unknown" ? "" : value })}>
                     <SelectTrigger>
-                      <SelectValue />
+                      <SelectValue placeholder="Select condition" />
                     </SelectTrigger>
                     <SelectContent>
+                      <SelectItem value="unknown">Unknown</SelectItem>
                       <SelectItem value="New">New</SelectItem>
                       <SelectItem value="Good">Good</SelectItem>
                       <SelectItem value="Fair">Fair</SelectItem>
