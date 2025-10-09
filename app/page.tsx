@@ -56,6 +56,23 @@ export default function Dashboard() {
   const totalTVDays = tvshows.reduce((total, show) => total + (show.daysTracking || 0), 0)
   const totalMovieRuntime = movies.reduce((total, movie) => total + (movie.runtime || 0), 0)
 
+  // Calculate current month PHEV stats
+  const currentMonth = new Date().toISOString().slice(0, 7) // YYYY-MM format
+  let monthlyKm = 0
+  let monthlyCost = 0
+
+  if (phevCarSummaries && phevCarSummaries.length > 0) {
+    phevCarSummaries.forEach(summary => {
+      if (summary.monthlyGroups) {
+        const currentMonthData = summary.monthlyGroups.find(group => group.month === currentMonth)
+        if (currentMonthData) {
+          monthlyKm += currentMonthData.totalKm
+          monthlyCost += currentMonthData.totalCost
+        }
+      }
+    })
+  }
+
   const gameStatusData = [
     { status: 'Playing', count: games.filter(g => g.status === 'Playing').length, color: '#3b82f6' },
     { status: 'Completed', count: games.filter(g => g.status === 'Completed').length, color: '#10b981' },
@@ -169,30 +186,26 @@ export default function Dashboard() {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Monthly KMs</CardTitle>
+            <CardTitle className="text-sm font-medium">This Month KMs</CardTitle>
             <Car className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
-              {phevStats ? `${phevStats.monthlyKm.toFixed(0)} km` : 'Loading...'}
-            </div>
+            <div className="text-2xl font-bold">{monthlyKm.toFixed(0)} km</div>
             <p className="text-xs text-muted-foreground">
-              Average per month
+              {currentMonth}
             </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Monthly Cost</CardTitle>
+            <CardTitle className="text-sm font-medium">This Month Cost</CardTitle>
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
-              {phevStats ? `$${phevStats.monthlyCost.toFixed(2)}` : 'Loading...'}
-            </div>
+            <div className="text-2xl font-bold">${monthlyCost.toFixed(2)}</div>
             <p className="text-xs text-muted-foreground">
-              Average per month
+              {currentMonth}
             </p>
           </CardContent>
         </Card>
