@@ -87,6 +87,37 @@ export function ItemForm({ open, onOpenChange, onItemAdded, areas, containers, s
     }
   }, [editingItem, open, selectedArea, selectedContainer])
 
+  // Auto-calculate keepUntil based on cost and purchasedWhen
+  React.useEffect(() => {
+    if (formData.cost && formData.purchasedWhen && !editingItem) {
+      const price = parseFloat(formData.cost)
+      const purchaseDate = new Date(formData.purchasedWhen)
+
+      // Calculate multiplier based on price ranges
+      let multiplier = 5 // Default for $0-250
+      if (price >= 251 && price <= 500) {
+        multiplier = 4
+      } else if (price >= 501 && price <= 1000) {
+        multiplier = 3
+      } else if (price >= 1001 && price <= 1500) {
+        multiplier = 2
+      } else if (price >= 1501 && price <= 2000) {
+        multiplier = 1.5
+      } else if (price >= 2001) {
+        multiplier = 1
+      }
+
+      // Calculate days to add
+      const daysToAdd = Math.round(price * multiplier)
+
+      // Add days to purchase date
+      const keepUntilDate = new Date(purchaseDate)
+      keepUntilDate.setDate(keepUntilDate.getDate() + daysToAdd)
+
+      setFormData(prev => ({ ...prev, keepUntil: keepUntilDate }))
+    }
+  }, [formData.cost, formData.purchasedWhen, editingItem])
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 

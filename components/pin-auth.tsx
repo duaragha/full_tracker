@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import { useRouter } from "next/navigation"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
@@ -12,6 +13,7 @@ interface PinAuthProps {
 }
 
 export function PinAuth({ onUnlock }: PinAuthProps) {
+  const router = useRouter()
   const [pin, setPin] = React.useState("")
   const [error, setError] = React.useState("")
   const [isLoading, setIsLoading] = React.useState(false)
@@ -45,9 +47,13 @@ export function PinAuth({ onUnlock }: PinAuthProps) {
     }
   }
 
+  const handleCancel = () => {
+    router.push("/")
+  }
+
   return (
-    <Dialog open={true} onOpenChange={() => {}}>
-      <DialogContent className="sm:max-w-md" onPointerDownOutside={(e) => e.preventDefault()} onEscapeKeyDown={(e) => e.preventDefault()}>
+    <Dialog open={true} onOpenChange={handleCancel}>
+      <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <div className="flex items-center gap-2">
             <Lock className="h-5 w-5 text-primary" />
