@@ -94,17 +94,17 @@ export function ItemForm({ open, onOpenChange, onItemAdded, areas, containers, s
       const purchaseDate = new Date(formData.purchasedWhen)
 
       // Calculate multiplier based on price ranges
-      let multiplier = 5 // Default for $0-250
+      let multiplier = 4 // Default for $0-250
       if (price >= 251 && price <= 500) {
-        multiplier = 4
-      } else if (price >= 501 && price <= 1000) {
         multiplier = 3
-      } else if (price >= 1001 && price <= 1500) {
+      } else if (price >= 501 && price <= 1000) {
         multiplier = 2
-      } else if (price >= 1501 && price <= 2000) {
+      } else if (price >= 1001 && price <= 1500) {
         multiplier = 1.5
-      } else if (price >= 2001) {
+      } else if (price >= 1501 && price <= 2000) {
         multiplier = 1
+      } else if (price >= 2001) {
+        multiplier = 0.75
       }
 
       // Calculate days to add

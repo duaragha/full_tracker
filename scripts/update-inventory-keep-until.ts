@@ -8,26 +8,26 @@ const pool = new Pool({
 /**
  * Calculate the keep_until date based on cost and purchase date
  * Price ranges and multipliers:
- * - $0-250: multiply by 5
- * - $251-500: multiply by 4
- * - $501-1000: multiply by 3
- * - $1001-1500: multiply by 2
- * - $1501-2000: multiply by 1.5
- * - $2001+: multiply by 1
+ * - $0-250: multiply by 4
+ * - $251-500: multiply by 3
+ * - $501-1000: multiply by 2
+ * - $1001-1500: multiply by 1.5
+ * - $1501-2000: multiply by 1
+ * - $2001+: multiply by 0.75
  */
 function calculateKeepUntilDate(cost: number, purchasedWhen: Date): Date {
-  let multiplier = 5 // Default for $0-250
+  let multiplier = 4 // Default for $0-250
 
   if (cost >= 251 && cost <= 500) {
-    multiplier = 4
-  } else if (cost >= 501 && cost <= 1000) {
     multiplier = 3
-  } else if (cost >= 1001 && cost <= 1500) {
+  } else if (cost >= 501 && cost <= 1000) {
     multiplier = 2
-  } else if (cost >= 1501 && cost <= 2000) {
+  } else if (cost >= 1001 && cost <= 1500) {
     multiplier = 1.5
-  } else if (cost >= 2001) {
+  } else if (cost >= 1501 && cost <= 2000) {
     multiplier = 1
+  } else if (cost >= 2001) {
+    multiplier = 0.75
   }
 
   // Calculate days to add
@@ -97,12 +97,12 @@ async function updateInventoryKeepUntil() {
 }
 
 function getMultiplier(cost: number): number {
-  if (cost >= 251 && cost <= 500) return 4
-  if (cost >= 501 && cost <= 1000) return 3
-  if (cost >= 1001 && cost <= 1500) return 2
-  if (cost >= 1501 && cost <= 2000) return 1.5
-  if (cost >= 2001) return 1
-  return 5 // Default for $0-250
+  if (cost >= 251 && cost <= 500) return 3
+  if (cost >= 501 && cost <= 1000) return 2
+  if (cost >= 1001 && cost <= 1500) return 1.5
+  if (cost >= 1501 && cost <= 2000) return 1
+  if (cost >= 2001) return 0.75
+  return 4 // Default for $0-250
 }
 
 // Run the update

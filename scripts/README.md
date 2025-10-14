@@ -8,18 +8,18 @@ This script updates the `keep_until` date for all existing inventory items based
 
 The script applies the following formula based on price ranges:
 
-- **$0-250**: multiply by 5
-- **$251-500**: multiply by 4
-- **$501-1000**: multiply by 3
-- **$1001-1500**: multiply by 2
-- **$1501-2000**: multiply by 1.5
-- **$2001+**: multiply by 1
+- **$0-250**: multiply by 4
+- **$251-500**: multiply by 3
+- **$501-1000**: multiply by 2
+- **$1001-1500**: multiply by 1.5
+- **$1501-2000**: multiply by 1
+- **$2001+**: multiply by 0.75
 
 **Example**: If you bought something for $120 on April 19, 2021:
 - Price: $120 (falls in $0-250 range)
-- Multiplier: 5
-- Days to add: 120 × 5 = 600 days
-- Keep Until: December 10, 2022
+- Multiplier: 4
+- Days to add: 120 × 4 = 480 days
+- Keep Until: July 12, 2022
 
 ### Running the Script
 
