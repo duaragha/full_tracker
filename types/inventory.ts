@@ -18,6 +18,8 @@ export interface InventoryItem {
   soldPrice: number | null // Price sold for
   notes: string
   photo?: string // Base64 or URL
+  parentItemId?: string | null // Reference to parent item for nested structures (e.g., GPU within PC)
+  children?: InventoryItem[] // Child items when fetched with hierarchy
   createdAt: string
   updatedAt: string
 }

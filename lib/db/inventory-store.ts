@@ -27,6 +27,8 @@ function normalizeInventoryItem(item: any): InventoryItem {
     soldPrice: item.sold_price ? Number(item.sold_price) : null,
     notes: item.notes || '',
     photo: item.photo,
+    parentItemId: item.parent_item_id ? String(item.parent_item_id) : null,
+    children: item.children || undefined,
     createdAt: item.created_at,
     updatedAt: item.updated_at,
   }
@@ -76,13 +78,13 @@ export async function getInventoryItems(): Promise<InventoryItem[]> {
   return result.rows.map(normalizeInventoryItem)
 }
 
-export async function addInventoryItem(item: Omit<InventoryItem, 'id' | 'createdAt' | 'updatedAt'>): Promise<InventoryItem> {
+export async function addInventoryItem(item: Omit<InventoryItem, 'id' | 'createdAt' | 'updatedAt' | 'children'>): Promise<InventoryItem> {
   const result = await pool.query<any>(
     `INSERT INTO inventory_items (
       name, used_in_last_year, location, type, cost, is_gift, gift_from,
       purchased_where, purchased_when, keep_until, kept, sold_date,
-      sold_price, notes, photo, created_at, updated_at
-    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, NOW(), NOW())
+      sold_price, notes, photo, parent_item_id, created_at, updated_at
+    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, NOW(), NOW())
     RETURNING *`,
     [
       item.name,
@@ -100,6 +102,7 @@ export async function addInventoryItem(item: Omit<InventoryItem, 'id' | 'created
       item.soldPrice,
       item.notes,
       item.photo,
+      item.parentItemId || null,
     ]
   )
   return normalizeInventoryItem(result.rows[0])
@@ -123,8 +126,9 @@ export async function updateInventoryItem(id: number, item: Partial<InventoryIte
       sold_price = $13,
       notes = COALESCE($14, notes),
       photo = $15,
+      parent_item_id = $16,
       updated_at = NOW()
-    WHERE id = $16`,
+    WHERE id = $17`,
     [
       item.name,
       item.usedInLastYear,
@@ -141,6 +145,7 @@ export async function updateInventoryItem(id: number, item: Partial<InventoryIte
       item.soldPrice,
       item.notes,
       item.photo,
+      item.parentItemId !== undefined ? item.parentItemId : undefined,
       id,
     ]
   )
@@ -148,6 +153,43 @@ export async function updateInventoryItem(id: number, item: Partial<InventoryIte
 
 export async function deleteInventoryItem(id: number): Promise<void> {
   await pool.query('DELETE FROM inventory_items WHERE id = $1', [id])
+}
+
+// Get items with their nested children (hierarchical structure)
+export async function getInventoryItemsWithChildren(): Promise<InventoryItem[]> {
+  // First get all items
+  const allItems = await getInventoryItems()
+
+  // Build a map for quick lookup
+  const itemMap = new Map<string, InventoryItem>()
+  allItems.forEach(item => {
+    itemMap.set(item.id, { ...item, children: [] })
+  })
+
+  // Build the hierarchy
+  const rootItems: InventoryItem[] = []
+  itemMap.forEach(item => {
+    if (item.parentItemId) {
+      const parent = itemMap.get(item.parentItemId)
+      if (parent) {
+        parent.children = parent.children || []
+        parent.children.push(item)
+      }
+    } else {
+      rootItems.push(item)
+    }
+  })
+
+  return rootItems
+}
+
+// Get children of a specific parent item
+export async function getChildItems(parentId: number): Promise<InventoryItem[]> {
+  const result = await pool.query<any>(
+    'SELECT * FROM inventory_items WHERE parent_item_id = $1 ORDER BY created_at DESC',
+    [parentId]
+  )
+  return result.rows.map(normalizeInventoryItem)
 }
 
 // Containers
