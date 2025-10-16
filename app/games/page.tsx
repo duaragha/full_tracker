@@ -218,51 +218,51 @@ export default function GamesPage() {
 
       <div className="grid grid-cols-2 gap-3 md:gap-4 md:grid-cols-7">
         <Card>
-          <CardHeader className="p-4 sm:p-6">
-            <CardTitle className="text-2xl sm:text-3xl">{games.length}</CardTitle>
-            <CardDescription className="text-xs sm:text-sm">Total Games</CardDescription>
+          <CardHeader>
+            <CardTitle>{games.length}</CardTitle>
+            <CardDescription>Total Games</CardDescription>
           </CardHeader>
         </Card>
         <Card>
-          <CardHeader className="p-4 sm:p-6">
-            <CardTitle className="text-2xl sm:text-3xl">{totalHours.toFixed(1)}h</CardTitle>
-            <CardDescription className="text-xs sm:text-sm">Total Hours Played</CardDescription>
+          <CardHeader>
+            <CardTitle>{totalHours.toFixed(1)}h</CardTitle>
+            <CardDescription>Total Hours Played</CardDescription>
           </CardHeader>
         </Card>
         <Card>
-          <CardHeader className="p-4 sm:p-6">
-            <CardTitle className="text-2xl sm:text-3xl">{avgPercentage}%</CardTitle>
-            <CardDescription className="text-xs sm:text-sm">Average Percentage</CardDescription>
+          <CardHeader>
+            <CardTitle>{avgPercentage}%</CardTitle>
+            <CardDescription>Average Percentage</CardDescription>
           </CardHeader>
         </Card>
         <Card>
-          <CardHeader className="p-4 sm:p-6">
-            <CardTitle className="text-2xl sm:text-3xl">{totalDays}</CardTitle>
-            <CardDescription className="text-xs sm:text-sm">Total Days</CardDescription>
+          <CardHeader>
+            <CardTitle>{totalDays}</CardTitle>
+            <CardDescription>Total Days</CardDescription>
           </CardHeader>
         </Card>
         <Card>
-          <CardHeader className="p-4 sm:p-6">
-            <CardTitle className="text-2xl sm:text-3xl">${totalCost.toFixed(2)}</CardTitle>
-            <CardDescription className="text-xs sm:text-sm">Total Cost</CardDescription>
+          <CardHeader>
+            <CardTitle>${totalCost.toFixed(2)}</CardTitle>
+            <CardDescription>Total Cost</CardDescription>
           </CardHeader>
         </Card>
         <Card>
-          <CardHeader className="p-4 sm:p-6">
-            <CardTitle className="text-sm sm:text-base truncate">
+          <CardHeader>
+            <CardTitle className="truncate">
               {oldestGame ? oldestGame.title : 'N/A'}
             </CardTitle>
-            <CardDescription className="text-xs sm:text-sm">
+            <CardDescription>
               Oldest Game {oldestGame && `(${new Date(oldestGame.dateStarted).getFullYear()})`}
             </CardDescription>
           </CardHeader>
         </Card>
         <Card>
-          <CardHeader className="p-4 sm:p-6">
-            <CardTitle className="text-sm sm:text-base truncate">
+          <CardHeader>
+            <CardTitle className="truncate">
               {newestGame ? newestGame.title : 'N/A'}
             </CardTitle>
-            <CardDescription className="text-xs sm:text-sm">
+            <CardDescription>
               Newest Game {newestGame && `(${new Date(newestGame.dateStarted).getFullYear()})`}
             </CardDescription>
           </CardHeader>

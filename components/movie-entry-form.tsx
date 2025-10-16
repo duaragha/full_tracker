@@ -97,10 +97,8 @@ export function MovieEntryForm({ selectedMovie, onSubmit, onCancel, initialData 
       director,
       genres: movieDetails.genres.map((g: any) => g.name),
       runtime: movieDetails.runtime || 0,
-      releaseDate: movieDetails.release_date || "",
       releaseYear,
       posterImage: getMoviePosterUrl(movieDetails.poster_path, 'w342'),
-      backdropImage: getMovieBackdropUrl(movieDetails.backdrop_path, 'w780'),
       status: formData.status,
       dateWatched: formData.dateWatched?.toISOString().split('T')[0] || null,
       watchlistAddedDate: formData.watchlistAddedDate?.toISOString().split('T')[0] || null,
@@ -145,7 +143,9 @@ export function MovieEntryForm({ selectedMovie, onSubmit, onCancel, initialData 
                 Runtime: {hours}h {minutes}m
               </p>
               <p className="text-sm text-muted-foreground">
-                Released: {movieDetails.release_date ? new Date(movieDetails.release_date).getFullYear() : "N/A"}
+                Released: {movieDetails.release_date
+                  ? movieDetails.release_date.substring(0, 4)
+                  : "N/A"}
               </p>
             </div>
           </div>

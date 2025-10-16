@@ -137,27 +137,27 @@ export default function TVShowsPage() {
 
       <div className="grid grid-cols-2 gap-3 md:gap-4 md:grid-cols-4">
         <Card>
-          <CardHeader className="p-4 sm:p-6">
-            <CardTitle className="text-2xl sm:text-3xl">{totalShows}</CardTitle>
-            <CardDescription className="text-xs sm:text-sm">Total Shows</CardDescription>
+          <CardHeader>
+            <CardTitle>{totalShows}</CardTitle>
+            <CardDescription>Total Shows</CardDescription>
           </CardHeader>
         </Card>
         <Card>
-          <CardHeader className="p-4 sm:p-6">
-            <CardTitle className="text-2xl sm:text-3xl">{totalEpisodesWatched}</CardTitle>
-            <CardDescription className="text-xs sm:text-sm">Episodes Watched</CardDescription>
+          <CardHeader>
+            <CardTitle>{totalEpisodesWatched}</CardTitle>
+            <CardDescription>Episodes Watched</CardDescription>
           </CardHeader>
         </Card>
         <Card>
-          <CardHeader className="p-4 sm:p-6">
-            <CardTitle className="text-2xl sm:text-3xl">{totalHours}h {remainingMinutes}m</CardTitle>
-            <CardDescription className="text-xs sm:text-sm">Total Hours Watched</CardDescription>
+          <CardHeader>
+            <CardTitle>{totalHours}h {remainingMinutes}m</CardTitle>
+            <CardDescription>Total Hours Watched</CardDescription>
           </CardHeader>
         </Card>
         <Card>
-          <CardHeader className="p-4 sm:p-6">
-            <CardTitle className="text-2xl sm:text-3xl">{totalDaysTracking}</CardTitle>
-            <CardDescription className="text-xs sm:text-sm">Days Tracking</CardDescription>
+          <CardHeader>
+            <CardTitle>{totalDaysTracking}</CardTitle>
+            <CardDescription>Days Tracking</CardDescription>
           </CardHeader>
         </Card>
       </div>

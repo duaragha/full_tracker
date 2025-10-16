@@ -5,10 +5,8 @@ export interface Movie {
   director: string
   genres: string[]
   runtime: number // minutes
-  releaseDate: string
   releaseYear: number | null
   posterImage: string
-  backdropImage: string
   status: 'Watched' | 'Watchlist'
   dateWatched: string | null
   watchlistAddedDate: string | null

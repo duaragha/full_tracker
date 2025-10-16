@@ -668,46 +668,15 @@ export default function InventoryPage() {
                             <TableHead>From</TableHead>
                             <TableHead>Where</TableHead>
                             <TableHead>When</TableHead>
+                            <TableHead>Keep Until</TableHead>
+                            <TableHead>Kept?</TableHead>
+                            <TableHead>Sold Date</TableHead>
+                            <TableHead>Sold Price</TableHead>
                             <TableHead>Actions</TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
-                          {group.items.map((item) => (
-                            <TableRow key={item.id}>
-                              <TableCell className="font-medium">{item.name}</TableCell>
-                              <TableCell>
-                                <Badge variant="secondary">{item.type}</Badge>
-                              </TableCell>
-                              <TableCell>{item.usedInLastYear ? "✓" : "✗"}</TableCell>
-                              <TableCell>${item.cost.toFixed(2)}</TableCell>
-                              <TableCell>{item.isGift ? "✓" : "✗"}</TableCell>
-                              <TableCell>{item.giftFrom || "-"}</TableCell>
-                              <TableCell className="text-sm">{item.purchasedWhere}</TableCell>
-                              <TableCell className="text-sm">
-                                {new Date(item.purchasedWhen).toLocaleDateString()}
-                              </TableCell>
-                              <TableCell>
-                                <div className="flex gap-1">
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    onClick={() => handleEditItem(item)}
-                                    className="h-9 w-9"
-                                  >
-                                    <Pencil className="h-4 w-4" />
-                                  </Button>
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    onClick={() => handleDeleteItem(item.id)}
-                                    className="h-9 w-9"
-                                  >
-                                    <Trash2 className="h-4 w-4" />
-                                  </Button>
-                                </div>
-                              </TableCell>
-                            </TableRow>
-                          ))}
+                          {group.items.filter(item => !item.parentItemId).map(item => renderItemRow(item))}
                         </TableBody>
                       </Table>
                     </div>

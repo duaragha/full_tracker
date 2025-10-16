@@ -21,7 +21,7 @@ export default function MoviesPage() {
   const [showForm, setShowForm] = React.useState(false)
   const [statusFilter, setStatusFilter] = React.useState<string>("All")
   const [searchQuery, setSearchQuery] = React.useState("")
-  const [sortBy, setSortBy] = React.useState<"title" | "runtime" | "rating" | "dateWatched" | "releaseDate">("title")
+  const [sortBy, setSortBy] = React.useState<"title" | "runtime" | "rating" | "dateWatched" | "releaseYear">("title")
   const [sortOrder, setSortOrder] = React.useState<"asc" | "desc">("asc")
 
   React.useEffect(() => {
@@ -89,17 +89,15 @@ export default function MoviesPage() {
           comparison = a.runtime - b.runtime
           break
         case "rating":
-          comparison = a.rating - b.rating
+          comparison = (a.rating || 0) - (b.rating || 0)
           break
         case "dateWatched":
           const dateA = a.dateWatched ? new Date(a.dateWatched).getTime() : 0
           const dateB = b.dateWatched ? new Date(b.dateWatched).getTime() : 0
           comparison = dateA - dateB
           break
-        case "releaseDate":
-          const relA = new Date(a.releaseDate).getTime()
-          const relB = new Date(b.releaseDate).getTime()
-          comparison = relA - relB
+        case "releaseYear":
+          comparison = (a.releaseYear || 0) - (b.releaseYear || 0)
           break
       }
       return sortOrder === "asc" ? comparison : -comparison
@@ -141,27 +139,27 @@ export default function MoviesPage() {
 
       <div className="grid grid-cols-2 gap-3 md:gap-4 md:grid-cols-4">
         <Card>
-          <CardHeader className="p-4 sm:p-6">
-            <CardTitle className="text-2xl sm:text-3xl">{totalMovies}</CardTitle>
-            <CardDescription className="text-xs sm:text-sm">Total Movies</CardDescription>
+          <CardHeader>
+            <CardTitle>{totalMovies}</CardTitle>
+            <CardDescription>Total Movies</CardDescription>
           </CardHeader>
         </Card>
         <Card>
-          <CardHeader className="p-4 sm:p-6">
-            <CardTitle className="text-2xl sm:text-3xl">{totalHours}h {totalMinutes}m</CardTitle>
-            <CardDescription className="text-xs sm:text-sm">Total Runtime</CardDescription>
+          <CardHeader>
+            <CardTitle>{totalHours}h {totalMinutes}m</CardTitle>
+            <CardDescription>Total Runtime</CardDescription>
           </CardHeader>
         </Card>
         <Card>
-          <CardHeader className="p-4 sm:p-6">
-            <CardTitle className="text-2xl sm:text-3xl">{avgRating}/10</CardTitle>
-            <CardDescription className="text-xs sm:text-sm">Average Rating</CardDescription>
+          <CardHeader>
+            <CardTitle>{avgRating}/10</CardTitle>
+            <CardDescription>Average Rating</CardDescription>
           </CardHeader>
         </Card>
         <Card>
-          <CardHeader className="p-4 sm:p-6">
-            <CardTitle className="text-2xl sm:text-3xl">{moviesThisYear}</CardTitle>
-            <CardDescription className="text-xs sm:text-sm">Movies This Year</CardDescription>
+          <CardHeader>
+            <CardTitle>{moviesThisYear}</CardTitle>
+            <CardDescription>Movies This Year</CardDescription>
           </CardHeader>
         </Card>
       </div>
@@ -208,7 +206,7 @@ export default function MoviesPage() {
                   <SelectItem value="runtime">Runtime</SelectItem>
                   <SelectItem value="rating">Rating</SelectItem>
                   <SelectItem value="dateWatched">Date Watched</SelectItem>
-                  <SelectItem value="releaseDate">Release Date</SelectItem>
+                  <SelectItem value="releaseYear">Release Year</SelectItem>
                 </SelectContent>
               </Select>
               <Select value={sortOrder} onValueChange={(value: any) => setSortOrder(value)}>
@@ -283,9 +281,7 @@ export default function MoviesPage() {
                             {hours > 0 && `${hours}h `}{mins}m
                           </TableCell>
                           <TableCell>
-                            {movie.releaseDate
-                              ? new Date(movie.releaseDate).getFullYear()
-                              : "N/A"}
+                            {movie.releaseYear || "N/A"}
                           </TableCell>
                           <TableCell>
                             {movie.dateWatched
@@ -293,10 +289,14 @@ export default function MoviesPage() {
                               : "-"}
                           </TableCell>
                           <TableCell>
-                            <div className="flex items-center gap-1">
-                              <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                              <span>{movie.rating}/10</span>
-                            </div>
+                            {movie.rating ? (
+                              <div className="flex items-center gap-1">
+                                <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                                <span>{movie.rating}/10</span>
+                              </div>
+                            ) : (
+                              "-"
+                            )}
                           </TableCell>
                           <TableCell>
                             <div className="flex gap-2">
@@ -373,9 +373,7 @@ export default function MoviesPage() {
                             <div>
                               <span className="text-muted-foreground">Released:</span>
                               <span className="ml-1 font-medium">
-                                {movie.releaseDate
-                                  ? new Date(movie.releaseDate).getFullYear()
-                                  : "N/A"}
+                                {movie.releaseYear || "N/A"}
                               </span>
                             </div>
                             <div>
@@ -388,10 +386,14 @@ export default function MoviesPage() {
                             </div>
                             <div className="flex items-center">
                               <span className="text-muted-foreground">Rating:</span>
-                              <div className="flex items-center gap-1 ml-1">
-                                <Star className="h-3.5 w-3.5 fill-yellow-400 text-yellow-400" />
-                                <span className="font-medium">{movie.rating}/10</span>
-                              </div>
+                              {movie.rating ? (
+                                <div className="flex items-center gap-1 ml-1">
+                                  <Star className="h-3.5 w-3.5 fill-yellow-400 text-yellow-400" />
+                                  <span className="font-medium">{movie.rating}/10</span>
+                                </div>
+                              ) : (
+                                <span className="ml-1 font-medium">-</span>
+                              )}
                             </div>
                           </div>
 

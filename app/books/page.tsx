@@ -125,27 +125,27 @@ export default function BooksPage() {
 
       <div className="grid grid-cols-2 gap-3 md:gap-4 md:grid-cols-4">
         <Card>
-          <CardHeader className="p-4 sm:p-6">
-            <CardTitle className="text-2xl sm:text-3xl">{books.length}</CardTitle>
-            <CardDescription className="text-xs sm:text-sm">Total Books</CardDescription>
+          <CardHeader>
+            <CardTitle>{books.length}</CardTitle>
+            <CardDescription>Total Books</CardDescription>
           </CardHeader>
         </Card>
         <Card>
-          <CardHeader className="p-4 sm:p-6">
-            <CardTitle className="text-2xl sm:text-3xl">{totalPages.toLocaleString()}</CardTitle>
-            <CardDescription className="text-xs sm:text-sm">Pages Read (Ebooks)</CardDescription>
+          <CardHeader>
+            <CardTitle>{totalPages.toLocaleString()}</CardTitle>
+            <CardDescription>Pages Read (Ebooks)</CardDescription>
           </CardHeader>
         </Card>
         <Card>
-          <CardHeader className="p-4 sm:p-6">
-            <CardTitle className="text-2xl sm:text-3xl">{totalHours}h {remainingMinutes}m</CardTitle>
-            <CardDescription className="text-xs sm:text-sm">Time Listened (Audiobooks)</CardDescription>
+          <CardHeader>
+            <CardTitle>{totalHours}h {remainingMinutes}m</CardTitle>
+            <CardDescription>Time Listened (Audiobooks)</CardDescription>
           </CardHeader>
         </Card>
         <Card>
-          <CardHeader className="p-4 sm:p-6">
-            <CardTitle className="text-2xl sm:text-3xl">{totalDays}</CardTitle>
-            <CardDescription className="text-xs sm:text-sm">Total Days</CardDescription>
+          <CardHeader>
+            <CardTitle>{totalDays}</CardTitle>
+            <CardDescription>Total Days</CardDescription>
           </CardHeader>
         </Card>
       </div>

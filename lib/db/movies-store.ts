@@ -29,10 +29,8 @@ function normalizeMovie(movie: any): Movie {
     director: movie.director || 'Unknown',
     genres,
     runtime: Number(movie.runtime) || 0,
-    releaseDate: movie.release_date || '',
     releaseYear: movie.release_year ? Number(movie.release_year) : null,
     posterImage: movie.poster_image || '',
-    backdropImage: movie.backdrop_image || '',
     status: movie.status || 'Watchlist',
     dateWatched: formatDate(movie.watched_date),
     watchlistAddedDate: formatDate(movie.watchlist_added_date),
@@ -57,9 +55,9 @@ export async function addMovie(movie: Omit<Movie, 'id' | 'createdAt' | 'updatedA
   const result = await pool.query<any>(
     `INSERT INTO movies (
       tmdb_id, title, director, genre, runtime, release_year,
-      poster_image, backdrop_image, status, watched_date, watchlist_added_date,
+      poster_image, status, watched_date, watchlist_added_date,
       rating, notes, created_at, updated_at
-    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, NOW(), NOW())
+    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, NOW(), NOW())
     RETURNING *`,
     [
       movie.tmdbId,
@@ -69,7 +67,6 @@ export async function addMovie(movie: Omit<Movie, 'id' | 'createdAt' | 'updatedA
       movie.runtime,
       movie.releaseYear,
       movie.posterImage,
-      movie.backdropImage,
       movie.status,
       movie.dateWatched,
       movie.watchlistAddedDate,
@@ -93,14 +90,13 @@ export async function updateMovie(id: number, movie: Partial<Movie>): Promise<vo
       runtime = COALESCE($5, runtime),
       release_year = COALESCE($6, release_year),
       poster_image = COALESCE($7, poster_image),
-      backdrop_image = COALESCE($8, backdrop_image),
-      status = COALESCE($9, status),
-      watched_date = $10,
-      watchlist_added_date = $11,
-      rating = $12,
-      notes = COALESCE($13, notes),
+      status = COALESCE($8, status),
+      watched_date = $9,
+      watchlist_added_date = $10,
+      rating = $11,
+      notes = COALESCE($12, notes),
       updated_at = NOW()
-    WHERE id = $14`,
+    WHERE id = $13`,
     [
       movie.tmdbId,
       movie.title,
@@ -109,7 +105,6 @@ export async function updateMovie(id: number, movie: Partial<Movie>): Promise<vo
       movie.runtime,
       movie.releaseYear,
       movie.posterImage,
-      movie.backdropImage,
       movie.status,
       movie.dateWatched,
       movie.watchlistAddedDate,
