@@ -17,6 +17,7 @@ export interface TVShow {
   id: string
   tmdbId: number
   title: string
+  creators: string[] // show creators/directors
   network: string
   genres: string[]
   posterImage: string
@@ -30,9 +31,17 @@ export interface TVShow {
   seasons: Season[]
   totalMinutes: number // calculated from watched episodes
   daysTracking: number // calculated
+  rewatchCount: number // number of times rewatched
+  rewatchHistory: RewatchEntry[] // history of rewatches
   notes: string
   createdAt: string
   updatedAt: string
+}
+
+export interface RewatchEntry {
+  startDate: string
+  endDate: string | null
+  notes?: string
 }
 
 export interface TVShowSearchResult {
@@ -56,6 +65,7 @@ export interface TMDbTVShowDetails {
   last_air_date: string | null
   genres: Array<{ id: number; name: string }>
   networks: Array<{ id: number; name: string }>
+  created_by: Array<{ id: number; name: string }> // show creators
   number_of_seasons: number
   number_of_episodes: number
   episode_run_time: number[]

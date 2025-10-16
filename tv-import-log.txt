@@ -1,0 +1,388 @@
+[dotenv@17.2.3] injecting env (4) from .env.local -- tip: 📡 add observability to secrets: https://dotenvx.com/ops
+📺 TV Time Shows Importer
+
+==================================================
+
+Found 122 TV shows in TV Time export
+  - Watching: 0
+  - Stopped: 6
+  - Other: 116
+
+==================================================
+Starting import...
+
+
+Processing: Teen Wolf
+  ✅ Imported: Teen Wolf (0/100 episodes, 0h 0m)
+
+Processing: Stargirl
+  ✅ Imported: DC's Stargirl (0/39 episodes, 0h 0m)
+
+Processing: The 100
+  ✅ Imported: The 100 (100/100 episodes, 69h 57m)
+
+Processing: The Last of Us
+  ✅ Imported: The Last of Us (0/16 episodes, 0h 0m)
+
+Processing: Banshee
+  ✅ Imported: Banshee (0/38 episodes, 0h 0m)
+
+Processing: Legacies
+  ✅ Imported: Legacies (0/68 episodes, 0h 0m)
+
+Processing: Fullmetal Alchemist: Brotherhood
+  ✅ Imported: Fullmetal Alchemist: Brotherhood (64/64 episodes, 26h 40m)
+
+Processing: 13 Reasons Why
+  ✅ Imported: 13 Reasons Why (26/49 episodes, 24h 49m)
+
+Processing: Avatar: The Last Airbender
+  ✅ Imported: Avatar: The Last Airbender (61/61 episodes, 24h 56m)
+
+Processing: Business Proposal
+  ✅ Imported: Business Proposal (12/12 episodes, 12h 12m)
+
+Processing: Glitch (2015)
+  ✅ Imported: Glitch (0/18 episodes, 0h 0m)
+
+Processing: Ashley Madison: Sex, Lies & Scandal
+  ✅ Imported: Ashley Madison: Sex, Lies & Scandal (3/3 episodes, 2h 35m)
+
+Processing: The Order
+  ✅ Imported: The Order (10/20 episodes, 7h 56m)
+
+Processing: Emily in Paris
+  ✅ Imported: Emily in Paris (0/50 episodes, 0h 0m)
+
+Processing: Boruto: Naruto Next Generations
+  ✅ Imported: Boruto: Naruto Next Generations (199/293 episodes, 79h 34m)
+
+Processing: The Suite Life on Deck
+  ✅ Imported: The Suite Life on Deck (71/71 episodes, 27h 13m)
+
+Processing: Victorious
+  ✅ Imported: Victorious (57/57 episodes, 23h 54m)
+
+Processing: Fresh Off the Boat
+  ✅ Imported: Fresh Off the Boat (116/116 episodes, 42h 32m)
+
+Processing: Primo
+  ✅ Imported: Primo (0/8 episodes, 0h 0m)
+
+Processing: iCarly
+  ✅ Imported: iCarly (109/109 episodes, 43h 15m)
+
+Processing: Death Note
+  ✅ Imported: Death Note (0/37 episodes, 0h 0m)
+
+Processing: Marvel's Daredevil
+  ✅ Imported: Marvel's Daredevil (17/39 episodes, 15h 19m)
+
+Processing: Better Call Saul
+  ✅ Imported: Better Call Saul (0/63 episodes, 0h 0m)
+
+Processing: The Boys
+  ✅ Imported: The Boys (24/40 episodes, 24h 48m)
+
+Processing: The Rookie
+  ✅ Imported: The Rookie (108/126 episodes, 77h 16m)
+
+Processing: Vikings
+  ✅ Imported: Vikings (0/89 episodes, 0h 0m)
+
+Processing: Breaking Bad
+  ✅ Imported: Breaking Bad (0/62 episodes, 0h 0m)
+
+Processing: Black Mirror
+  ✅ Imported: Black Mirror (0/32 episodes, 0h 0m)
+
+Processing: The Vampire Diaries
+  ✅ Imported: The Vampire Diaries (171/171 episodes, 121h 46m)
+
+Processing: Jane the Virgin
+  ✅ Imported: Jane the Virgin (100/100 episodes, 70h 41m)
+
+Processing: Marvel's The Punisher
+  ✅ Imported: Marvel's The Punisher (26/26 episodes, 23h 4m)
+
+Processing: How I Met Your Mother
+  ✅ Imported: How I Met Your Mother (208/208 episodes, 78h 10m)
+
+Processing: Naruto
+  ✅ Imported: Naruto (220/220 episodes, 14h 0m)
+
+Processing: Elementary
+  ✅ Imported: Elementary (0/154 episodes, 0h 0m)
+
+Processing: The Good Doctor
+  ✅ Imported: The Good Doctor (0/126 episodes, 0h 0m)
+
+Processing: The Good Place
+  ✅ Imported: The Good Place (0/50 episodes, 0h 0m)
+
+Processing: Good Luck Charlie
+  ✅ Imported: Good Luck Charlie (100/100 episodes, 37h 46m)
+
+Processing: The Flash (2014)
+  ✅ Imported: The Flash (144/184 episodes, 100h 9m)
+
+Processing: Supernatural
+  ✅ Imported: Supernatural (82/327 episodes, 56h 56m)
+
+Processing: Superman & Lois
+  ✅ Imported: Superman & Lois (0/53 episodes, 0h 0m)
+
+Processing: Reign (2013)
+  ✅ Imported: Reign (0/78 episodes, 0h 0m)
+
+Processing: My Babysitter's a Vampire
+  ✅ Imported: My Babysitter's a Vampire (26/26 episodes, 0h 50m)
+
+Processing: Batwoman
+  ✅ Imported: Batwoman (0/51 episodes, 0h 0m)
+
+Processing: Austin & Ally
+  ✅ Imported: Austin & Ally (87/87 episodes, 36h 15m)
+
+Processing: Blue Bloods
+  ✅ Imported: Blue Bloods (0/293 episodes, 0h 0m)
+
+Processing: The Last Kingdom
+  ✅ Imported: The Last Kingdom (0/46 episodes, 0h 0m)
+
+Processing: Jessie
+  ✅ Imported: Jessie (101/101 episodes, 39h 12m)
+
+Processing: The Detour
+  ✅ Imported: The Detour (0/42 episodes, 0h 0m)
+
+Processing: Bates Motel
+  ✅ Imported: Bates Motel (35/50 episodes, 25h 16m)
+
+Processing: The Big Bang Theory
+  ✅ Imported: The Big Bang Theory (280/279 episodes, 94h 55m)
+
+Processing: Superstore
+  ✅ Imported: Superstore (113/112 episodes, 39h 35m)
+
+Processing: The Queen's Gambit
+  ✅ Imported: The Queen's Gambit (0/7 episodes, 0h 0m)
+
+Processing: Big Time Rush
+  ✅ Imported: Big Time Rush (69/69 episodes, 27h 26m)
+
+Processing: On My Block
+  ✅ Imported: On My Block (38/38 episodes, 18h 43m)
+
+Processing: 2 Broke Girls
+  ✅ Imported: 2 Broke Girls (138/138 episodes, 55h 30m)
+
+Processing: Naruto Shippuden
+  ✅ Imported: Naruto Shippūden (500/500 episodes, 12h 16m)
+
+Processing: SpongeBob SquarePants
+  ✅ Imported: SpongeBob SquarePants (0/618 episodes, 0h 0m)
+
+Processing: 9-1-1
+  ✅ Imported: 9-1-1 (0/131 episodes, 0h 0m)
+
+Processing: Cobra Kai
+  ✅ Imported: Cobra Kai (8/65 episodes, 3h 55m)
+
+Processing: Sherlock
+  ✅ Imported: Sherlock (10/12 episodes, 13h 19m)
+
+Processing: The Lord of the Rings: The Rings of Power
+  ✅ Imported: The Lord of the Rings: The Rings of Power (0/16 episodes, 0h 0m)
+
+Processing: Van Helsing
+  ✅ Imported: Van Helsing (0/65 episodes, 0h 0m)
+
+Processing: Tulsa King
+  ✅ Imported: Tulsa King (0/29 episodes, 0h 0m)
+
+Processing: Pretty Little Liars
+  ✅ Imported: Pretty Little Liars (0/160 episodes, 0h 0m)
+
+Processing: Young Sheldon
+  ✅ Imported: Young Sheldon (141/141 episodes, 45h 54m)
+
+Processing: Sense8
+  ✅ Imported: Sense8 (24/24 episodes, 25h 10m)
+
+Processing: Manifest
+  ✅ Imported: Manifest (62/62 episodes, 45h 37m)
+
+Processing: Pokémon
+  ✅ Imported: Pokémon (654/1335 episodes, 250h 41m)
+
+Processing: Friends from College
+  ✅ Imported: Friends from College (16/16 episodes, 8h 3m)
+
+Processing: America's Got Talent
+  ✅ Imported: America's Got Talent (0/477 episodes, 0h 0m)
+
+Processing: Supergirl
+  ✅ Imported: Supergirl (87/126 episodes, 61h 1m)
+
+Processing: The Office (US)
+  ✅ Imported: The Office (195/195 episodes, 74h 17m)
+
+Processing: Revenge
+  ✅ Imported: Revenge (0/89 episodes, 0h 0m)
+
+Processing: Jujutsu Kaisen
+  ✅ Imported: JUJUTSU KAISEN (9/47 episodes, 3h 36m)
+
+Processing: The Fresh Prince of Bel-Air
+  ✅ Imported: The Fresh Prince of Bel-Air (0/148 episodes, 0h 0m)
+
+Processing: House of the Dragon
+  ✅ Imported: House of the Dragon (0/18 episodes, 0h 0m)
+
+Processing: Fear the Walking Dead
+  ✅ Imported: Fear the Walking Dead (0/113 episodes, 0h 0m)
+
+Processing: How to Get Away with Murder
+  ✅ Imported: How to Get Away with Murder (0/90 episodes, 0h 0m)
+
+Processing: Tom Clancy's Jack Ryan
+  ✅ Imported: Tom Clancy's Jack Ryan (16/30 episodes, 13h 17m)
+
+Processing: Sam & Cat
+  ✅ Imported: Sam & Cat (36/36 episodes, 13h 48m)
+
+Processing: Quantico
+  ✅ Imported: Quantico (44/57 episodes, 31h 34m)
+
+Processing: DC's Legends of Tomorrow
+  ✅ Imported: DC's Legends of Tomorrow (82/110 episodes, 57h 10m)
+
+Processing: That '70s Show
+  ✅ Imported: That '70s Show (0/200 episodes, 0h 0m)
+
+Processing: Lucifer
+  ✅ Imported: Lucifer (93/93 episodes, 71h 55m)
+
+Processing: Stranger Things
+  ✅ Imported: Stranger Things (34/42 episodes, 34h 54m)
+
+Processing: Riverdale
+  ✅ Imported: Riverdale (38/137 episodes, 27h 17m)
+
+Processing: The Suite Life of Zack & Cody
+  ✅ Imported: The Suite Life of Zack & Cody (87/87 episodes, 33h 21m)
+
+Processing: Black Lightning
+  ✅ Imported: Black Lightning (24/58 episodes, 17h 6m)
+
+Processing: Marvel's Jessica Jones
+  ✅ Imported: Marvel's Jessica Jones (0/39 episodes, 0h 0m)
+
+Processing: Cars on the Road
+  ✅ Imported: Cars on the Road (3/9 episodes, 0h 35m)
+
+Processing: Shadowhunters
+  ✅ Imported: Shadowhunters (13/55 episodes, 9h 29m)
+
+Processing: Grey's Anatomy
+  ✅ Imported: Grey's Anatomy (0/454 episodes, 0h 0m)
+
+Processing: Once Upon a Time (2011)
+  ✅ Imported: Once Upon a Time (156/156 episodes, 113h 18m)
+
+Processing: The OA
+  ✅ Imported: The OA (0/16 episodes, 0h 0m)
+
+Processing: Fuller House
+  ✅ Imported: Fuller House (75/75 episodes, 35h 32m)
+
+Processing: Attack on Titan
+  ✅ Imported: Attack on Titan (89/89 episodes, 34h 47m)
+
+Processing: Brooklyn Nine-Nine
+  ✅ Imported: Brooklyn Nine-Nine (153/153 episodes, 55h 46m)
+
+Processing: Dynasty (2017)
+  ✅ Imported: Dynasty (0/108 episodes, 0h 0m)
+
+Processing: Kim's Convenience
+  ✅ Imported: Kim's Convenience (65/65 episodes, 23h 50m)
+
+Processing: Suits
+  ✅ Imported: Suits (0/134 episodes, 0h 0m)
+
+Processing: Friends
+  ✅ Imported: Friends (236/236 episodes, 90h 52m)
+
+Processing: The Originals
+  ✅ Imported: The Originals (82/92 episodes, 57h 9m)
+
+Processing: Blockbuster
+  ✅ Imported: Blockbuster (2/10 episodes, 0h 54m)
+
+Processing: Patriot Act with Hasan Minhaj
+  ✅ Imported: Patriot Act with Hasan Minhaj (25/40 episodes, 10h 45m)
+
+Processing: Game of Thrones
+  ✅ Imported: Game of Thrones (74/73 episodes, 70h 32m)
+
+Processing: The Witcher
+  ✅ Imported: The Witcher (16/32 episodes, 15h 49m)
+
+Processing: Selling Sunset
+  ✅ Imported: Selling Sunset (34/87 episodes, 18h 8m)
+
+Processing: Full House
+  ✅ Imported: Full House (192/192 episodes, 75h 41m)
+
+Processing: Arrow
+  ✅ Imported: Arrow (170/170 episodes, 119h 10m)
+
+Processing: Modern Family
+  ✅ Imported: Modern Family (250/250 episodes, 104h 10m)
+
+Processing: Seinfeld
+  ✅ Imported: Seinfeld (180/180 episodes, 70h 27m)
+
+Processing: The Legend of Korra
+  ✅ Imported: The Legend of Korra (52/52 episodes, 19h 56m)
+
+Processing: You
+  ✅ Imported: You (30/50 episodes, 24h 7m)
+
+Processing: Peaky Blinders
+  ✅ Imported: Peaky Blinders (0/36 episodes, 0h 0m)
+
+Processing: Parks and Recreation
+  ✅ Imported: Parks and Recreation (125/125 episodes, 46h 40m)
+
+Processing: BEEF
+  ✅ Imported: BEEF (0/11 episodes, 0h 0m)
+
+Processing: The Walking Dead
+  ✅ Imported: The Walking Dead (177/177 episodes, 136h 40m)
+
+Processing: Never Have I Ever
+  ✅ Imported: Never Have I Ever (40/40 episodes, 18h 56m)
+
+Processing: Gravity Falls
+  ✅ Imported: Gravity Falls (40/40 episodes, 15h 42m)
+
+Processing: Exploding Kittens
+  ✅ Imported: Exploding Kittens (9/9 episodes, 3h 56m)
+
+Processing: Demon Slayer: Kimetsu no Yaiba
+  ✅ Imported: Demon Slayer: Kimetsu no Yaiba (63/63 episodes, 26h 57m)
+
+Processing: The Last Man on Earth
+  ✅ Imported: The Last Man on Earth (36/67 episodes, 13h 12m)
+
+==================================================
+📊 Import Summary
+==================================================
+✅ Successfully imported: 122
+⏭️  Skipped (already exists): 0
+❌ Failed: 0
+
+✨ Import complete!

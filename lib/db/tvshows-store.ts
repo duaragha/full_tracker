@@ -13,6 +13,7 @@ function normalizeTVShow(show: any): TVShow {
   return {
     ...show,
     tmdbId: Number(show.tmdb_id),
+    creators: show.creators || [],
     posterImage: show.poster_image,
     backdropImage: show.backdrop_image,
     showStartDate: show.show_start_date,
@@ -23,6 +24,8 @@ function normalizeTVShow(show: any): TVShow {
     watchedEpisodes: Number(show.watched_episodes),
     totalMinutes: Number(show.total_minutes),
     daysTracking: Number(show.days_tracking),
+    rewatchCount: Number(show.rewatch_count) || 0,
+    rewatchHistory: show.rewatch_history || [],
     seasons: show.seasons || [],
     genres: show.genres || [],
     createdAt: show.created_at,
@@ -40,15 +43,16 @@ export async function getTVShows(): Promise<TVShow[]> {
 export async function addTVShow(show: Omit<TVShow, 'id' | 'createdAt' | 'updatedAt'>): Promise<TVShow> {
   const result = await pool.query<any>(
     `INSERT INTO tvshows (
-      tmdb_id, title, network, genres, poster_image, backdrop_image,
+      tmdb_id, title, creators, network, genres, poster_image, backdrop_image,
       show_start_date, show_end_date, date_i_started, date_i_ended,
       total_episodes, watched_episodes, seasons, total_minutes,
-      days_tracking, notes, created_at, updated_at
-    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, NOW(), NOW())
+      days_tracking, rewatch_count, rewatch_history, notes, created_at, updated_at
+    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, NOW(), NOW())
     RETURNING *`,
     [
       show.tmdbId,
       show.title,
+      show.creators,
       show.network,
       show.genres,
       show.posterImage,
@@ -62,6 +66,8 @@ export async function addTVShow(show: Omit<TVShow, 'id' | 'createdAt' | 'updated
       show.seasons,
       show.totalMinutes,
       show.daysTracking,
+      show.rewatchCount,
+      show.rewatchHistory,
       show.notes,
     ]
   )
@@ -73,25 +79,29 @@ export async function updateTVShow(id: number, show: Partial<TVShow>): Promise<v
     `UPDATE tvshows SET
       tmdb_id = COALESCE($1, tmdb_id),
       title = COALESCE($2, title),
-      network = COALESCE($3, network),
-      genres = COALESCE($4, genres),
-      poster_image = COALESCE($5, poster_image),
-      backdrop_image = COALESCE($6, backdrop_image),
-      show_start_date = COALESCE($7, show_start_date),
-      show_end_date = $8,
-      date_i_started = $9,
-      date_i_ended = $10,
-      total_episodes = COALESCE($11, total_episodes),
-      watched_episodes = COALESCE($12, watched_episodes),
-      seasons = COALESCE($13, seasons),
-      total_minutes = COALESCE($14, total_minutes),
-      days_tracking = COALESCE($15, days_tracking),
-      notes = COALESCE($16, notes),
+      creators = COALESCE($3, creators),
+      network = COALESCE($4, network),
+      genres = COALESCE($5, genres),
+      poster_image = COALESCE($6, poster_image),
+      backdrop_image = COALESCE($7, backdrop_image),
+      show_start_date = COALESCE($8, show_start_date),
+      show_end_date = $9,
+      date_i_started = $10,
+      date_i_ended = $11,
+      total_episodes = COALESCE($12, total_episodes),
+      watched_episodes = COALESCE($13, watched_episodes),
+      seasons = COALESCE($14, seasons),
+      total_minutes = COALESCE($15, total_minutes),
+      days_tracking = COALESCE($16, days_tracking),
+      rewatch_count = COALESCE($17, rewatch_count),
+      rewatch_history = COALESCE($18, rewatch_history),
+      notes = COALESCE($19, notes),
       updated_at = NOW()
-    WHERE id = $17`,
+    WHERE id = $20`,
     [
       show.tmdbId,
       show.title,
+      show.creators,
       show.network,
       show.genres,
       show.posterImage,
@@ -105,6 +115,8 @@ export async function updateTVShow(id: number, show: Partial<TVShow>): Promise<v
       show.seasons,
       show.totalMinutes,
       show.daysTracking,
+      show.rewatchCount,
+      show.rewatchHistory,
       show.notes,
       id,
     ]

@@ -1,12 +1,13 @@
 "use client"
 
 import * as React from "react"
-import { TVShow, TVShowSearchResult, Season, Episode } from "@/types/tvshow"
+import { TVShow, TVShowSearchResult, Season, Episode, RewatchEntry } from "@/types/tvshow"
 import { getTVShowDetails, getAllSeasons, getPosterUrl, getBackdropUrl } from "@/lib/api/tvshows"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { DatePicker } from "@/components/ui/date-picker"
+import { RewatchManager } from "@/components/rewatch-manager"
 import { Loader2 } from "lucide-react"
 
 interface TVShowEntryFormProps {
@@ -22,6 +23,7 @@ export function TVShowEntryForm({ selectedShow, onSubmit, onCancel, initialData 
     dateIStarted: initialData?.dateIStarted ? new Date(initialData.dateIStarted) : null,
     dateIEnded: initialData?.dateIEnded ? new Date(initialData.dateIEnded) : null,
     notes: initialData?.notes || "",
+    rewatchHistory: initialData?.rewatchHistory || [] as RewatchEntry[]
   })
   const [showDetails, setShowDetails] = React.useState<any>(null)
 
@@ -57,6 +59,8 @@ export function TVShowEntryForm({ selectedShow, onSubmit, onCancel, initialData 
         dateIStarted: formData.dateIStarted?.toISOString() || null,
         dateIEnded: formData.dateIEnded?.toISOString() || null,
         notes: formData.notes,
+        rewatchCount: formData.rewatchHistory.length,
+        rewatchHistory: formData.rewatchHistory,
       })
       return
     }
@@ -88,6 +92,7 @@ export function TVShowEntryForm({ selectedShow, onSubmit, onCancel, initialData 
       onSubmit({
         tmdbId: selectedShow.id,
         title: showDetails.name,
+        creators: showDetails.created_by?.map((c: any) => c.name) || [],
         network: showDetails.networks[0]?.name || "Unknown",
         genres: showDetails.genres.map((g: any) => g.name),
         posterImage: getPosterUrl(showDetails.poster_path, 'w342'),
@@ -101,6 +106,8 @@ export function TVShowEntryForm({ selectedShow, onSubmit, onCancel, initialData 
         seasons,
         totalMinutes: 0,
         daysTracking: 0,
+        rewatchCount: formData.rewatchHistory.length,
+        rewatchHistory: formData.rewatchHistory,
         notes: formData.notes,
       })
     } catch (error) {
@@ -133,6 +140,11 @@ export function TVShowEntryForm({ selectedShow, onSubmit, onCancel, initialData 
             )}
             <div className="flex-1 space-y-1">
               <h3 className="text-base sm:text-lg font-semibold">{showDetails.name}</h3>
+              {showDetails.created_by && showDetails.created_by.length > 0 && (
+                <p className="text-sm text-muted-foreground">
+                  Created by: {showDetails.created_by.map((c: any) => c.name).join(", ")}
+                </p>
+              )}
               <p className="text-sm text-muted-foreground">
                 Network: {showDetails.networks[0]?.name || "Unknown"}
               </p>
@@ -184,6 +196,13 @@ export function TVShowEntryForm({ selectedShow, onSubmit, onCancel, initialData 
           placeholder="Add any notes about this show..."
         />
       </div>
+
+      {initialData && (
+        <RewatchManager
+          rewatchHistory={formData.rewatchHistory}
+          onUpdate={(history) => setFormData({ ...formData, rewatchHistory: history })}
+        />
+      )}
 
       <div className="flex flex-col sm:flex-row justify-end gap-2">
         <Button type="button" variant="outline" onClick={onCancel} className="w-full sm:w-auto">

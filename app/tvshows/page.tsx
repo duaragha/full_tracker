@@ -220,13 +220,13 @@ export default function TVShowsPage() {
                   <TableRow>
                     <TableHead>Poster</TableHead>
                     <TableHead>Title</TableHead>
+                    <TableHead>Creator(s)</TableHead>
                     <TableHead>Network</TableHead>
                     <TableHead>Genres</TableHead>
                     <TableHead>Progress</TableHead>
                     <TableHead>Hours</TableHead>
                     <TableHead>Aired</TableHead>
                     <TableHead>Watched</TableHead>
-                    <TableHead>Days</TableHead>
                     <TableHead>Actions</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -249,7 +249,21 @@ export default function TVShowsPage() {
                             />
                           )}
                         </TableCell>
-                        <TableCell className="font-medium">{show.title}</TableCell>
+                        <TableCell>
+                          <div className="flex flex-col">
+                            <span className="font-medium">{show.title}</span>
+                            {show.rewatchCount > 0 && (
+                              <Badge variant="secondary" className="text-xs w-fit mt-1">
+                                Rewatched {show.rewatchCount}x
+                              </Badge>
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-sm">
+                          {show.creators && show.creators.length > 0
+                            ? show.creators.slice(0, 2).join(", ")
+                            : "-"}
+                        </TableCell>
                         <TableCell>{show.network}</TableCell>
                         <TableCell>
                           <div className="flex flex-wrap gap-1">
@@ -286,7 +300,6 @@ export default function TVShowsPage() {
                               year: "numeric",
                             })}`}
                         </TableCell>
-                        <TableCell>{show.daysTracking}</TableCell>
                         <TableCell>
                           <div className="flex gap-2">
                             <Button
@@ -341,9 +354,21 @@ export default function TVShowsPage() {
                       )}
                       <div className="flex-1 min-w-0 space-y-2">
                         <div>
-                          <h3 className="font-semibold text-base leading-tight line-clamp-2">
-                            {show.title}
-                          </h3>
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <h3 className="font-semibold text-base leading-tight line-clamp-2">
+                              {show.title}
+                            </h3>
+                            {show.rewatchCount > 0 && (
+                              <Badge variant="secondary" className="text-xs">
+                                {show.rewatchCount}x
+                              </Badge>
+                            )}
+                          </div>
+                          {show.creators && show.creators.length > 0 && (
+                            <p className="text-xs text-muted-foreground mt-0.5">
+                              by {show.creators[0]}
+                            </p>
+                          )}
                           <p className="text-sm text-muted-foreground mt-1">
                             {show.network}
                           </p>

@@ -1,9 +1,9 @@
+// Copy of import script but only imports first 3 shows for testing
 import { Pool } from 'pg'
 import * as fs from 'fs'
 import * as path from 'path'
 import { config } from 'dotenv'
 
-// Load environment variables
 config({ path: '.env.local' })
 
 const pool = new Pool({
@@ -15,10 +15,7 @@ const TMDB_API_KEY = '98e6dfd40c55480146fa393e2aad48fe'
 const TMDB_BASE_URL = 'https://api.themoviedb.org/3'
 
 interface TVTimeEpisode {
-  id: {
-    tvdb: number
-    imdb: string
-  }
+  id: { tvdb: number; imdb: string }
   number: number
   special: boolean
   is_watched: boolean
@@ -32,25 +29,11 @@ interface TVTimeSeason {
 
 interface TVTimeShow {
   uuid: string
-  id: {
-    tvdb: number
-    imdb: string
-  }
+  id: { tvdb: number; imdb: string }
   created_at: string
   title: string
   status: string
   seasons: TVTimeSeason[]
-}
-
-interface TMDbFindResponse {
-  tv_results: Array<{
-    id: number
-    name: string
-    poster_path: string | null
-    backdrop_path: string | null
-    first_air_date: string
-    overview: string
-  }>
 }
 
 interface TMDbTVShowDetails {
@@ -88,17 +71,11 @@ async function findTVShowByImdbId(imdbId: string): Promise<number | null> {
     const response = await fetch(
       `${TMDB_BASE_URL}/find/${imdbId}?api_key=${TMDB_API_KEY}&external_source=imdb_id`
     )
-
-    if (!response.ok) {
-      return null
-    }
-
-    const data: TMDbFindResponse = await response.json()
-
+    if (!response.ok) return null
+    const data: any = await response.json()
     if (data.tv_results && data.tv_results.length > 0) {
       return data.tv_results[0].id
     }
-
     return null
   } catch (error) {
     return null
@@ -110,17 +87,11 @@ async function findTVShowByTVDBId(tvdbId: number): Promise<number | null> {
     const response = await fetch(
       `${TMDB_BASE_URL}/find/${tvdbId}?api_key=${TMDB_API_KEY}&external_source=tvdb_id`
     )
-
-    if (!response.ok) {
-      return null
-    }
-
-    const data: TMDbFindResponse = await response.json()
-
+    if (!response.ok) return null
+    const data: any = await response.json()
     if (data.tv_results && data.tv_results.length > 0) {
       return data.tv_results[0].id
     }
-
     return null
   } catch (error) {
     return null
@@ -132,15 +103,9 @@ async function getTVShowDetails(tmdbId: number): Promise<TMDbTVShowDetails | nul
     const response = await fetch(
       `${TMDB_BASE_URL}/tv/${tmdbId}?api_key=${TMDB_API_KEY}`
     )
-
-    if (!response.ok) {
-      console.error(`Failed to get TV show details ${tmdbId}: ${response.statusText}`)
-      return null
-    }
-
+    if (!response.ok) return null
     return await response.json()
   } catch (error) {
-    console.error(`Error getting TV show details ${tmdbId}:`, error)
     return null
   }
 }
@@ -150,11 +115,7 @@ async function getSeasonDetails(tmdbId: number, seasonNumber: number): Promise<T
     const response = await fetch(
       `${TMDB_BASE_URL}/tv/${tmdbId}/season/${seasonNumber}?api_key=${TMDB_API_KEY}`
     )
-
-    if (!response.ok) {
-      return null
-    }
-
+    if (!response.ok) return null
     return await response.json()
   } catch (error) {
     return null
@@ -184,7 +145,6 @@ function calculateWatchStats(show: TVTimeShow) {
     })
   })
 
-  // Sort by watch date
   watchedEpisodes.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
 
   const startedDate = watchedEpisodes.length > 0
@@ -195,7 +155,6 @@ function calculateWatchStats(show: TVTimeShow) {
     ? watchedEpisodes[watchedEpisodes.length - 1]
     : null
 
-  // Check if show is completed (all episodes watched)
   const totalEpisodes = show.seasons.reduce((sum, season) =>
     sum + season.episodes.filter(ep => !ep.special).length, 0
   )
@@ -217,19 +176,9 @@ function calculateWatchStats(show: TVTimeShow) {
   }
 }
 
-function mapStatus(tvTimeStatus: string, stats: any): string {
-  // TV Time statuses: watching, stopped, completed, etc.
-  if (stats.completedDate) return 'Completed'
-  if (tvTimeStatus === 'watching') return 'Watching'
-  if (tvTimeStatus === 'stopped') return 'Dropped'
-  if (stats.watchedCount > 0) return 'Watching'
-  return 'Plan to Watch'
-}
-
 async function importShow(tvTimeShow: TVTimeShow) {
   console.log(`\nProcessing: ${tvTimeShow.title}`)
 
-  // Find TMDB ID using IMDB ID first, then TVDB ID as fallback
   let tmdbId = null
 
   if (tvTimeShow.id.imdb && tvTimeShow.id.imdb !== '-1') {
@@ -241,52 +190,48 @@ async function importShow(tvTimeShow: TVTimeShow) {
   }
 
   if (!tmdbId) {
-    console.log(`  ❌ Could not find TMDB ID for ${tvTimeShow.title} (IMDB: ${tvTimeShow.id.imdb}, TVDB: ${tvTimeShow.id.tvdb})`)
+    console.log(`  ❌ Could not find TMDB ID`)
     return { success: false, title: tvTimeShow.title, reason: 'TMDB ID not found' }
   }
 
-  // Check if show already exists
   const exists = await showExists(tmdbId)
   if (exists) {
-    console.log(`  ⏭️  Already exists: ${tvTimeShow.title} (TMDB: ${tmdbId})`)
+    console.log(`  ⏭️  Already exists (TMDB: ${tmdbId})`)
     return { success: true, title: tvTimeShow.title, skipped: true }
   }
 
-  // Get show details
   const details = await getTVShowDetails(tmdbId)
-
   if (!details) {
-    console.log(`  ❌ Could not get details for ${tvTimeShow.title} (TMDB: ${tmdbId})`)
+    console.log(`  ❌ Could not get details`)
     return { success: false, title: tvTimeShow.title, reason: 'Details not found' }
   }
 
-  // Calculate watch statistics
   const stats = calculateWatchStats(tvTimeShow)
+  const creators = details.created_by?.map(c => c.name) || []
+  const network = details.networks?.length > 0 ? details.networks[0].name : 'Unknown'
 
-  // Get creators
-  const creators = details.created_by.map(c => c.name)
-
-  // Get network (use first network if multiple)
-  const network = details.networks.length > 0 ? details.networks[0].name : 'Unknown'
-
-  // Prepare data
   const posterImage = details.poster_path
     ? `https://image.tmdb.org/t/p/w500${details.poster_path}`
     : ''
   const backdropImage = details.backdrop_path
     ? `https://image.tmdb.org/t/p/w1280${details.backdrop_path}`
     : ''
-  const genres = details.genres.map(g => g.name)
-  const status = mapStatus(tvTimeShow.status, stats)
+  const genres = details.genres?.map(g => g.name) || []
 
-  // Build seasons with episode data
+  console.log(`  📺 ${details.name}`)
+  console.log(`     Creators: ${creators.join(', ') || 'None'}`)
+  console.log(`     Network: ${network}`)
+  console.log(`     Aired: ${details.first_air_date || 'Unknown'}`)
+
+  // Build seasons (limit to first 2 seasons for test)
+  const seasonsToImport = tvTimeShow.seasons.slice(0, 2)
   const seasonsData = await Promise.all(
-    tvTimeShow.seasons.map(async (tvTimeSeason) => {
+    seasonsToImport.map(async (tvTimeSeason) => {
       const seasonDetails = await getSeasonDetails(details.id, tvTimeSeason.number)
+      await sleep(200) // Small delay between season requests
 
       const episodes = tvTimeSeason.episodes.map(tvTimeEpisode => {
         const tmdbEpisode = seasonDetails?.episodes.find(e => e.episode_number === tvTimeEpisode.number)
-
         return {
           episodeNumber: tvTimeEpisode.number,
           name: tmdbEpisode?.name || `Episode ${tvTimeEpisode.number}`,
@@ -305,19 +250,12 @@ async function importShow(tvTimeShow: TVTimeShow) {
     })
   )
 
-  // For plan to watch shows, set watchlist_added_date to created_at from TV Time
-  const watchlistAddedDate = (status === 'Plan to Watch' && tvTimeShow.created_at)
-    ? tvTimeShow.created_at.split('T')[0]
-    : null
-
-  // Calculate total watched minutes from episodes
   const totalMinutes = seasonsData.reduce((total, season) => {
     return total + season.episodes
       .filter(ep => ep.watched)
       .reduce((sum, ep) => sum + (ep.runtime || 0), 0)
   }, 0)
 
-  // Calculate days tracking
   let daysTracking = 0
   if (stats.startedDate && stats.completedDate) {
     const start = new Date(stats.startedDate)
@@ -329,16 +267,15 @@ async function importShow(tvTimeShow: TVTimeShow) {
     daysTracking = Math.ceil((now.getTime() - start.getTime()) / (1000 * 60 * 60 * 24))
   }
 
-  // Insert into database
   try {
     await pool.query(
       `INSERT INTO tvshows (
         tmdb_id, title, creators, network, genres, poster_image, backdrop_image,
         show_start_date, show_end_date, date_i_started, date_i_ended,
         total_episodes, watched_episodes, seasons, total_minutes, days_tracking,
-        rewatch_count, rewatch_history, status, notes,
+        rewatch_count, rewatch_history, notes,
         created_at, updated_at
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, NOW(), NOW())`,
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, NOW(), NOW())`,
       [
         tmdbId,
         details.name,
@@ -356,60 +293,31 @@ async function importShow(tvTimeShow: TVTimeShow) {
         JSON.stringify(seasonsData),
         totalMinutes,
         daysTracking,
-        0, // rewatch_count
-        JSON.stringify([]), // rewatch_history
-        status, // status
-        `Imported from TV Time\nIMDB: ${tvTimeShow.id.imdb}\nWatched ${stats.watchedCount}/${stats.totalEpisodes} episodes\nTV Time Status: ${tvTimeShow.status}`,
+        0,
+        JSON.stringify([]),
+        `Imported from TV Time`,
       ]
     )
 
-    console.log(`  ✅ Imported: ${details.name} (${stats.watchedCount}/${stats.totalEpisodes} episodes, ${Math.floor(totalMinutes/60)}h ${totalMinutes%60}m)`)
+    console.log(`  ✅ Imported (${stats.watchedCount}/${stats.totalEpisodes} eps, ${Math.floor(totalMinutes/60)}h ${totalMinutes%60}m)`)
     return { success: true, title: details.name }
   } catch (error) {
-    console.error(`  ❌ Database error for ${tvTimeShow.title}:`, error)
+    console.error(`  ❌ Database error:`, error)
     return { success: false, title: tvTimeShow.title, reason: 'Database error' }
   }
 }
 
 async function main() {
-  console.log('📺 TV Time Shows Importer\n')
-  console.log('=' .repeat(50))
+  console.log('📺 Test Import - First 3 Shows\n')
 
-  // Read shows.json
-  const showsPath = path.join(process.cwd(), 'shows.json')
-
-  if (!fs.existsSync(showsPath)) {
-    console.error('❌ shows.json not found!')
-    console.log('Please place shows.json in the project root directory')
-    process.exit(1)
-  }
-
-  const showsData = fs.readFileSync(showsPath, 'utf-8')
+  const showsData = fs.readFileSync('shows.json', 'utf-8')
   const shows: TVTimeShow[] = JSON.parse(showsData)
 
-  console.log(`\nFound ${shows.length} TV shows in TV Time export`)
+  console.log(`Found ${shows.length} shows, importing first 3...\n`)
 
-  // Categorize shows by status
-  const watching = shows.filter(s => s.status === 'watching')
-  const stopped = shows.filter(s => s.status === 'stopped')
-  const other = shows.filter(s => s.status !== 'watching' && s.status !== 'stopped')
+  const results = { success: 0, failed: 0, skipped: 0, errors: [] as any[] }
 
-  console.log(`  - Watching: ${watching.length}`)
-  console.log(`  - Stopped: ${stopped.length}`)
-  console.log(`  - Other: ${other.length}`)
-
-  console.log('\n' + '='.repeat(50))
-  console.log('Starting import...\n')
-
-  const results = {
-    success: 0,
-    failed: 0,
-    skipped: 0,
-    errors: [] as any[]
-  }
-
-  // Import all shows
-  for (const show of shows) {
+  for (const show of shows.slice(0, 3)) {
     const result = await importShow(show)
 
     if (result.success) {
@@ -423,31 +331,15 @@ async function main() {
       results.errors.push(result)
     }
 
-    // Rate limiting - TMDB allows 40 requests per 10 seconds
-    // We make multiple requests per show (show details + season details)
     await sleep(500)
   }
 
-  // Summary
   console.log('\n' + '='.repeat(50))
-  console.log('📊 Import Summary')
-  console.log('='.repeat(50))
-  console.log(`✅ Successfully imported: ${results.success}`)
-  console.log(`⏭️  Skipped (already exists): ${results.skipped}`)
+  console.log(`✅ Success: ${results.success}`)
+  console.log(`⏭️  Skipped: ${results.skipped}`)
   console.log(`❌ Failed: ${results.failed}`)
 
-  if (results.errors.length > 0) {
-    console.log('\n❌ Failed shows:')
-    results.errors.forEach(err => {
-      console.log(`  - ${err.title}: ${err.reason}`)
-    })
-  }
-
   await pool.end()
-  console.log('\n✨ Import complete!')
 }
 
-main().catch(error => {
-  console.error('Fatal error:', error)
-  process.exit(1)
-})
+main().catch(console.error)
