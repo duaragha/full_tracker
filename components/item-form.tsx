@@ -161,25 +161,27 @@ export function ItemForm({ open, onOpenChange, onItemAdded, areas, containers, s
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
+      <DialogContent className="w-[calc(100%-1rem)] max-w-3xl h-[90vh] flex flex-col p-0 gap-0 sm:h-auto sm:max-h-[90vh]">
+        <DialogHeader className="p-4 sm:p-6 pb-0">
           <DialogTitle>{editingItem ? "Edit Item" : "Add New Item"}</DialogTitle>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid gap-4 md:grid-cols-2">
+        <form onSubmit={handleSubmit} className="flex flex-col flex-1 overflow-hidden">
+          <div className="overflow-y-auto flex-1 p-4 sm:p-6 space-y-4">
+          <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
               <Label htmlFor="name">Item Name</Label>
               <Input
                 id="name"
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                className="h-11 text-base"
               />
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="type">Type</Label>
               <Select value={formData.type} onValueChange={(value) => setFormData({ ...formData, type: value })}>
-                <SelectTrigger>
+                <SelectTrigger className="h-11 text-base">
                   <SelectValue placeholder="Select type" />
                 </SelectTrigger>
                 <SelectContent>
@@ -196,7 +198,7 @@ export function ItemForm({ open, onOpenChange, onItemAdded, areas, containers, s
                 value={formData.areaId}
                 onValueChange={(value) => setFormData({ ...formData, areaId: value, containerId: "" })}
               >
-                <SelectTrigger>
+                <SelectTrigger className="h-11 text-base">
                   <SelectValue placeholder="Select area" />
                 </SelectTrigger>
                 <SelectContent>
@@ -210,7 +212,7 @@ export function ItemForm({ open, onOpenChange, onItemAdded, areas, containers, s
             <div className="space-y-2">
               <Label htmlFor="containerId">Container</Label>
               <Select value={formData.containerId} onValueChange={(value) => setFormData({ ...formData, containerId: value })}>
-                <SelectTrigger>
+                <SelectTrigger className="h-11 text-base">
                   <SelectValue placeholder="Select container (optional)" />
                 </SelectTrigger>
                 <SelectContent>
@@ -231,6 +233,7 @@ export function ItemForm({ open, onOpenChange, onItemAdded, areas, containers, s
                   value={formData.cost}
                   onChange={(e) => setFormData({ ...formData, cost: e.target.value })}
                   required={!formData.isGift}
+                  className="h-11 text-base"
                 />
               </div>
             )}
@@ -241,6 +244,7 @@ export function ItemForm({ open, onOpenChange, onItemAdded, areas, containers, s
                 id="purchasedWhere"
                 value={formData.purchasedWhere}
                 onChange={(e) => setFormData({ ...formData, purchasedWhere: e.target.value })}
+                className="h-11 text-base"
               />
             </div>
 
@@ -289,6 +293,7 @@ export function ItemForm({ open, onOpenChange, onItemAdded, areas, containers, s
                 value={formData.giftFrom}
                 onChange={(e) => setFormData({ ...formData, giftFrom: e.target.value })}
                 placeholder="Who did you get this from? (e.g., John, Mom, Estate Sale)"
+                className="h-11 text-base"
               />
             </div>
 
@@ -302,7 +307,7 @@ export function ItemForm({ open, onOpenChange, onItemAdded, areas, containers, s
             </div>
 
             {!formData.kept && (
-              <div className="grid gap-4 md:grid-cols-2 ml-6">
+              <div className="grid gap-4 sm:grid-cols-2 ml-6">
                 <div className="space-y-2">
                   <Label>Date Sold/Disposed</Label>
                   <Popover>
@@ -338,6 +343,7 @@ export function ItemForm({ open, onOpenChange, onItemAdded, areas, containers, s
                     value={formData.soldPrice}
                     onChange={(e) => setFormData({ ...formData, soldPrice: e.target.value })}
                     placeholder="0.00"
+                    className="h-11 text-base"
                   />
                 </div>
               </div>
@@ -351,14 +357,16 @@ export function ItemForm({ open, onOpenChange, onItemAdded, areas, containers, s
               value={formData.notes}
               onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
               rows={3}
+              className="text-base"
             />
           </div>
+          </div>
 
-          <div className="flex justify-end gap-2">
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+          <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 p-4 sm:p-6 pt-4 border-t bg-background">
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)} className="h-11">
               Cancel
             </Button>
-            <Button type="submit">{editingItem ? "Update" : "Add"} Item</Button>
+            <Button type="submit" className="h-11">{editingItem ? "Update" : "Add"} Item</Button>
           </div>
         </form>
       </DialogContent>

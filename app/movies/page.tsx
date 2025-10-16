@@ -116,41 +116,41 @@ export default function MoviesPage() {
   const totalMinutes = totalRuntime % 60
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="space-y-4 sm:space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Movies Tracker</h1>
-          <p className="text-muted-foreground">Track your movie watching journey</p>
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Movies Tracker</h1>
+          <p className="text-sm sm:text-base text-muted-foreground">Track your movie watching journey</p>
         </div>
-        <Button onClick={() => setShowForm(true)}>
+        <Button onClick={() => setShowForm(true)} className="w-full sm:w-auto">
           <Plus className="mr-2 h-4 w-4" />
           Add Movie Manually
         </Button>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 md:gap-4 md:grid-cols-4">
         <Card>
-          <CardHeader>
-            <CardTitle>{totalMovies}</CardTitle>
-            <CardDescription>Total Movies</CardDescription>
+          <CardHeader className="p-4 sm:p-6">
+            <CardTitle className="text-2xl sm:text-3xl">{totalMovies}</CardTitle>
+            <CardDescription className="text-xs sm:text-sm">Total Movies</CardDescription>
           </CardHeader>
         </Card>
         <Card>
-          <CardHeader>
-            <CardTitle>{totalHours}h {totalMinutes}m</CardTitle>
-            <CardDescription>Total Runtime</CardDescription>
+          <CardHeader className="p-4 sm:p-6">
+            <CardTitle className="text-2xl sm:text-3xl">{totalHours}h {totalMinutes}m</CardTitle>
+            <CardDescription className="text-xs sm:text-sm">Total Runtime</CardDescription>
           </CardHeader>
         </Card>
         <Card>
-          <CardHeader>
-            <CardTitle>{avgRating}/10</CardTitle>
-            <CardDescription>Average Rating</CardDescription>
+          <CardHeader className="p-4 sm:p-6">
+            <CardTitle className="text-2xl sm:text-3xl">{avgRating}/10</CardTitle>
+            <CardDescription className="text-xs sm:text-sm">Average Rating</CardDescription>
           </CardHeader>
         </Card>
         <Card>
-          <CardHeader>
-            <CardTitle>{moviesThisYear}</CardTitle>
-            <CardDescription>Movies This Year</CardDescription>
+          <CardHeader className="p-4 sm:p-6">
+            <CardTitle className="text-2xl sm:text-3xl">{moviesThisYear}</CardTitle>
+            <CardDescription className="text-xs sm:text-sm">Movies This Year</CardDescription>
           </CardHeader>
         </Card>
       </div>
@@ -169,15 +169,15 @@ export default function MoviesPage() {
         <CardHeader>
           <div className="flex flex-col gap-4">
             <CardTitle>Your Movies</CardTitle>
-            <div className="flex gap-4">
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
               <Input
                 placeholder="Search movies by title..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="max-w-sm"
+                className="w-full sm:max-w-sm"
               />
               <Select value={sortBy} onValueChange={(value: any) => setSortBy(value)}>
-                <SelectTrigger className="w-[180px]">
+                <SelectTrigger className="w-full sm:w-[180px]">
                   <SelectValue placeholder="Sort by" />
                 </SelectTrigger>
                 <SelectContent>
@@ -189,7 +189,7 @@ export default function MoviesPage() {
                 </SelectContent>
               </Select>
               <Select value={sortOrder} onValueChange={(value: any) => setSortOrder(value)}>
-                <SelectTrigger className="w-[150px]">
+                <SelectTrigger className="w-full sm:w-[150px]">
                   <SelectValue placeholder="Order" />
                 </SelectTrigger>
                 <SelectContent>
@@ -206,112 +206,210 @@ export default function MoviesPage() {
               No movies found. Start adding movies to track your progress!
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Poster</TableHead>
-                    <TableHead>Title</TableHead>
-                    <TableHead>Director</TableHead>
-                    <TableHead>Genres</TableHead>
-                    <TableHead>Runtime</TableHead>
-                    <TableHead>Released</TableHead>
-                    <TableHead>Watched</TableHead>
-                    <TableHead>Rating</TableHead>
-                    <TableHead>Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredAndSortedMovies.map((movie) => {
-                    const hours = Math.floor(movie.runtime / 60)
-                    const mins = movie.runtime % 60
+            <>
+              {/* Desktop Table View */}
+              <div className="hidden md:block overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Poster</TableHead>
+                      <TableHead>Title</TableHead>
+                      <TableHead>Director</TableHead>
+                      <TableHead>Genres</TableHead>
+                      <TableHead>Runtime</TableHead>
+                      <TableHead>Released</TableHead>
+                      <TableHead>Watched</TableHead>
+                      <TableHead>Rating</TableHead>
+                      <TableHead>Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredAndSortedMovies.map((movie) => {
+                      const hours = Math.floor(movie.runtime / 60)
+                      const mins = movie.runtime % 60
 
-                    return (
-                      <TableRow key={movie.id}>
-                        <TableCell>
-                          {movie.posterImage && (
-                            <img
-                              src={movie.posterImage}
-                              alt={movie.title}
-                              className="h-16 w-12 rounded object-cover"
-                            />
-                          )}
-                        </TableCell>
-                        <TableCell className="font-medium">{movie.title}</TableCell>
-                        <TableCell>{movie.director}</TableCell>
-                        <TableCell>
+                      return (
+                        <TableRow key={movie.id}>
+                          <TableCell>
+                            {movie.posterImage && (
+                              <img
+                                src={movie.posterImage}
+                                alt={movie.title}
+                                className="h-16 w-12 rounded object-cover"
+                              />
+                            )}
+                          </TableCell>
+                          <TableCell className="font-medium">{movie.title}</TableCell>
+                          <TableCell>{movie.director}</TableCell>
+                          <TableCell>
+                            <div className="flex flex-wrap gap-1">
+                              {movie.genres.slice(0, 2).map((genre) => (
+                                <Badge key={genre} variant="secondary" className="text-xs">
+                                  {genre}
+                                </Badge>
+                              ))}
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            {hours > 0 && `${hours}h `}{mins}m
+                          </TableCell>
+                          <TableCell>
+                            {movie.releaseDate
+                              ? new Date(movie.releaseDate).getFullYear()
+                              : "N/A"}
+                          </TableCell>
+                          <TableCell>
+                            {movie.dateWatched
+                              ? new Date(movie.dateWatched).toLocaleDateString()
+                              : "-"}
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center gap-1">
+                              <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                              <span>{movie.rating}/10</span>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex gap-2">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => handleEdit(movie)}
+                              >
+                                <Pencil className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => handleDelete(movie.id)}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      )
+                    })}
+                  </TableBody>
+                </Table>
+              </div>
+
+              {/* Mobile Card View */}
+              <div className="grid md:hidden grid-cols-1 gap-4">
+                {filteredAndSortedMovies.map((movie) => {
+                  const hours = Math.floor(movie.runtime / 60)
+                  const mins = movie.runtime % 60
+
+                  return (
+                    <Card key={movie.id} className="overflow-hidden">
+                      <div className="flex gap-4 p-4">
+                        {movie.posterImage && (
+                          <img
+                            src={movie.posterImage}
+                            alt={movie.title}
+                            className="h-32 w-24 rounded object-cover flex-shrink-0"
+                          />
+                        )}
+                        <div className="flex-1 min-w-0 space-y-2">
+                          <div>
+                            <h3 className="font-semibold text-base leading-tight line-clamp-2">
+                              {movie.title}
+                            </h3>
+                            <p className="text-sm text-muted-foreground mt-1">
+                              {movie.director}
+                            </p>
+                          </div>
+
                           <div className="flex flex-wrap gap-1">
-                            {movie.genres.slice(0, 2).map((genre) => (
+                            {movie.genres.slice(0, 3).map((genre) => (
                               <Badge key={genre} variant="secondary" className="text-xs">
                                 {genre}
                               </Badge>
                             ))}
                           </div>
-                        </TableCell>
-                        <TableCell>
-                          {hours > 0 && `${hours}h `}{mins}m
-                        </TableCell>
-                        <TableCell>
-                          {movie.releaseDate
-                            ? new Date(movie.releaseDate).getFullYear()
-                            : "N/A"}
-                        </TableCell>
-                        <TableCell>
-                          {movie.dateWatched
-                            ? new Date(movie.dateWatched).toLocaleDateString()
-                            : "-"}
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-1">
-                            <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                            <span>{movie.rating}/10</span>
+
+                          <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
+                            <div>
+                              <span className="text-muted-foreground">Runtime:</span>
+                              <span className="ml-1 font-medium">
+                                {hours > 0 && `${hours}h `}{mins}m
+                              </span>
+                            </div>
+                            <div>
+                              <span className="text-muted-foreground">Released:</span>
+                              <span className="ml-1 font-medium">
+                                {movie.releaseDate
+                                  ? new Date(movie.releaseDate).getFullYear()
+                                  : "N/A"}
+                              </span>
+                            </div>
+                            <div>
+                              <span className="text-muted-foreground">Watched:</span>
+                              <span className="ml-1 font-medium">
+                                {movie.dateWatched
+                                  ? new Date(movie.dateWatched).toLocaleDateString()
+                                  : "-"}
+                              </span>
+                            </div>
+                            <div className="flex items-center">
+                              <span className="text-muted-foreground">Rating:</span>
+                              <div className="flex items-center gap-1 ml-1">
+                                <Star className="h-3.5 w-3.5 fill-yellow-400 text-yellow-400" />
+                                <span className="font-medium">{movie.rating}/10</span>
+                              </div>
+                            </div>
                           </div>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex gap-2">
+
+                          <div className="flex gap-2 pt-2">
                             <Button
-                              variant="ghost"
-                              size="icon"
+                              variant="outline"
+                              size="sm"
                               onClick={() => handleEdit(movie)}
+                              className="flex-1"
                             >
-                              <Pencil className="h-4 w-4" />
+                              <Pencil className="h-4 w-4 mr-2" />
+                              Edit
                             </Button>
                             <Button
-                              variant="ghost"
-                              size="icon"
+                              variant="outline"
+                              size="sm"
                               onClick={() => handleDelete(movie.id)}
+                              className="flex-1"
                             >
-                              <Trash2 className="h-4 w-4" />
+                              <Trash2 className="h-4 w-4 mr-2" />
+                              Delete
                             </Button>
                           </div>
-                        </TableCell>
-                      </TableRow>
-                    )
-                  })}
-                </TableBody>
-              </Table>
-            </div>
+                        </div>
+                      </div>
+                    </Card>
+                  )
+                })}
+              </div>
+            </>
           )}
         </CardContent>
       </Card>
 
       <Dialog open={showForm} onOpenChange={setShowForm}>
-        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
+        <DialogContent className="w-[calc(100%-1rem)] max-w-3xl h-[90vh] flex flex-col p-0 gap-0 sm:h-auto sm:max-h-[90vh]">
+          <DialogHeader className="p-4 sm:p-6 pb-4">
             <DialogTitle>
               {editingMovie ? "Edit Movie" : "Add New Movie"}
             </DialogTitle>
           </DialogHeader>
-          <MovieEntryForm
-            selectedMovie={selectedMovie}
-            initialData={editingMovie || undefined}
-            onSubmit={handleSubmit}
-            onCancel={() => {
-              setShowForm(false)
-              setSelectedMovie(null)
-              setEditingMovie(null)
-            }}
-          />
+          <div className="overflow-y-auto flex-1 px-4 sm:px-6">
+            <MovieEntryForm
+              selectedMovie={selectedMovie}
+              initialData={editingMovie || undefined}
+              onSubmit={handleSubmit}
+              onCancel={() => {
+                setShowForm(false)
+                setSelectedMovie(null)
+                setEditingMovie(null)
+              }}
+            />
+          </div>
         </DialogContent>
       </Dialog>
     </div>

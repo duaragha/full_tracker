@@ -80,8 +80,8 @@ export function GameEntryForm({ selectedGame, onSubmit, onCancel, initialData }:
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
-      <div className="grid gap-4 md:grid-cols-2">
+    <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
+      <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
         <div className="space-y-2">
           <Label htmlFor="title">Title</Label>
           <Input
@@ -246,11 +246,11 @@ export function GameEntryForm({ selectedGame, onSubmit, onCancel, initialData }:
         />
       </div>
 
-      <div className="flex justify-end gap-2">
-        <Button type="button" variant="outline" onClick={onCancel}>
+      <div className="flex flex-col sm:flex-row justify-end gap-2">
+        <Button type="button" variant="outline" onClick={onCancel} className="w-full sm:w-auto">
           Cancel
         </Button>
-        <Button type="submit">{initialData ? "Update" : "Add"} Game</Button>
+        <Button type="submit" className="w-full sm:w-auto">{initialData ? "Update" : "Add"} Game</Button>
       </div>
     </form>
   )

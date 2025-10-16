@@ -53,7 +53,7 @@ export function PinAuth({ onUnlock }: PinAuthProps) {
 
   return (
     <Dialog open={true} onOpenChange={handleCancel}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="w-[calc(100%-2rem)] sm:max-w-md">
         <DialogHeader>
           <div className="flex items-center gap-2">
             <Lock className="h-5 w-5 text-primary" />
@@ -76,12 +76,13 @@ export function PinAuth({ onUnlock }: PinAuthProps) {
               placeholder="Enter PIN"
               autoFocus
               disabled={isLoading}
+              className="h-11 text-base"
             />
             {error && (
               <p className="text-sm text-destructive">{error}</p>
             )}
           </div>
-          <Button type="submit" className="w-full" disabled={isLoading || !pin}>
+          <Button type="submit" className="w-full h-11" disabled={isLoading || !pin}>
             {isLoading ? "Verifying..." : "Unlock"}
           </Button>
         </form>

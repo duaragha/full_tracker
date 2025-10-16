@@ -111,41 +111,41 @@ export default function BooksPage() {
   const remainingMinutes = totalMinutes % 60
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="space-y-4 sm:space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Books Tracker</h1>
-          <p className="text-muted-foreground">Track your reading journey</p>
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Books Tracker</h1>
+          <p className="text-sm sm:text-base text-muted-foreground">Track your reading journey</p>
         </div>
-        <Button onClick={() => setShowForm(true)}>
+        <Button onClick={() => setShowForm(true)} className="w-full sm:w-auto">
           <Plus className="mr-2 h-4 w-4" />
           Add Book Manually
         </Button>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 md:gap-4 md:grid-cols-4">
         <Card>
-          <CardHeader>
-            <CardTitle>{books.length}</CardTitle>
-            <CardDescription>Total Books</CardDescription>
+          <CardHeader className="p-4 sm:p-6">
+            <CardTitle className="text-2xl sm:text-3xl">{books.length}</CardTitle>
+            <CardDescription className="text-xs sm:text-sm">Total Books</CardDescription>
           </CardHeader>
         </Card>
         <Card>
-          <CardHeader>
-            <CardTitle>{totalPages.toLocaleString()}</CardTitle>
-            <CardDescription>Pages Read (Ebooks)</CardDescription>
+          <CardHeader className="p-4 sm:p-6">
+            <CardTitle className="text-2xl sm:text-3xl">{totalPages.toLocaleString()}</CardTitle>
+            <CardDescription className="text-xs sm:text-sm">Pages Read (Ebooks)</CardDescription>
           </CardHeader>
         </Card>
         <Card>
-          <CardHeader>
-            <CardTitle>{totalHours}h {remainingMinutes}m</CardTitle>
-            <CardDescription>Time Listened (Audiobooks)</CardDescription>
+          <CardHeader className="p-4 sm:p-6">
+            <CardTitle className="text-2xl sm:text-3xl">{totalHours}h {remainingMinutes}m</CardTitle>
+            <CardDescription className="text-xs sm:text-sm">Time Listened (Audiobooks)</CardDescription>
           </CardHeader>
         </Card>
         <Card>
-          <CardHeader>
-            <CardTitle>{totalDays}</CardTitle>
-            <CardDescription>Total Days</CardDescription>
+          <CardHeader className="p-4 sm:p-6">
+            <CardTitle className="text-2xl sm:text-3xl">{totalDays}</CardTitle>
+            <CardDescription className="text-xs sm:text-sm">Total Days</CardDescription>
           </CardHeader>
         </Card>
       </div>
@@ -163,10 +163,10 @@ export default function BooksPage() {
       <Card>
         <CardHeader>
           <div className="flex flex-col gap-4">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
               <CardTitle>Your Books</CardTitle>
               <Select value={typeFilter} onValueChange={setTypeFilter}>
-                <SelectTrigger className="w-[180px]">
+                <SelectTrigger className="w-full sm:w-[180px]">
                   <SelectValue placeholder="Filter by type" />
                 </SelectTrigger>
                 <SelectContent>
@@ -176,15 +176,15 @@ export default function BooksPage() {
                 </SelectContent>
               </Select>
             </div>
-            <div className="flex gap-4">
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
               <Input
                 placeholder="Search books by title or author..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="max-w-sm"
+                className="w-full sm:max-w-sm"
               />
               <Select value={sortBy} onValueChange={(value: any) => setSortBy(value)}>
-                <SelectTrigger className="w-[180px]">
+                <SelectTrigger className="w-full sm:w-[180px]">
                   <SelectValue placeholder="Sort by" />
                 </SelectTrigger>
                 <SelectContent>
@@ -196,7 +196,7 @@ export default function BooksPage() {
                 </SelectContent>
               </Select>
               <Select value={sortOrder} onValueChange={(value: any) => setSortOrder(value)}>
-                <SelectTrigger className="w-[150px]">
+                <SelectTrigger className="w-full sm:w-[150px]">
                   <SelectValue placeholder="Order" />
                 </SelectTrigger>
                 <SelectContent>
@@ -213,103 +213,198 @@ export default function BooksPage() {
               No books found. Start adding books to track your reading!
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Cover</TableHead>
-                    <TableHead>Title</TableHead>
-                    <TableHead>Author</TableHead>
-                    <TableHead>Type</TableHead>
-                    <TableHead>Pages/Minutes</TableHead>
-                    <TableHead>Days</TableHead>
-                    <TableHead>Started</TableHead>
-                    <TableHead>Completed</TableHead>
-                    <TableHead>Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredAndSortedBooks.map((book) => (
-                    <TableRow key={book.id}>
-                      <TableCell>
-                        {book.coverImage && (
-                          <img
-                            src={book.coverImage}
-                            alt={book.title}
-                            className="h-16 w-12 rounded object-cover"
-                          />
-                        )}
-                      </TableCell>
-                      <TableCell className="font-medium">{book.title}</TableCell>
-                      <TableCell>{book.author}</TableCell>
-                      <TableCell>
-                        <Badge variant={book.type === 'Ebook' ? 'default' : 'secondary'}>
-                          {book.type}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        {book.type === 'Ebook'
-                          ? `${book.pages || 0} pages`
-                          : `${book.minutes || 0} min`
-                        }
-                      </TableCell>
-                      <TableCell>{book.daysRead}</TableCell>
-                      <TableCell>
-                        {book.dateStarted
-                          ? new Date(book.dateStarted).toLocaleDateString()
-                          : '-'
-                        }
-                      </TableCell>
-                      <TableCell>
-                        {book.dateCompleted
-                          ? new Date(book.dateCompleted).toLocaleDateString()
-                          : '-'
-                        }
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex gap-2">
+            <>
+              {/* Desktop Table View */}
+              <div className="hidden md:block overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Cover</TableHead>
+                      <TableHead>Title</TableHead>
+                      <TableHead>Author</TableHead>
+                      <TableHead>Type</TableHead>
+                      <TableHead>Pages/Minutes</TableHead>
+                      <TableHead>Days</TableHead>
+                      <TableHead>Started</TableHead>
+                      <TableHead>Completed</TableHead>
+                      <TableHead>Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredAndSortedBooks.map((book) => (
+                      <TableRow key={book.id}>
+                        <TableCell>
+                          {book.coverImage && (
+                            <img
+                              src={book.coverImage}
+                              alt={book.title}
+                              className="h-16 w-12 rounded object-cover"
+                            />
+                          )}
+                        </TableCell>
+                        <TableCell className="font-medium">{book.title}</TableCell>
+                        <TableCell>{book.author}</TableCell>
+                        <TableCell>
+                          <Badge variant={book.type === 'Ebook' ? 'default' : 'secondary'}>
+                            {book.type}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          {book.type === 'Ebook'
+                            ? `${book.pages || 0} pages`
+                            : `${book.minutes || 0} min`
+                          }
+                        </TableCell>
+                        <TableCell>{book.daysRead}</TableCell>
+                        <TableCell>
+                          {book.dateStarted
+                            ? new Date(book.dateStarted).toLocaleDateString()
+                            : '-'
+                          }
+                        </TableCell>
+                        <TableCell>
+                          {book.dateCompleted
+                            ? new Date(book.dateCompleted).toLocaleDateString()
+                            : '-'
+                          }
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex gap-2">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleEdit(book)}
+                            >
+                              <Pencil className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleDelete(book.id)}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+
+              {/* Mobile Card View */}
+              <div className="grid md:hidden grid-cols-1 gap-4">
+                {filteredAndSortedBooks.map((book) => (
+                  <Card key={book.id} className="overflow-hidden">
+                    <div className="flex gap-4 p-4">
+                      {book.coverImage && (
+                        <img
+                          src={book.coverImage}
+                          alt={book.title}
+                          className="h-32 w-24 rounded object-cover flex-shrink-0"
+                        />
+                      )}
+                      <div className="flex-1 min-w-0 space-y-2">
+                        <div>
+                          <h3 className="font-semibold text-base leading-tight line-clamp-2">
+                            {book.title}
+                          </h3>
+                          <p className="text-sm text-muted-foreground mt-1">
+                            {book.author}
+                          </p>
+                        </div>
+
+                        <div>
+                          <Badge variant={book.type === 'Ebook' ? 'default' : 'secondary'}>
+                            {book.type}
+                          </Badge>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
+                          <div>
+                            <span className="text-muted-foreground">
+                              {book.type === 'Ebook' ? 'Pages:' : 'Minutes:'}
+                            </span>
+                            <span className="ml-1 font-medium">
+                              {book.type === 'Ebook'
+                                ? `${book.pages || 0}`
+                                : `${book.minutes || 0}`
+                              }
+                            </span>
+                          </div>
+                          <div>
+                            <span className="text-muted-foreground">Days:</span>
+                            <span className="ml-1 font-medium">{book.daysRead}</span>
+                          </div>
+                          <div>
+                            <span className="text-muted-foreground">Started:</span>
+                            <span className="ml-1 font-medium">
+                              {book.dateStarted
+                                ? new Date(book.dateStarted).toLocaleDateString()
+                                : '-'
+                              }
+                            </span>
+                          </div>
+                          <div>
+                            <span className="text-muted-foreground">Completed:</span>
+                            <span className="ml-1 font-medium">
+                              {book.dateCompleted
+                                ? new Date(book.dateCompleted).toLocaleDateString()
+                                : '-'
+                              }
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="flex gap-2 pt-2">
                           <Button
-                            variant="ghost"
-                            size="icon"
+                            variant="outline"
+                            size="sm"
                             onClick={() => handleEdit(book)}
+                            className="flex-1"
                           >
-                            <Pencil className="h-4 w-4" />
+                            <Pencil className="h-4 w-4 mr-2" />
+                            Edit
                           </Button>
                           <Button
-                            variant="ghost"
-                            size="icon"
+                            variant="outline"
+                            size="sm"
                             onClick={() => handleDelete(book.id)}
+                            className="flex-1"
                           >
-                            <Trash2 className="h-4 w-4" />
+                            <Trash2 className="h-4 w-4 mr-2" />
+                            Delete
                           </Button>
                         </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
+                      </div>
+                    </div>
+                  </Card>
+                ))}
+              </div>
+            </>
           )}
         </CardContent>
       </Card>
 
       <Dialog open={showForm} onOpenChange={setShowForm}>
-        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
+        <DialogContent className="w-[calc(100%-1rem)] max-w-3xl h-[90vh] flex flex-col p-0 gap-0 sm:h-auto sm:max-h-[90vh]">
+          <DialogHeader className="p-4 sm:p-6 pb-4">
             <DialogTitle>
               {editingBook ? "Edit Book" : "Add New Book"}
             </DialogTitle>
           </DialogHeader>
-          <BookEntryForm
-            selectedBook={selectedBook}
-            initialData={editingBook || undefined}
-            onSubmit={handleSubmit}
-            onCancel={() => {
-              setShowForm(false)
-              setSelectedBook(null)
-              setEditingBook(null)
-            }}
-          />
+          <div className="overflow-y-auto flex-1 px-4 sm:px-6">
+            <BookEntryForm
+              selectedBook={selectedBook}
+              initialData={editingBook || undefined}
+              onSubmit={handleSubmit}
+              onCancel={() => {
+                setShowForm(false)
+                setSelectedBook(null)
+                setEditingBook(null)
+              }}
+            />
+          </div>
         </DialogContent>
       </Dialog>
     </div>

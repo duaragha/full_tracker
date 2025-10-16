@@ -49,7 +49,7 @@ export function AreaManager({ open, onOpenChange, onAreaAdded, editingArea }: Ar
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent className="w-[calc(100%-2rem)] sm:max-w-md">
         <DialogHeader>
           <DialogTitle>{editingArea ? "Edit Area" : "Add New Area"}</DialogTitle>
         </DialogHeader>
@@ -62,13 +62,14 @@ export function AreaManager({ open, onOpenChange, onAreaAdded, editingArea }: Ar
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
               placeholder="e.g., Bedroom, Closet, Garage"
               required
+              className="h-11 text-base"
             />
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="type">Type *</Label>
             <Select value={formData.type} onValueChange={(value) => setFormData({ ...formData, type: value })}>
-              <SelectTrigger>
+              <SelectTrigger className="h-11 text-base">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -83,11 +84,11 @@ export function AreaManager({ open, onOpenChange, onAreaAdded, editingArea }: Ar
             </Select>
           </div>
 
-          <div className="flex justify-end gap-2">
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+          <div className="flex flex-col-reverse sm:flex-row justify-end gap-2">
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)} className="h-11">
               Cancel
             </Button>
-            <Button type="submit">{editingArea ? "Update" : "Add"} Area</Button>
+            <Button type="submit" className="h-11">{editingArea ? "Update" : "Add"} Area</Button>
           </div>
         </form>
       </DialogContent>

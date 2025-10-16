@@ -120,19 +120,19 @@ export function TVShowEntryForm({ selectedShow, onSubmit, onCancel, initialData 
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
       {showDetails && !initialData && (
         <div className="space-y-2">
-          <div className="flex gap-4">
+          <div className="flex flex-col sm:flex-row gap-4">
             {showDetails.poster_path && (
               <img
                 src={getPosterUrl(showDetails.poster_path, 'w185')}
                 alt={showDetails.name}
-                className="w-32 h-48 object-cover rounded"
+                className="w-full sm:w-32 h-auto sm:h-48 object-cover rounded"
               />
             )}
-            <div className="flex-1">
-              <h3 className="text-lg font-semibold">{showDetails.name}</h3>
+            <div className="flex-1 space-y-1">
+              <h3 className="text-base sm:text-lg font-semibold">{showDetails.name}</h3>
               <p className="text-sm text-muted-foreground">
                 Network: {showDetails.networks[0]?.name || "Unknown"}
               </p>
@@ -154,7 +154,7 @@ export function TVShowEntryForm({ selectedShow, onSubmit, onCancel, initialData 
         </div>
       )}
 
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
         <div className="space-y-2">
           <Label>Date I Started Watching</Label>
           <DatePicker
@@ -185,11 +185,11 @@ export function TVShowEntryForm({ selectedShow, onSubmit, onCancel, initialData 
         />
       </div>
 
-      <div className="flex justify-end gap-2">
-        <Button type="button" variant="outline" onClick={onCancel}>
+      <div className="flex flex-col sm:flex-row justify-end gap-2">
+        <Button type="button" variant="outline" onClick={onCancel} className="w-full sm:w-auto">
           Cancel
         </Button>
-        <Button type="submit" disabled={loading}>
+        <Button type="submit" disabled={loading} className="w-full sm:w-auto">
           {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
           {initialData ? "Update" : "Add"} Show
         </Button>

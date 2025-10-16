@@ -123,41 +123,41 @@ export default function TVShowsPage() {
   const remainingMinutes = totalMinutesWatched % 60
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="space-y-4 sm:space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">TV Shows Tracker</h1>
-          <p className="text-muted-foreground">Track your TV show watching journey</p>
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">TV Shows Tracker</h1>
+          <p className="text-sm sm:text-base text-muted-foreground">Track your TV show watching journey</p>
         </div>
-        <Button onClick={() => setShowForm(true)}>
+        <Button onClick={() => setShowForm(true)} className="w-full sm:w-auto">
           <Plus className="mr-2 h-4 w-4" />
           Add Show Manually
         </Button>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 md:gap-4 md:grid-cols-4">
         <Card>
-          <CardHeader>
-            <CardTitle>{totalShows}</CardTitle>
-            <CardDescription>Total Shows</CardDescription>
+          <CardHeader className="p-4 sm:p-6">
+            <CardTitle className="text-2xl sm:text-3xl">{totalShows}</CardTitle>
+            <CardDescription className="text-xs sm:text-sm">Total Shows</CardDescription>
           </CardHeader>
         </Card>
         <Card>
-          <CardHeader>
-            <CardTitle>{totalEpisodesWatched}</CardTitle>
-            <CardDescription>Episodes Watched</CardDescription>
+          <CardHeader className="p-4 sm:p-6">
+            <CardTitle className="text-2xl sm:text-3xl">{totalEpisodesWatched}</CardTitle>
+            <CardDescription className="text-xs sm:text-sm">Episodes Watched</CardDescription>
           </CardHeader>
         </Card>
         <Card>
-          <CardHeader>
-            <CardTitle>{totalHours}h {remainingMinutes}m</CardTitle>
-            <CardDescription>Total Hours Watched</CardDescription>
+          <CardHeader className="p-4 sm:p-6">
+            <CardTitle className="text-2xl sm:text-3xl">{totalHours}h {remainingMinutes}m</CardTitle>
+            <CardDescription className="text-xs sm:text-sm">Total Hours Watched</CardDescription>
           </CardHeader>
         </Card>
         <Card>
-          <CardHeader>
-            <CardTitle>{totalDaysTracking}</CardTitle>
-            <CardDescription>Days Tracking</CardDescription>
+          <CardHeader className="p-4 sm:p-6">
+            <CardTitle className="text-2xl sm:text-3xl">{totalDaysTracking}</CardTitle>
+            <CardDescription className="text-xs sm:text-sm">Days Tracking</CardDescription>
           </CardHeader>
         </Card>
       </div>
@@ -176,15 +176,15 @@ export default function TVShowsPage() {
         <CardHeader>
           <div className="flex flex-col gap-4">
             <CardTitle>Your TV Shows</CardTitle>
-            <div className="flex gap-4">
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
               <Input
                 placeholder="Search shows by title..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="max-w-sm"
+                className="w-full sm:max-w-sm"
               />
               <Select value={sortBy} onValueChange={(value: any) => setSortBy(value)}>
-                <SelectTrigger className="w-[180px]">
+                <SelectTrigger className="w-full sm:w-[180px]">
                   <SelectValue placeholder="Sort by" />
                 </SelectTrigger>
                 <SelectContent>
@@ -195,7 +195,7 @@ export default function TVShowsPage() {
                 </SelectContent>
               </Select>
               <Select value={sortOrder} onValueChange={(value: any) => setSortOrder(value)}>
-                <SelectTrigger className="w-[150px]">
+                <SelectTrigger className="w-full sm:w-[150px]">
                   <SelectValue placeholder="Order" />
                 </SelectTrigger>
                 <SelectContent>
@@ -212,8 +212,10 @@ export default function TVShowsPage() {
               No TV shows found. Start adding shows to track your progress!
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <Table>
+            <>
+              {/* Desktop Table View */}
+              <div className="hidden md:block overflow-x-auto">
+                <Table>
                 <TableHeader>
                   <TableRow>
                     <TableHead>Poster</TableHead>
@@ -317,44 +319,139 @@ export default function TVShowsPage() {
                 </TableBody>
               </Table>
             </div>
+
+            {/* Mobile Card View */}
+            <div className="grid md:hidden grid-cols-1 gap-4">
+              {filteredAndSortedShows.map((show) => {
+                const hours = Math.floor(show.totalMinutes / 60)
+                const mins = show.totalMinutes % 60
+                const progress = show.totalEpisodes > 0
+                  ? Math.round((show.watchedEpisodes / show.totalEpisodes) * 100)
+                  : 0
+
+                return (
+                  <Card key={show.id} className="overflow-hidden">
+                    <div className="flex gap-4 p-4">
+                      {show.posterImage && (
+                        <img
+                          src={show.posterImage}
+                          alt={show.title}
+                          className="h-32 w-24 rounded object-cover flex-shrink-0"
+                        />
+                      )}
+                      <div className="flex-1 min-w-0 space-y-2">
+                        <div>
+                          <h3 className="font-semibold text-base leading-tight line-clamp-2">
+                            {show.title}
+                          </h3>
+                          <p className="text-sm text-muted-foreground mt-1">
+                            {show.network}
+                          </p>
+                        </div>
+
+                        <div className="flex flex-wrap gap-1">
+                          {show.genres.slice(0, 3).map((genre) => (
+                            <Badge key={genre} variant="secondary" className="text-xs">
+                              {genre}
+                            </Badge>
+                          ))}
+                        </div>
+
+                        <div className="space-y-1 text-sm">
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">Progress:</span>
+                            <span className="font-medium">
+                              {show.watchedEpisodes}/{show.totalEpisodes} ({progress}%)
+                            </span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">Hours:</span>
+                            <span className="font-medium">{hours}h {mins}m</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">Days:</span>
+                            <span className="font-medium">{show.daysTracking}</span>
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-3 gap-2 pt-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleViewEpisodes(show)}
+                            className="text-xs"
+                          >
+                            <List className="h-3.5 w-3.5 mr-1" />
+                            Episodes
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleEdit(show)}
+                            className="text-xs"
+                          >
+                            <Pencil className="h-3.5 w-3.5 mr-1" />
+                            Edit
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleDelete(show.id)}
+                            className="text-xs"
+                          >
+                            <Trash2 className="h-3.5 w-3.5 mr-1" />
+                            Delete
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  </Card>
+                )
+              })}
+            </div>
+          </>
           )}
         </CardContent>
       </Card>
 
       <Dialog open={showForm} onOpenChange={setShowForm}>
-        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
+        <DialogContent className="w-[calc(100%-1rem)] max-w-3xl h-[90vh] flex flex-col p-0 gap-0 sm:h-auto sm:max-h-[90vh]">
+          <DialogHeader className="p-4 sm:p-6 pb-4">
             <DialogTitle>
               {editingShow ? "Edit TV Show" : "Add New TV Show"}
             </DialogTitle>
           </DialogHeader>
-          <TVShowEntryForm
-            selectedShow={selectedShow}
-            initialData={editingShow || undefined}
-            onSubmit={handleSubmit}
-            onCancel={() => {
-              setShowForm(false)
-              setSelectedShow(null)
-              setEditingShow(null)
-            }}
-          />
+          <div className="overflow-y-auto flex-1 px-4 sm:px-6">
+            <TVShowEntryForm
+              selectedShow={selectedShow}
+              initialData={editingShow || undefined}
+              onSubmit={handleSubmit}
+              onCancel={() => {
+                setShowForm(false)
+                setSelectedShow(null)
+                setEditingShow(null)
+              }}
+            />
+          </div>
         </DialogContent>
       </Dialog>
 
       <Dialog open={!!viewingEpisodes} onOpenChange={() => setViewingEpisodes(null)}>
-        <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
+        <DialogContent className="w-[calc(100%-1rem)] max-w-5xl h-[90vh] flex flex-col p-0 gap-0 sm:h-auto sm:max-h-[90vh]">
+          <DialogHeader className="p-4 sm:p-6 pb-4">
             <DialogTitle>
               {viewingEpisodes?.title} - Episodes
             </DialogTitle>
           </DialogHeader>
-          {viewingEpisodes && (
-            <EpisodeList
-              showId={viewingEpisodes.id}
-              seasons={viewingEpisodes.seasons}
-              onUpdate={handleEpisodesUpdate}
-            />
-          )}
+          <div className="overflow-y-auto flex-1 px-4 sm:px-6 pb-4">
+            {viewingEpisodes && (
+              <EpisodeList
+                showId={viewingEpisodes.id}
+                seasons={viewingEpisodes.seasons}
+                onUpdate={handleEpisodesUpdate}
+              />
+            )}
+          </div>
         </DialogContent>
       </Dialog>
     </div>

@@ -67,7 +67,7 @@ export function PhevEntryForm({ activeCarId, onSubmit }: PhevEntryFormProps) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-4">
+      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-4">
         <div className="space-y-2">
           <Label htmlFor="date">Date</Label>
           <DatePicker
@@ -112,7 +112,7 @@ export function PhevEntryForm({ activeCarId, onSubmit }: PhevEntryFormProps) {
       </div>
 
       <div className="flex justify-end">
-        <Button type="submit" disabled={isSubmitting || !activeCarId}>
+        <Button type="submit" disabled={isSubmitting || !activeCarId} className="w-full sm:w-auto">
           {isSubmitting ? "Saving..." : "Save Entry"}
         </Button>
       </div>

@@ -193,75 +193,76 @@ export default function GamesPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="space-y-4 sm:space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Games Tracker</h1>
-          <p className="text-muted-foreground">Track your gaming journey</p>
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Games Tracker</h1>
+          <p className="text-sm sm:text-base text-muted-foreground">Track your gaming journey</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
           <Button
             variant="outline"
             onClick={handleEnrichGames}
             disabled={isEnriching || games.length === 0}
+            className="w-full sm:w-auto"
           >
             <Download className="mr-2 h-4 w-4" />
             {isEnriching ? 'Enriching...' : 'Enrich Missing Data'}
           </Button>
-          <Button onClick={() => setShowForm(true)}>
+          <Button onClick={() => setShowForm(true)} className="w-full sm:w-auto">
             <Plus className="mr-2 h-4 w-4" />
             Add Game Manually
           </Button>
         </div>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-7">
+      <div className="grid grid-cols-2 gap-3 md:gap-4 md:grid-cols-7">
         <Card>
-          <CardHeader>
-            <CardTitle>{games.length}</CardTitle>
-            <CardDescription>Total Games</CardDescription>
+          <CardHeader className="p-4 sm:p-6">
+            <CardTitle className="text-2xl sm:text-3xl">{games.length}</CardTitle>
+            <CardDescription className="text-xs sm:text-sm">Total Games</CardDescription>
           </CardHeader>
         </Card>
         <Card>
-          <CardHeader>
-            <CardTitle>{totalHours.toFixed(1)}h</CardTitle>
-            <CardDescription>Total Hours Played</CardDescription>
+          <CardHeader className="p-4 sm:p-6">
+            <CardTitle className="text-2xl sm:text-3xl">{totalHours.toFixed(1)}h</CardTitle>
+            <CardDescription className="text-xs sm:text-sm">Total Hours Played</CardDescription>
           </CardHeader>
         </Card>
         <Card>
-          <CardHeader>
-            <CardTitle>{avgPercentage}%</CardTitle>
-            <CardDescription>Average Percentage</CardDescription>
+          <CardHeader className="p-4 sm:p-6">
+            <CardTitle className="text-2xl sm:text-3xl">{avgPercentage}%</CardTitle>
+            <CardDescription className="text-xs sm:text-sm">Average Percentage</CardDescription>
           </CardHeader>
         </Card>
         <Card>
-          <CardHeader>
-            <CardTitle>{totalDays}</CardTitle>
-            <CardDescription>Total Days</CardDescription>
+          <CardHeader className="p-4 sm:p-6">
+            <CardTitle className="text-2xl sm:text-3xl">{totalDays}</CardTitle>
+            <CardDescription className="text-xs sm:text-sm">Total Days</CardDescription>
           </CardHeader>
         </Card>
         <Card>
-          <CardHeader>
-            <CardTitle>${totalCost.toFixed(2)}</CardTitle>
-            <CardDescription>Total Cost</CardDescription>
+          <CardHeader className="p-4 sm:p-6">
+            <CardTitle className="text-2xl sm:text-3xl">${totalCost.toFixed(2)}</CardTitle>
+            <CardDescription className="text-xs sm:text-sm">Total Cost</CardDescription>
           </CardHeader>
         </Card>
         <Card>
-          <CardHeader>
-            <CardTitle className="text-sm truncate">
+          <CardHeader className="p-4 sm:p-6">
+            <CardTitle className="text-sm sm:text-base truncate">
               {oldestGame ? oldestGame.title : 'N/A'}
             </CardTitle>
-            <CardDescription>
+            <CardDescription className="text-xs sm:text-sm">
               Oldest Game {oldestGame && `(${new Date(oldestGame.dateStarted).getFullYear()})`}
             </CardDescription>
           </CardHeader>
         </Card>
         <Card>
-          <CardHeader>
-            <CardTitle className="text-sm truncate">
+          <CardHeader className="p-4 sm:p-6">
+            <CardTitle className="text-sm sm:text-base truncate">
               {newestGame ? newestGame.title : 'N/A'}
             </CardTitle>
-            <CardDescription>
+            <CardDescription className="text-xs sm:text-sm">
               Newest Game {newestGame && `(${new Date(newestGame.dateStarted).getFullYear()})`}
             </CardDescription>
           </CardHeader>
@@ -283,10 +284,10 @@ export default function GamesPage() {
       <Card>
         <CardHeader>
           <div className="flex flex-col gap-4">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
               <CardTitle>Your Games</CardTitle>
               <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-[180px]">
+                <SelectTrigger className="w-full sm:w-[180px]">
                   <SelectValue placeholder="Filter by status" />
                 </SelectTrigger>
                 <SelectContent>
@@ -297,15 +298,15 @@ export default function GamesPage() {
                 </SelectContent>
               </Select>
             </div>
-            <div className="flex gap-4">
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4" suppressHydrationWarning>
               <Input
                 placeholder="Search games by title..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="max-w-sm"
+                className="w-full sm:max-w-sm"
               />
               <Select value={sortBy} onValueChange={(value: any) => setSortBy(value)}>
-                <SelectTrigger className="w-[180px]">
+                <SelectTrigger className="w-full sm:w-[180px]">
                   <SelectValue placeholder="Sort by" />
                 </SelectTrigger>
                 <SelectContent>
@@ -316,7 +317,7 @@ export default function GamesPage() {
                 </SelectContent>
               </Select>
               <Select value={sortOrder} onValueChange={(value: any) => setSortOrder(value)}>
-                <SelectTrigger className="w-[150px]">
+                <SelectTrigger className="w-full sm:w-[150px]">
                   <SelectValue placeholder="Order" />
                 </SelectTrigger>
                 <SelectContent>
@@ -333,35 +334,118 @@ export default function GamesPage() {
               No games found. Start adding games to track your progress!
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Cover</TableHead>
-                    <TableHead>Title</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Progress</TableHead>
-                    <TableHead>Hours</TableHead>
-                    <TableHead>Days</TableHead>
-                    <TableHead>Console</TableHead>
-                    <TableHead>Price</TableHead>
-                    <TableHead>Hrs/$</TableHead>
-                    <TableHead>Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {paginatedGames.map((game) => (
-                    <GameTableRow
-                      key={game.id}
-                      game={game}
-                      onEdit={handleEdit}
-                      onDelete={handleDelete}
-                      getStatusColor={getStatusColor}
-                    />
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
+            <>
+              {/* Desktop Table View */}
+              <div className="hidden md:block overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Cover</TableHead>
+                      <TableHead>Title</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Progress</TableHead>
+                      <TableHead>Hours</TableHead>
+                      <TableHead>Days</TableHead>
+                      <TableHead>Console</TableHead>
+                      <TableHead>Price</TableHead>
+                      <TableHead>Hrs/$</TableHead>
+                      <TableHead>Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {paginatedGames.map((game) => (
+                      <GameTableRow
+                        key={game.id}
+                        game={game}
+                        onEdit={handleEdit}
+                        onDelete={handleDelete}
+                        getStatusColor={getStatusColor}
+                      />
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+
+              {/* Mobile Card View */}
+              <div className="grid md:hidden grid-cols-1 gap-4">
+                {paginatedGames.map((game) => (
+                  <Card key={game.id} className="overflow-hidden">
+                    <div className="flex gap-4 p-4">
+                      {game.coverImage && (
+                        <img
+                          src={game.coverImage}
+                          alt={game.title}
+                          className="h-32 w-24 rounded object-cover flex-shrink-0"
+                        />
+                      )}
+                      <div className="flex-1 min-w-0 space-y-2">
+                        <div>
+                          <h3 className="font-semibold text-base leading-tight line-clamp-2">
+                            {game.title}
+                          </h3>
+                          <p className="text-sm text-muted-foreground mt-1">
+                            {game.console}
+                          </p>
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                          <Badge variant={getStatusColor(game.status)}>
+                            {game.status}
+                          </Badge>
+                          <span className="text-sm font-medium">{game.percentage}%</span>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
+                          <div>
+                            <span className="text-muted-foreground">Hours:</span>
+                            <span className="ml-1 font-medium">
+                              {game.hoursPlayed}h {game.minutesPlayed}m
+                            </span>
+                          </div>
+                          <div>
+                            <span className="text-muted-foreground">Days:</span>
+                            <span className="ml-1 font-medium">{game.daysPlayed}</span>
+                          </div>
+                          <div>
+                            <span className="text-muted-foreground">Price:</span>
+                            <span className="ml-1 font-medium">
+                              {game.isGift ? 'Gift' : `$${game.price.toFixed(2)}`}
+                            </span>
+                          </div>
+                          <div>
+                            <span className="text-muted-foreground">Hrs/$:</span>
+                            <span className="ml-1 font-medium">
+                              {game.isGift ? 'Gift' : game.pricePerHour.toFixed(2)}
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="flex gap-2 pt-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleEdit(game)}
+                            className="flex-1"
+                          >
+                            <Pencil className="h-4 w-4 mr-2" />
+                            Edit
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleDelete(game.id)}
+                            className="flex-1"
+                          >
+                            <Trash2 className="h-4 w-4 mr-2" />
+                            Delete
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  </Card>
+                ))}
+              </div>
+            </>
           )}
 
           <div className="flex items-center justify-between px-2 py-4">
@@ -440,22 +524,24 @@ export default function GamesPage() {
       </Card>
 
       <Dialog open={showForm} onOpenChange={setShowForm}>
-        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
+        <DialogContent className="w-[calc(100%-1rem)] max-w-3xl h-[90vh] flex flex-col p-0 gap-0 sm:h-auto sm:max-h-[90vh]">
+          <DialogHeader className="p-4 sm:p-6 pb-4">
             <DialogTitle>
               {editingGame ? "Edit Game" : "Add New Game"}
             </DialogTitle>
           </DialogHeader>
-          <GameEntryForm
-            selectedGame={selectedGame}
-            initialData={editingGame || undefined}
-            onSubmit={handleSubmit}
-            onCancel={() => {
-              setShowForm(false)
-              setSelectedGame(null)
-              setEditingGame(null)
-            }}
-          />
+          <div className="overflow-y-auto flex-1 px-4 sm:px-6">
+            <GameEntryForm
+              selectedGame={selectedGame}
+              initialData={editingGame || undefined}
+              onSubmit={handleSubmit}
+              onCancel={() => {
+                setShowForm(false)
+                setSelectedGame(null)
+                setEditingGame(null)
+              }}
+            />
+          </div>
         </DialogContent>
       </Dialog>
     </div>

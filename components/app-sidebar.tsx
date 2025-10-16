@@ -61,10 +61,10 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   return (
     <Sidebar {...props} style={{ width: '180px' } as React.CSSProperties}>
       <SidebarHeader>
-        <div className="flex items-center gap-2 px-2 py-2">
-          <BarChart3 className="size-5" />
+        <div className="flex items-center gap-2 px-2 py-2 sm:py-3">
+          <BarChart3 className="size-6 sm:size-5" />
           <div className="flex flex-col">
-            <span className="font-semibold text-sm">Full Tracker</span>
+            <span className="font-semibold text-base sm:text-sm">Full Tracker</span>
             <span className="text-xs text-muted-foreground">Track everything</span>
           </div>
         </div>
@@ -76,9 +76,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             <SidebarMenu>
               {navItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild isActive={pathname === item.url} className="px-2 h-9">
-                    <Link href={item.url} className="text-sm">
-                      <item.icon className="size-4 mr-2" />
+                  <SidebarMenuButton asChild isActive={pathname === item.url} className="px-3 h-11 sm:px-2 sm:h-9">
+                    <Link href={item.url} className="text-base sm:text-sm">
+                      <item.icon className="size-5 sm:size-4 mr-3 sm:mr-2" />
                       <span>{item.title}</span>
                     </Link>
                   </SidebarMenuButton>

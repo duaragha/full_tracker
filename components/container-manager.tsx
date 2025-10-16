@@ -111,18 +111,18 @@ export function ContainerManager({ open, onOpenChange, onContainerAdded, areaId,
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
+      <DialogContent className="w-[calc(100%-1rem)] max-w-2xl h-[90vh] flex flex-col p-0 gap-0 sm:h-auto sm:max-h-[90vh]">
+        <DialogHeader className="p-4 sm:p-6 pb-0">
           <DialogTitle>{editingContainer ? "Edit Container" : "Add New Container"}</DialogTitle>
         </DialogHeader>
-        <form onSubmit={handleSubmit}>
-          <Tabs defaultValue="basic" className="space-y-4">
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="basic">Basic Info</TabsTrigger>
-              <TabsTrigger value="tracking">Tracking Details</TabsTrigger>
+        <form onSubmit={handleSubmit} className="flex flex-col flex-1 overflow-hidden">
+          <Tabs defaultValue="basic" className="flex flex-col flex-1 overflow-hidden">
+            <TabsList className="grid w-full grid-cols-2 mx-4 sm:mx-6 mt-4">
+              <TabsTrigger value="basic" className="h-10 text-sm sm:text-base">Basic Info</TabsTrigger>
+              <TabsTrigger value="tracking" className="h-10 text-sm sm:text-base">Tracking Details</TabsTrigger>
             </TabsList>
 
-            <TabsContent value="basic" className="space-y-4">
+            <TabsContent value="basic" className="space-y-4 overflow-y-auto flex-1 p-4 sm:p-6 pt-4">
               <div className="space-y-2">
                 <Label htmlFor="name">Container Name *</Label>
                 <Input
@@ -131,14 +131,15 @@ export function ContainerManager({ open, onOpenChange, onContainerAdded, areaId,
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   placeholder="e.g., Box 1, Backpack, Drawer 2"
                   required
+                  className="h-11 text-base"
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="type">Type *</Label>
                   <Select value={formData.type} onValueChange={(value) => setFormData({ ...formData, type: value })}>
-                    <SelectTrigger>
+                    <SelectTrigger className="h-11 text-base">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -158,7 +159,7 @@ export function ContainerManager({ open, onOpenChange, onContainerAdded, areaId,
                 <div className="space-y-2">
                   <Label htmlFor="material">Material</Label>
                   <Select value={formData.material || "none"} onValueChange={(value) => setFormData({ ...formData, material: value === "none" ? "" : value })}>
-                    <SelectTrigger>
+                    <SelectTrigger className="h-11 text-base">
                       <SelectValue placeholder="Select material" />
                     </SelectTrigger>
                     <SelectContent>
@@ -175,7 +176,7 @@ export function ContainerManager({ open, onOpenChange, onContainerAdded, areaId,
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="color">Color</Label>
                   <Input
@@ -183,6 +184,7 @@ export function ContainerManager({ open, onOpenChange, onContainerAdded, areaId,
                     value={formData.color}
                     onChange={(e) => setFormData({ ...formData, color: e.target.value })}
                     placeholder="e.g., Red, Blue, Clear"
+                    className="h-11 text-base"
                   />
                 </div>
 
@@ -193,6 +195,7 @@ export function ContainerManager({ open, onOpenChange, onContainerAdded, areaId,
                     value={formData.size}
                     onChange={(e) => setFormData({ ...formData, size: e.target.value })}
                     placeholder="e.g., Large, 50L, 24x18x12"
+                    className="h-11 text-base"
                   />
                 </div>
               </div>
@@ -204,12 +207,13 @@ export function ContainerManager({ open, onOpenChange, onContainerAdded, areaId,
                   value={formData.capacity}
                   onChange={(e) => setFormData({ ...formData, capacity: e.target.value })}
                   placeholder="e.g., 50 liters, 20 items, 3 shelves"
+                  className="h-11 text-base"
                 />
               </div>
             </TabsContent>
 
-            <TabsContent value="tracking" className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+            <TabsContent value="tracking" className="space-y-4 overflow-y-auto flex-1 p-4 sm:p-6 pt-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="brand">Brand</Label>
                   <Input
@@ -217,6 +221,7 @@ export function ContainerManager({ open, onOpenChange, onContainerAdded, areaId,
                     value={formData.brand}
                     onChange={(e) => setFormData({ ...formData, brand: e.target.value })}
                     placeholder="e.g., IKEA, Rubbermaid"
+                    className="h-11 text-base"
                   />
                 </div>
 
@@ -227,11 +232,12 @@ export function ContainerManager({ open, onOpenChange, onContainerAdded, areaId,
                     value={formData.model}
                     onChange={(e) => setFormData({ ...formData, model: e.target.value })}
                     placeholder="e.g., SAMLA, Roughneck"
+                    className="h-11 text-base"
                   />
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="purchasedFrom">Purchased From</Label>
                   <Input
@@ -239,6 +245,7 @@ export function ContainerManager({ open, onOpenChange, onContainerAdded, areaId,
                     value={formData.purchasedFrom}
                     onChange={(e) => setFormData({ ...formData, purchasedFrom: e.target.value })}
                     placeholder="e.g., IKEA, Amazon, Target"
+                    className="h-11 text-base"
                   />
                 </div>
 
@@ -251,7 +258,7 @@ export function ContainerManager({ open, onOpenChange, onContainerAdded, areaId,
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="cost">Cost ($)</Label>
                   <Input
@@ -261,13 +268,14 @@ export function ContainerManager({ open, onOpenChange, onContainerAdded, areaId,
                     value={formData.cost}
                     onChange={(e) => setFormData({ ...formData, cost: e.target.value })}
                     placeholder="0.00"
+                    className="h-11 text-base"
                   />
                 </div>
 
                 <div className="space-y-2">
                   <Label htmlFor="condition">Condition</Label>
                   <Select value={formData.condition || "unknown"} onValueChange={(value) => setFormData({ ...formData, condition: value === "unknown" ? "" : value })}>
-                    <SelectTrigger>
+                    <SelectTrigger className="h-11 text-base">
                       <SelectValue placeholder="Select condition" />
                     </SelectTrigger>
                     <SelectContent>
@@ -306,11 +314,11 @@ export function ContainerManager({ open, onOpenChange, onContainerAdded, areaId,
             </TabsContent>
           </Tabs>
 
-          <div className="flex justify-end gap-2 mt-6">
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+          <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 p-4 sm:p-6 pt-4 border-t bg-background">
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)} className="h-11">
               Cancel
             </Button>
-            <Button type="submit">{editingContainer ? "Update" : "Add"} Container</Button>
+            <Button type="submit" className="h-11">{editingContainer ? "Update" : "Add"} Container</Button>
           </div>
         </form>
       </DialogContent>
