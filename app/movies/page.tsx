@@ -21,7 +21,7 @@ export default function MoviesPage() {
   const [showForm, setShowForm] = React.useState(false)
   const [statusFilter, setStatusFilter] = React.useState<string>("All")
   const [searchQuery, setSearchQuery] = React.useState("")
-  const [sortBy, setSortBy] = React.useState<"title" | "runtime" | "rating" | "dateWatched" | "releaseYear">("title")
+  const [sortBy, setSortBy] = React.useState<"title" | "runtime" | "rating" | "dateWatched" | "releaseDate">("title")
   const [sortOrder, setSortOrder] = React.useState<"asc" | "desc">("asc")
 
   React.useEffect(() => {
@@ -96,8 +96,10 @@ export default function MoviesPage() {
           const dateB = b.dateWatched ? new Date(b.dateWatched).getTime() : 0
           comparison = dateA - dateB
           break
-        case "releaseYear":
-          comparison = (a.releaseYear || 0) - (b.releaseYear || 0)
+        case "releaseDate":
+          const relA = a.releaseDate ? new Date(a.releaseDate).getTime() : 0
+          const relB = b.releaseDate ? new Date(b.releaseDate).getTime() : 0
+          comparison = relA - relB
           break
       }
       return sortOrder === "asc" ? comparison : -comparison
@@ -206,7 +208,7 @@ export default function MoviesPage() {
                   <SelectItem value="runtime">Runtime</SelectItem>
                   <SelectItem value="rating">Rating</SelectItem>
                   <SelectItem value="dateWatched">Date Watched</SelectItem>
-                  <SelectItem value="releaseYear">Release Year</SelectItem>
+                  <SelectItem value="releaseDate">Release Date</SelectItem>
                 </SelectContent>
               </Select>
               <Select value={sortOrder} onValueChange={(value: any) => setSortOrder(value)}>
@@ -281,7 +283,9 @@ export default function MoviesPage() {
                             {hours > 0 && `${hours}h `}{mins}m
                           </TableCell>
                           <TableCell>
-                            {movie.releaseYear || "N/A"}
+                            {movie.releaseDate
+                              ? new Date(movie.releaseDate).toLocaleDateString()
+                              : "N/A"}
                           </TableCell>
                           <TableCell>
                             {movie.dateWatched
@@ -373,7 +377,9 @@ export default function MoviesPage() {
                             <div>
                               <span className="text-muted-foreground">Released:</span>
                               <span className="ml-1 font-medium">
-                                {movie.releaseYear || "N/A"}
+                                {movie.releaseDate
+                                  ? new Date(movie.releaseDate).toLocaleDateString()
+                                  : "N/A"}
                               </span>
                             </div>
                             <div>

@@ -5,6 +5,7 @@ export interface Movie {
   director: string
   genres: string[]
   runtime: number // minutes
+  releaseDate: string | null
   releaseYear: number | null
   posterImage: string
   status: 'Watched' | 'Watchlist'

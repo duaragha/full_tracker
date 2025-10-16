@@ -97,6 +97,7 @@ export function MovieEntryForm({ selectedMovie, onSubmit, onCancel, initialData 
       director,
       genres: movieDetails.genres.map((g: any) => g.name),
       runtime: movieDetails.runtime || 0,
+      releaseDate: movieDetails.release_date || null,
       releaseYear,
       posterImage: getMoviePosterUrl(movieDetails.poster_path, 'w342'),
       status: formData.status,
@@ -144,7 +145,7 @@ export function MovieEntryForm({ selectedMovie, onSubmit, onCancel, initialData 
               </p>
               <p className="text-sm text-muted-foreground">
                 Released: {movieDetails.release_date
-                  ? movieDetails.release_date.substring(0, 4)
+                  ? new Date(movieDetails.release_date).toLocaleDateString()
                   : "N/A"}
               </p>
             </div>

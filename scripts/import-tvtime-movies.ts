@@ -166,6 +166,7 @@ async function importMovie(tvTimeMovie: TVTimeMovie) {
   const watchedDate = tvTimeMovie.is_watched && tvTimeMovie.watched_at
     ? tvTimeMovie.watched_at.split('T')[0]
     : null
+  const releaseDate = details.release_date || null
   const releaseYear = details.release_date
     ? parseInt(details.release_date.substring(0, 4))
     : null
@@ -180,15 +181,16 @@ async function importMovie(tvTimeMovie: TVTimeMovie) {
   try {
     await pool.query(
       `INSERT INTO movies (
-        tmdb_id, title, genre, runtime, release_year, director,
+        tmdb_id, title, genre, runtime, release_date, release_year, director,
         poster_image, watched_date, watchlist_added_date, status, rating, notes,
         created_at, updated_at
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, NOW(), NOW())`,
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, NOW(), NOW())`,
       [
         tmdbId,
         details.title,
         genre,
         details.runtime || 0,
+        releaseDate,
         releaseYear,
         director,
         posterImage,

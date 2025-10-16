@@ -2,32 +2,33 @@
 
 import * as React from "react"
 import Link from "next/link"
-import { Gamepad2, BookOpen, TrendingUp, Clock, Tv, Film, Car, DollarSign } from "lucide-react"
+import { Gamepad2, BookOpen, TrendingUp, Clock, Tv, Film, Car, DollarSign, Package } from "lucide-react"
 import { getGamesAction } from "@/app/actions/games"
 import { getBooksAction } from "@/app/actions/books"
 import { getTVShowsAction } from "@/app/actions/tvshows"
 import { getMoviesAction } from "@/app/actions/movies"
 import { getPHEVStatsAction, getPHEVCarSummariesAction } from "@/app/actions/phev"
+import { getInventoryItemsAction } from "@/app/actions/inventory"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
-import { Bar, BarChart, CartesianGrid, XAxis, Pie, PieChart, Cell, Legend } from "recharts"
 
 export default function Dashboard() {
   const [games, setGames] = React.useState<any[]>([])
   const [books, setBooks] = React.useState<any[]>([])
   const [tvshows, setTVShows] = React.useState<any[]>([])
   const [movies, setMovies] = React.useState<any[]>([])
+  const [inventory, setInventory] = React.useState<any[]>([])
   const [phevStats, setPHEVStats] = React.useState<any>(null)
   const [phevCarSummaries, setPHEVCarSummaries] = React.useState<any[]>([])
 
   React.useEffect(() => {
     const loadData = async () => {
-      const [gamesData, booksData, tvshowsData, moviesData, phevStatsData, phevCarData] = await Promise.all([
+      const [gamesData, booksData, tvshowsData, moviesData, inventoryData, phevStatsData, phevCarData] = await Promise.all([
         getGamesAction(),
         getBooksAction(),
         getTVShowsAction(),
         getMoviesAction(),
+        getInventoryItemsAction(),
         getPHEVStatsAction(),
         getPHEVCarSummariesAction()
       ])
@@ -35,6 +36,7 @@ export default function Dashboard() {
       setBooks(booksData)
       setTVShows(tvshowsData)
       setMovies(moviesData)
+      setInventory(inventoryData)
       setPHEVStats(phevStatsData)
       setPHEVCarSummaries(phevCarData)
     }
@@ -73,17 +75,6 @@ export default function Dashboard() {
     })
   }
 
-  const gameStatusData = [
-    { status: 'Playing', count: games.filter(g => g.status === 'Playing').length, color: '#3b82f6' },
-    { status: 'Completed', count: games.filter(g => g.status === 'Completed').length, color: '#10b981' },
-    { status: 'Stopped', count: games.filter(g => g.status === 'Stopped').length, color: '#ef4444' },
-  ].filter(item => item.count > 0)
-
-  const bookTypeData = [
-    { type: 'Ebooks', count: books.filter(b => b.type === 'Ebook').length, color: '#a855f7' },
-    { type: 'Audiobooks', count: books.filter(b => b.type === 'Audiobook').length, color: '#f97316' },
-  ].filter(item => item.count > 0)
-
   const recentGames = games
     .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
     .slice(0, 5)
@@ -94,6 +85,14 @@ export default function Dashboard() {
 
   const recentTVShows = tvshows
     .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
+    .slice(0, 5)
+
+  const recentMovies = movies
+    .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
+    .slice(0, 5)
+
+  const recentInventory = inventory
+    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
     .slice(0, 5)
 
   return (
@@ -211,91 +210,7 @@ export default function Dashboard() {
         </Card>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle>Games by Status</CardTitle>
-            <CardDescription>Distribution of your game collection</CardDescription>
-          </CardHeader>
-          <CardContent>
-            {gameStatusData.length > 0 ? (
-              <ChartContainer
-                config={{
-                  count: {
-                    label: "Games",
-                  },
-                }}
-                className="h-[300px]"
-              >
-                <PieChart>
-                  <Pie
-                    data={gameStatusData}
-                    dataKey="count"
-                    nameKey="status"
-                    cx="50%"
-                    cy="50%"
-                    outerRadius={80}
-                    label
-                  >
-                    {gameStatusData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
-                    ))}
-                  </Pie>
-                  <ChartTooltip content={<ChartTooltipContent />} />
-                  <Legend />
-                </PieChart>
-              </ChartContainer>
-            ) : (
-              <div className="flex h-[300px] items-center justify-center text-muted-foreground">
-                No games data available
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Books by Type</CardTitle>
-            <CardDescription>Ebooks vs Audiobooks</CardDescription>
-          </CardHeader>
-          <CardContent>
-            {bookTypeData.length > 0 ? (
-              <ChartContainer
-                config={{
-                  count: {
-                    label: "Books",
-                  },
-                }}
-                className="h-[300px]"
-              >
-                <PieChart>
-                  <Pie
-                    data={bookTypeData}
-                    dataKey="count"
-                    nameKey="type"
-                    cx="50%"
-                    cy="50%"
-                    outerRadius={80}
-                    label
-                  >
-                    {bookTypeData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
-                    ))}
-                  </Pie>
-                  <ChartTooltip content={<ChartTooltipContent />} />
-                  <Legend />
-                </PieChart>
-              </ChartContainer>
-            ) : (
-              <div className="flex h-[300px] items-center justify-center text-muted-foreground">
-                No books data available
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
-
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
         <Card>
           <CardHeader>
             <div className="flex items-center justify-between">
@@ -414,6 +329,84 @@ export default function Dashboard() {
             ) : (
               <div className="text-center py-8 text-muted-foreground">
                 No TV shows yet. Start watching!
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle>Recent Movies</CardTitle>
+                <CardDescription>Recently updated movies</CardDescription>
+              </div>
+              <Button asChild variant="outline" size="sm">
+                <Link href="/movies">View All</Link>
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent>
+            {recentMovies.length > 0 ? (
+              <div className="space-y-4">
+                {recentMovies.map((movie) => (
+                  <div key={movie.id} className="flex items-center gap-4">
+                    {movie.posterImage && (
+                      <img
+                        src={movie.posterImage}
+                        alt={movie.title}
+                        className="h-16 w-12 rounded object-cover"
+                      />
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium truncate">{movie.title}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {movie.status} • {movie.releaseYear || 'N/A'}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-8 text-muted-foreground">
+                No movies yet. Start watching!
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle>Recent Inventory</CardTitle>
+                <CardDescription>Recently added items</CardDescription>
+              </div>
+              <Button asChild variant="outline" size="sm">
+                <Link href="/inventory">View All</Link>
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent>
+            {recentInventory.length > 0 ? (
+              <div className="space-y-4">
+                {recentInventory.map((item) => (
+                  <div key={item.id} className="flex items-center gap-4">
+                    <div className="flex h-16 w-16 items-center justify-center rounded bg-muted">
+                      <Package className="h-8 w-8 text-muted-foreground" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium truncate">{item.name}</p>
+                      <p className="text-sm text-muted-foreground">
+                        Qty: {item.quantity} • ${item.purchasePrice?.toFixed(2) || '0.00'}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-8 text-muted-foreground">
+                No inventory items yet. Start tracking!
               </div>
             )}
           </CardContent>

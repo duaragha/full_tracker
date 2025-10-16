@@ -29,6 +29,7 @@ function normalizeMovie(movie: any): Movie {
     director: movie.director || 'Unknown',
     genres,
     runtime: Number(movie.runtime) || 0,
+    releaseDate: formatDate(movie.release_date),
     releaseYear: movie.release_year ? Number(movie.release_year) : null,
     posterImage: movie.poster_image || '',
     status: movie.status || 'Watchlist',
@@ -54,10 +55,10 @@ export async function addMovie(movie: Omit<Movie, 'id' | 'createdAt' | 'updatedA
 
   const result = await pool.query<any>(
     `INSERT INTO movies (
-      tmdb_id, title, director, genre, runtime, release_year,
+      tmdb_id, title, director, genre, runtime, release_date, release_year,
       poster_image, status, watched_date, watchlist_added_date,
       rating, notes, created_at, updated_at
-    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, NOW(), NOW())
+    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, NOW(), NOW())
     RETURNING *`,
     [
       movie.tmdbId,
@@ -65,6 +66,7 @@ export async function addMovie(movie: Omit<Movie, 'id' | 'createdAt' | 'updatedA
       movie.director,
       genreString,
       movie.runtime,
+      movie.releaseDate,
       movie.releaseYear,
       movie.posterImage,
       movie.status,
@@ -88,21 +90,23 @@ export async function updateMovie(id: number, movie: Partial<Movie>): Promise<vo
       director = COALESCE($3, director),
       genre = COALESCE($4, genre),
       runtime = COALESCE($5, runtime),
-      release_year = COALESCE($6, release_year),
-      poster_image = COALESCE($7, poster_image),
-      status = COALESCE($8, status),
-      watched_date = $9,
-      watchlist_added_date = $10,
-      rating = $11,
-      notes = COALESCE($12, notes),
+      release_date = COALESCE($6, release_date),
+      release_year = COALESCE($7, release_year),
+      poster_image = COALESCE($8, poster_image),
+      status = COALESCE($9, status),
+      watched_date = $10,
+      watchlist_added_date = $11,
+      rating = $12,
+      notes = COALESCE($13, notes),
       updated_at = NOW()
-    WHERE id = $13`,
+    WHERE id = $14`,
     [
       movie.tmdbId,
       movie.title,
       movie.director,
       genreString,
       movie.runtime,
+      movie.releaseDate,
       movie.releaseYear,
       movie.posterImage,
       movie.status,
