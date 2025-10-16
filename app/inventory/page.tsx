@@ -32,6 +32,7 @@ export default function InventoryPage() {
   const [selectedArea, setSelectedArea] = React.useState<string | null>(null)
   const [selectedContainer, setSelectedContainer] = React.useState<string | null>(null)
   const [expandedAreas, setExpandedAreas] = React.useState<Set<string>>(new Set())
+  const [expandedItems, setExpandedItems] = React.useState<Set<string>>(new Set())
 
   const [showAreaDialog, setShowAreaDialog] = React.useState(false)
   const [showContainerDialog, setShowContainerDialog] = React.useState(false)
@@ -206,6 +207,105 @@ export default function InventoryPage() {
       newExpanded.add(areaId)
     }
     setExpandedAreas(newExpanded)
+  }
+
+  const toggleItem = (itemId: string) => {
+    const newExpanded = new Set(expandedItems)
+    if (newExpanded.has(itemId)) {
+      newExpanded.delete(itemId)
+    } else {
+      newExpanded.add(itemId)
+    }
+    setExpandedItems(newExpanded)
+  }
+
+  // Helper to get children of an item
+  const getChildItems = (parentId: string) => {
+    return displayedItems.filter(item => item.parentItemId === parentId)
+  }
+
+  // Recursive component for rendering item rows with nesting
+  const renderItemRow = (item: InventoryItem, depth: number = 0): React.ReactNode => {
+    const children = getChildItems(item.id)
+    const hasChildren = children.length > 0
+    const isExpanded = expandedItems.has(item.id)
+    const indentStyle = depth > 0 ? { paddingLeft: `${depth * 2}rem` } : {}
+
+    return (
+      <React.Fragment key={item.id}>
+        <TableRow>
+          <TableCell className="font-medium" style={indentStyle}>
+            <div className="flex items-center gap-2">
+              {hasChildren && (
+                <button
+                  onClick={() => toggleItem(item.id)}
+                  className="p-1 hover:bg-muted rounded"
+                >
+                  {isExpanded ? (
+                    <ChevronDown className="h-4 w-4" />
+                  ) : (
+                    <ChevronRight className="h-4 w-4" />
+                  )}
+                </button>
+              )}
+              <span className={hasChildren ? "" : "ml-7"}>{item.name}</span>
+            </div>
+          </TableCell>
+          <TableCell>
+            <Badge variant="secondary">{item.type}</Badge>
+          </TableCell>
+          <TableCell>{item.usedInLastYear ? "✓" : "✗"}</TableCell>
+          <TableCell className="text-sm">
+            {getAreaName(item.location.areaId)} /{" "}
+            {getContainerName(item.location.containerId)}
+          </TableCell>
+          <TableCell>${item.cost.toFixed(2)}</TableCell>
+          <TableCell>{item.isGift ? "✓" : "✗"}</TableCell>
+          <TableCell>{item.giftFrom || "-"}</TableCell>
+          <TableCell className="text-sm">{item.purchasedWhere}</TableCell>
+          <TableCell className="text-sm">
+            {new Date(item.purchasedWhen).toLocaleDateString()}
+          </TableCell>
+          <TableCell className="text-sm">
+            {item.keepUntil
+              ? new Date(item.keepUntil).toLocaleDateString()
+              : "-"}
+          </TableCell>
+          <TableCell>{item.kept ? "✓" : "✗"}</TableCell>
+          <TableCell className="text-sm">
+            {item.soldDate
+              ? new Date(item.soldDate).toLocaleDateString()
+              : "-"}
+          </TableCell>
+          <TableCell>
+            {item.soldPrice !== null && item.soldPrice !== undefined
+              ? `$${item.soldPrice.toFixed(2)}`
+              : "-"}
+          </TableCell>
+          <TableCell>
+            <div className="flex gap-1">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => handleEditItem(item)}
+                className="h-9 w-9"
+              >
+                <Pencil className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => handleDeleteItem(item.id)}
+                className="h-9 w-9"
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            </div>
+          </TableCell>
+        </TableRow>
+        {hasChildren && isExpanded && children.map(child => renderItemRow(child, depth + 1))}
+      </React.Fragment>
+    )
   }
 
   const handleAddArea = () => {
@@ -637,62 +737,7 @@ export default function InventoryPage() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {displayedItems.map((item) => (
-                      <TableRow key={item.id}>
-                        <TableCell className="font-medium">{item.name}</TableCell>
-                        <TableCell>
-                          <Badge variant="secondary">{item.type}</Badge>
-                        </TableCell>
-                        <TableCell>{item.usedInLastYear ? "✓" : "✗"}</TableCell>
-                        <TableCell className="text-sm">
-                          {getAreaName(item.location.areaId)} /{" "}
-                          {getContainerName(item.location.containerId)}
-                        </TableCell>
-                        <TableCell>${item.cost.toFixed(2)}</TableCell>
-                        <TableCell>{item.isGift ? "✓" : "✗"}</TableCell>
-                        <TableCell>{item.giftFrom || "-"}</TableCell>
-                        <TableCell className="text-sm">{item.purchasedWhere}</TableCell>
-                        <TableCell className="text-sm">
-                          {new Date(item.purchasedWhen).toLocaleDateString()}
-                        </TableCell>
-                        <TableCell className="text-sm">
-                          {item.keepUntil
-                            ? new Date(item.keepUntil).toLocaleDateString()
-                            : "-"}
-                        </TableCell>
-                        <TableCell>{item.kept ? "✓" : "✗"}</TableCell>
-                        <TableCell className="text-sm">
-                          {item.soldDate
-                            ? new Date(item.soldDate).toLocaleDateString()
-                            : "-"}
-                        </TableCell>
-                        <TableCell>
-                          {item.soldPrice !== null && item.soldPrice !== undefined
-                            ? `$${item.soldPrice.toFixed(2)}`
-                            : "-"}
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex gap-1">
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => handleEditItem(item)}
-                              className="h-9 w-9"
-                            >
-                              <Pencil className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => handleDeleteItem(item.id)}
-                              className="h-9 w-9"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))}
+                    {displayedItems.filter(item => !item.parentItemId).map(item => renderItemRow(item))}
                   </TableBody>
                 </Table>
               </div>
@@ -722,6 +767,7 @@ export default function InventoryPage() {
         onItemAdded={loadData}
         areas={areas}
         containers={containers}
+        items={items}
         selectedArea={selectedArea || undefined}
         selectedContainer={selectedContainer || undefined}
         editingItem={editingItem}

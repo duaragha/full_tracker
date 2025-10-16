@@ -23,17 +23,19 @@ interface ItemFormProps {
   onItemAdded: () => void
   areas: Area[]
   containers: Container[]
+  items: InventoryItem[]
   selectedArea?: string
   selectedContainer?: string
   editingItem?: InventoryItem
 }
 
-export function ItemForm({ open, onOpenChange, onItemAdded, areas, containers, selectedArea, selectedContainer, editingItem }: ItemFormProps) {
+export function ItemForm({ open, onOpenChange, onItemAdded, areas, containers, items, selectedArea, selectedContainer, editingItem }: ItemFormProps) {
   const [formData, setFormData] = React.useState({
     name: "",
     usedInLastYear: false,
     areaId: selectedArea || "",
     containerId: selectedContainer || "",
+    parentItemId: "",
     type: "",
     cost: "",
     isGift: false,
@@ -54,6 +56,7 @@ export function ItemForm({ open, onOpenChange, onItemAdded, areas, containers, s
         usedInLastYear: editingItem.usedInLastYear,
         areaId: editingItem.location.areaId,
         containerId: editingItem.location.containerId,
+        parentItemId: editingItem.parentItemId || "",
         type: editingItem.type,
         cost: editingItem.cost.toString(),
         isGift: editingItem.isGift,
@@ -72,6 +75,7 @@ export function ItemForm({ open, onOpenChange, onItemAdded, areas, containers, s
         usedInLastYear: false,
         areaId: selectedArea || "",
         containerId: selectedContainer || "",
+        parentItemId: "",
         type: "",
         cost: "",
         isGift: false,
@@ -128,6 +132,7 @@ export function ItemForm({ open, onOpenChange, onItemAdded, areas, containers, s
         areaId: formData.areaId,
         containerId: formData.containerId,
       },
+      parentItemId: formData.parentItemId || null,
       type: formData.type,
       cost: parseFloat(formData.cost) || 0,
       isGift: formData.isGift,
@@ -152,6 +157,27 @@ export function ItemForm({ open, onOpenChange, onItemAdded, areas, containers, s
   }
 
   const availableContainers = containers.filter(c => c.areaId === formData.areaId)
+
+  // Filter available parent items - exclude current item and its descendants
+  const availableParentItems = React.useMemo(() => {
+    if (!editingItem) return items
+
+    // Build a set of items that can't be parents (current item + all its descendants)
+    const excludedIds = new Set<string>([editingItem.id])
+
+    const addDescendants = (itemId: string) => {
+      items.forEach(item => {
+        if (item.parentItemId === itemId && !excludedIds.has(item.id)) {
+          excludedIds.add(item.id)
+          addDescendants(item.id)
+        }
+      })
+    }
+
+    addDescendants(editingItem.id)
+
+    return items.filter(item => !excludedIds.has(item.id))
+  }, [items, editingItem])
 
   const itemTypes = [
     "Electronics", "Clothing", "Documents", "Books", "Tools", "Kitchen",
@@ -221,6 +247,24 @@ export function ItemForm({ open, onOpenChange, onItemAdded, areas, containers, s
                   ))}
                 </SelectContent>
               </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="parentItemId">Parent Item (Optional)</Label>
+              <Select value={formData.parentItemId} onValueChange={(value) => setFormData({ ...formData, parentItemId: value })}>
+                <SelectTrigger className="h-11 text-base">
+                  <SelectValue placeholder="None (top-level item)" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">None (top-level item)</SelectItem>
+                  {availableParentItems.map(item => (
+                    <SelectItem key={item.id} value={item.id}>{item.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">
+                For nested items (e.g., GPU inside PC, tools in toolbox)
+              </p>
             </div>
 
             {!formData.isGift && (
