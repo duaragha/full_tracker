@@ -268,23 +268,24 @@ export default function InventoryPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="p-4 sm:p-6 space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Room Inventory</h1>
-          <p className="text-muted-foreground">Organize and track all your belongings</p>
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Room Inventory</h1>
+          <p className="text-sm sm:text-base text-muted-foreground">Organize and track all your belongings</p>
         </div>
         <Button
           variant="destructive"
           onClick={handleWipeInventory}
           disabled={items.length === 0}
+          className="w-full sm:w-auto h-11"
         >
           <AlertTriangle className="mr-2 h-4 w-4" />
           Clear All Inventory
         </Button>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-5">
+      <div className="grid gap-4 grid-cols-2 sm:grid-cols-3 md:grid-cols-5">
         <Card>
           <CardHeader>
             <CardTitle>{totalItems}</CardTitle>
@@ -317,18 +318,19 @@ export default function InventoryPage() {
         </Card>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-5">
+      <div className="grid gap-6 grid-cols-1 lg:grid-cols-5">
         {/* Left Sidebar - Tree View */}
-        <Card className="md:col-span-1">
-          <CardHeader>
+        <Card className="lg:col-span-1">
+          <CardHeader className="p-4 sm:p-6">
             <div className="flex items-center justify-between">
-              <CardTitle className="text-base">Areas & Containers</CardTitle>
-              <Button size="sm" onClick={handleAddArea}>
+              <CardTitle className="text-base sm:text-lg">Areas & Containers</CardTitle>
+              <Button size="sm" onClick={handleAddArea} className="h-9 w-9 sm:h-10 sm:w-auto">
                 <Plus className="h-4 w-4" />
+                <span className="sr-only sm:not-sr-only sm:ml-2">Add</span>
               </Button>
             </div>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-4 sm:p-6">
             <div className="space-y-1">
               {areas.map((area) => {
                 const areaContainers = getContainersByArea(area.id)
@@ -338,78 +340,80 @@ export default function InventoryPage() {
                 return (
                   <div key={area.id}>
                     <div
-                      className={`flex items-center gap-2 p-2 rounded cursor-pointer hover:bg-muted ${
+                      className={`flex items-center gap-2 p-2 rounded cursor-pointer hover:bg-muted touch-manipulation ${
                         isSelected ? "bg-muted" : ""
                       }`}
                     >
                       <button
                         onClick={() => toggleArea(area.id)}
-                        className="p-0 hover:bg-transparent"
+                        className="p-1 hover:bg-transparent min-h-[44px] min-w-[44px] flex items-center justify-center"
                       >
                         {isExpanded ? (
-                          <ChevronDown className="h-4 w-4" />
+                          <ChevronDown className="h-5 w-5" />
                         ) : (
-                          <ChevronRight className="h-4 w-4" />
+                          <ChevronRight className="h-5 w-5" />
                         )}
                       </button>
                       <div
-                        className="flex-1"
+                        className="flex-1 min-h-[44px] flex items-center"
                         onClick={() => {
                           setSelectedArea(area.id)
                           setSelectedContainer(null)
                         }}
                       >
-                        <span className="font-medium text-sm">{area.name}</span>
-                        <Badge variant="outline" className="ml-2 text-xs">
-                          {area.type}
-                        </Badge>
+                        <div>
+                          <span className="font-medium text-sm sm:text-base">{area.name}</span>
+                          <Badge variant="outline" className="ml-2 text-xs">
+                            {area.type}
+                          </Badge>
+                        </div>
                       </div>
                       <div className="flex gap-1">
                         <Button
                           size="icon"
                           variant="ghost"
-                          className="h-6 w-6"
+                          className="h-9 w-9 sm:h-8 sm:w-8"
                           onClick={(e) => {
                             e.stopPropagation()
                             handleAddContainer(area.id)
                           }}
                         >
-                          <Plus className="h-3 w-3" />
+                          <Plus className="h-4 w-4" />
                         </Button>
                         <Button
                           size="icon"
                           variant="ghost"
-                          className="h-6 w-6"
+                          className="h-9 w-9 sm:h-8 sm:w-8"
                           onClick={(e) => {
                             e.stopPropagation()
                             handleEditArea(area)
                           }}
                         >
-                          <Pencil className="h-3 w-3" />
+                          <Pencil className="h-4 w-4" />
                         </Button>
                         <Button
                           size="icon"
                           variant="ghost"
-                          className="h-6 w-6"
+                          className="h-9 w-9 sm:h-8 sm:w-8"
                           onClick={(e) => {
                             e.stopPropagation()
                             handleDeleteArea(area.id)
                           }}
                         >
-                          <Trash2 className="h-3 w-3" />
+                          <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>
                     </div>
 
                     {isExpanded && (
-                      <div className="ml-6 mt-1 space-y-1">
+                      <div className="ml-6 sm:ml-8 mt-1 space-y-1">
                         {areaContainers.map((container) => {
                           const isContainerSelected = selectedContainer === container.id
 
                           return (
                             <div
                               key={container.id}
-                              className={`flex items-center gap-2 p-2 rounded cursor-pointer hover:bg-muted ${
+                              className={`flex items-center gap-2 p-2 rounded cursor-pointer hover:bg-muted touch-manipulation min-h-[44px] ${
                                 isContainerSelected ? "bg-muted" : ""
                               }`}
                               onClick={() => {
@@ -417,30 +421,30 @@ export default function InventoryPage() {
                                 setSelectedContainer(container.id)
                               }}
                             >
-                              <PackageIcon className="h-4 w-4" />
-                              <span className="flex-1 text-sm">{container.name}</span>
+                              <PackageIcon className="h-5 w-5" />
+                              <span className="flex-1 text-sm sm:text-base">{container.name}</span>
                               <div className="flex gap-1">
                                 <Button
                                   size="icon"
                                   variant="ghost"
-                                  className="h-6 w-6"
+                                  className="h-9 w-9 sm:h-8 sm:w-8"
                                   onClick={(e) => {
                                     e.stopPropagation()
                                     handleEditContainer(container)
                                   }}
                                 >
-                                  <Pencil className="h-3 w-3" />
+                                  <Pencil className="h-4 w-4" />
                                 </Button>
                                 <Button
                                   size="icon"
                                   variant="ghost"
-                                  className="h-6 w-6"
+                                  className="h-9 w-9 sm:h-8 sm:w-8"
                                   onClick={(e) => {
                                     e.stopPropagation()
                                     handleDeleteContainer(container.id)
                                   }}
                                 >
-                                  <Trash2 className="h-3 w-3" />
+                                  <Trash2 className="h-4 w-4" />
                                 </Button>
                               </div>
                             </div>
@@ -462,31 +466,31 @@ export default function InventoryPage() {
         </Card>
 
         {/* Main Content - Items Table */}
-        <Card className="md:col-span-4">
-          <CardHeader>
+        <Card className="lg:col-span-4">
+          <CardHeader className="p-4 sm:p-6">
             <div className="flex flex-col gap-4">
-              <div className="flex items-center justify-between">
-                <CardTitle>
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <CardTitle className="text-base sm:text-lg">
                   {selectedContainer
                     ? `Items in ${getContainerName(selectedContainer)}`
                     : selectedArea
                     ? `Items in ${getAreaName(selectedArea)}`
                     : "All Items"}
                 </CardTitle>
-                <Button onClick={handleAddItem} disabled={!selectedArea}>
+                <Button onClick={handleAddItem} disabled={!selectedArea} className="w-full sm:w-auto h-11">
                   <Plus className="mr-2 h-4 w-4" />
                   Add Item
                 </Button>
               </div>
-              <div className="flex gap-4">
+              <div className="flex flex-col sm:flex-row gap-3">
                 <Input
                   placeholder="Search items..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="max-w-sm"
+                  className="w-full sm:max-w-sm h-11 text-base"
                 />
                 <Select value={sortBy} onValueChange={(value: any) => setSortBy(value)}>
-                  <SelectTrigger className="w-[180px]">
+                  <SelectTrigger className="w-full sm:w-[180px] h-11 text-base">
                     <SelectValue placeholder="Sort by" />
                   </SelectTrigger>
                   <SelectContent>
@@ -496,7 +500,7 @@ export default function InventoryPage() {
                   </SelectContent>
                 </Select>
                 <Select value={sortOrder} onValueChange={(value: any) => setSortOrder(value)}>
-                  <SelectTrigger className="w-[150px]">
+                  <SelectTrigger className="w-full sm:w-[150px] h-11 text-base">
                     <SelectValue placeholder="Order" />
                   </SelectTrigger>
                   <SelectContent>
@@ -507,12 +511,12 @@ export default function InventoryPage() {
               </div>
             </div>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-4 sm:p-6">
             {displayedItems.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground">
+              <div className="text-center py-8 text-sm sm:text-base text-muted-foreground">
                 {selectedArea
                   ? "No items found. Click 'Add Item' to start tracking!"
-                  : "Select an area or container from the left sidebar to view items."}
+                  : "Select an area or container from the sidebar above to view items."}
               </div>
             ) : groupedItems ? (
               // Grouped view for "All Items"
@@ -520,30 +524,35 @@ export default function InventoryPage() {
                 {groupedItems.map((group, groupIdx) => (
                   <div key={groupIdx}>
                     {/* Container Header */}
-                    <div className="flex items-center gap-3 mb-3 pb-2 border-b">
-                      <PackageIcon className="h-5 w-5 text-primary" />
-                      <div className="flex-1">
-                        <h3 className="font-semibold text-lg">
-                          {group.container ? group.container.name : "No Container"}
-                        </h3>
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-3 pb-2 border-b">
+                      <div className="flex items-center gap-3 flex-1">
+                        <PackageIcon className="h-5 w-5 text-primary" />
+                        <div className="flex-1">
+                          <h3 className="font-semibold text-base sm:text-lg">
+                            {group.container ? group.container.name : "No Container"}
+                          </h3>
+                          {group.container && (
+                            <p className="text-xs sm:text-sm text-muted-foreground">
+                              {getAreaName(group.container.areaId)} • {group.container.type}
+                              {group.container.brand && ` • ${group.container.brand}`}
+                              {group.container.model && ` ${group.container.model}`}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Badge variant="outline">{group.items.length} items</Badge>
                         {group.container && (
-                          <p className="text-sm text-muted-foreground">
-                            {getAreaName(group.container.areaId)} • {group.container.type}
-                            {group.container.brand && ` • ${group.container.brand}`}
-                            {group.container.model && ` ${group.container.model}`}
-                          </p>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleEditContainer(group.container!)}
+                            className="h-9"
+                          >
+                            <Pencil className="h-4 w-4" />
+                          </Button>
                         )}
                       </div>
-                      <Badge variant="outline">{group.items.length} items</Badge>
-                      {group.container && (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleEditContainer(group.container!)}
-                        >
-                          <Pencil className="h-4 w-4" />
-                        </Button>
-                      )}
                     </div>
 
                     {/* Items in this container */}
@@ -578,11 +587,12 @@ export default function InventoryPage() {
                                 {new Date(item.purchasedWhen).toLocaleDateString()}
                               </TableCell>
                               <TableCell>
-                                <div className="flex gap-2">
+                                <div className="flex gap-1">
                                   <Button
                                     variant="ghost"
                                     size="icon"
                                     onClick={() => handleEditItem(item)}
+                                    className="h-9 w-9"
                                   >
                                     <Pencil className="h-4 w-4" />
                                   </Button>
@@ -590,6 +600,7 @@ export default function InventoryPage() {
                                     variant="ghost"
                                     size="icon"
                                     onClick={() => handleDeleteItem(item.id)}
+                                    className="h-9 w-9"
                                   >
                                     <Trash2 className="h-4 w-4" />
                                   </Button>
@@ -661,11 +672,12 @@ export default function InventoryPage() {
                             : "-"}
                         </TableCell>
                         <TableCell>
-                          <div className="flex gap-2">
+                          <div className="flex gap-1">
                             <Button
                               variant="ghost"
                               size="icon"
                               onClick={() => handleEditItem(item)}
+                              className="h-9 w-9"
                             >
                               <Pencil className="h-4 w-4" />
                             </Button>
@@ -673,6 +685,7 @@ export default function InventoryPage() {
                               variant="ghost"
                               size="icon"
                               onClick={() => handleDeleteItem(item.id)}
+                              className="h-9 w-9"
                             >
                               <Trash2 className="h-4 w-4" />
                             </Button>
