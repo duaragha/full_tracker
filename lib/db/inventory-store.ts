@@ -102,7 +102,7 @@ export async function addInventoryItem(item: Omit<InventoryItem, 'id' | 'created
       item.soldPrice,
       item.notes,
       item.photo,
-      item.parentItemId || null,
+      item.parentItemId ? parseInt(item.parentItemId, 10) : null,
     ]
   )
   return normalizeInventoryItem(result.rows[0])
@@ -145,7 +145,7 @@ export async function updateInventoryItem(id: number, item: Partial<InventoryIte
       item.soldPrice,
       item.notes,
       item.photo,
-      item.parentItemId !== undefined ? item.parentItemId : undefined,
+      item.parentItemId !== undefined ? (item.parentItemId ? parseInt(item.parentItemId, 10) : null) : undefined,
       id,
     ]
   )

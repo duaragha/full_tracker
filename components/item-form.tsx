@@ -132,7 +132,7 @@ export function ItemForm({ open, onOpenChange, onItemAdded, areas, containers, i
         areaId: formData.areaId,
         containerId: formData.containerId,
       },
-      parentItemId: formData.parentItemId || null,
+      parentItemId: formData.parentItemId && formData.parentItemId !== "" ? formData.parentItemId : null,
       type: formData.type,
       cost: parseFloat(formData.cost) || 0,
       isGift: formData.isGift,
