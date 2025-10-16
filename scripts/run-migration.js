@@ -1,33 +1,41 @@
-const { Pool } = require('pg');
+const { Pool } = require('pg')
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL || process.env.POSTGRES_URL,
-  ssl: { rejectUnauthorized: false },
-});
+  ssl: false,
+})
+
+const migrationSQL = `
+-- Add support for nested items (items within items)
+ALTER TABLE inventory_items
+  ADD COLUMN IF NOT EXISTS parent_item_id INTEGER REFERENCES inventory_items(id) ON DELETE CASCADE;
+
+-- Add index for better query performance
+CREATE INDEX IF NOT EXISTS idx_inventory_items_parent ON inventory_items(parent_item_id);
+
+-- Add check constraint to prevent self-parenting
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint WHERE conname = 'check_not_self_parent'
+  ) THEN
+    ALTER TABLE inventory_items
+      ADD CONSTRAINT check_not_self_parent
+      CHECK (parent_item_id IS NULL OR parent_item_id != id);
+  END IF;
+END $$;
+`
 
 async function runMigration() {
-  const client = await pool.connect();
-
   try {
-    console.log('Running migration...');
-
-    await client.query('ALTER TABLE games ADD COLUMN IF NOT EXISTS publisher TEXT');
-    await client.query('ALTER TABLE games ADD COLUMN IF NOT EXISTS release_date TEXT');
-    await client.query('ALTER TABLE games ADD COLUMN IF NOT EXISTS percentage INTEGER DEFAULT 0');
-    await client.query('ALTER TABLE games ADD COLUMN IF NOT EXISTS days_played INTEGER DEFAULT 0');
-    await client.query('ALTER TABLE games ADD COLUMN IF NOT EXISTS minutes_played INTEGER DEFAULT 0');
-    await client.query('ALTER TABLE games ADD COLUMN IF NOT EXISTS console TEXT');
-    await client.query('ALTER TABLE games ADD COLUMN IF NOT EXISTS store TEXT');
-    await client.query('ALTER TABLE games ADD COLUMN IF NOT EXISTS price DECIMAL(10,2) DEFAULT 0');
-
-    console.log('Migration completed successfully!');
-  } catch (err) {
-    console.error('Migration failed:', err);
-    process.exit(1);
-  } finally {
-    client.release();
-    await pool.end();
+    console.log('Running nested items migration...')
+    await pool.query(migrationSQL)
+    console.log('✅ Migration completed successfully!')
+    process.exit(0)
+  } catch (error) {
+    console.error('❌ Migration failed:', error.message)
+    process.exit(1)
   }
 }
 
-runMigration();
+runMigration()
