@@ -171,25 +171,32 @@ async function importMovie(tvTimeMovie: TVTimeMovie) {
     : null
   const status = tvTimeMovie.is_watched ? 'Watched' : 'Watchlist'
 
+  // For watchlist items, set watchlist_added_date to created_at from TV Time
+  const watchlistAddedDate = !tvTimeMovie.is_watched && tvTimeMovie.created_at
+    ? tvTimeMovie.created_at.split('T')[0]
+    : null
+
   // Insert into database
   try {
     await pool.query(
       `INSERT INTO movies (
-        tmdb_id, title, genre, runtime, release_year,
-        poster_image, watched_date, status, rating, notes,
+        tmdb_id, title, genre, runtime, release_year, director,
+        poster_image, watched_date, watchlist_added_date, status, rating, notes,
         created_at, updated_at
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NOW(), NOW())`,
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, NOW(), NOW())`,
       [
         tmdbId,
         details.title,
         genre,
         details.runtime || 0,
         releaseYear,
+        director,
         posterImage,
         watchedDate,
+        watchlistAddedDate,
         status,
         null, // rating - user can add later
-        `Imported from TV Time\nIMDB: ${tvTimeMovie.id.imdb}\nDirector: ${director}\nOriginal watch date: ${tvTimeMovie.watched_at || 'N/A'}`,
+        `Imported from TV Time\nIMDB: ${tvTimeMovie.id.imdb}\nOriginal watch date: ${tvTimeMovie.watched_at || 'N/A'}`,
       ]
     )
 
