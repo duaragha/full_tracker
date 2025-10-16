@@ -251,12 +251,12 @@ export function ItemForm({ open, onOpenChange, onItemAdded, areas, containers, i
 
             <div className="space-y-2">
               <Label htmlFor="parentItemId">Parent Item (Optional)</Label>
-              <Select value={formData.parentItemId} onValueChange={(value) => setFormData({ ...formData, parentItemId: value })}>
+              <Select value={formData.parentItemId || "none"} onValueChange={(value) => setFormData({ ...formData, parentItemId: value === "none" ? "" : value })}>
                 <SelectTrigger className="h-11 text-base">
                   <SelectValue placeholder="None (top-level item)" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">None (top-level item)</SelectItem>
+                  <SelectItem value="none">None (top-level item)</SelectItem>
                   {availableParentItems.map(item => (
                     <SelectItem key={item.id} value={item.id}>{item.name}</SelectItem>
                   ))}
