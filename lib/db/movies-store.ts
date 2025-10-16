@@ -10,16 +10,34 @@ const pool = new Pool({
 })
 
 function normalizeMovie(movie: any): Movie {
+  // Parse genre string into array (database has comma-separated string)
+  const genres = movie.genre
+    ? movie.genre.split(',').map((g: string) => g.trim()).filter(Boolean)
+    : []
+
+  // Format dates consistently
+  const formatDate = (date: any) => {
+    if (!date) return null
+    if (date instanceof Date) return date.toISOString().split('T')[0]
+    if (typeof date === 'string') return date.split('T')[0]
+    return null
+  }
+
   return {
     ...movie,
     tmdbId: Number(movie.tmdb_id),
-    releaseDate: movie.release_date,
-    posterImage: movie.poster_image,
-    backdropImage: movie.backdrop_image,
-    dateWatched: movie.date_watched instanceof Date ? movie.date_watched.toISOString().split('T')[0] : movie.date_watched,
-    runtime: Number(movie.runtime),
+    director: movie.director || 'Unknown',
+    genres,
+    runtime: Number(movie.runtime) || 0,
+    releaseDate: movie.release_date || '',
+    releaseYear: movie.release_year ? Number(movie.release_year) : null,
+    posterImage: movie.poster_image || '',
+    backdropImage: movie.backdrop_image || '',
+    status: movie.status || 'Watchlist',
+    dateWatched: formatDate(movie.watched_date),
+    watchlistAddedDate: formatDate(movie.watchlist_added_date),
     rating: movie.rating ? Number(movie.rating) : null,
-    genres: movie.genres || [],
+    notes: movie.notes || '',
     createdAt: movie.created_at,
     updatedAt: movie.updated_at,
   }
@@ -33,23 +51,28 @@ export async function getMovies(): Promise<Movie[]> {
 }
 
 export async function addMovie(movie: Omit<Movie, 'id' | 'createdAt' | 'updatedAt'>): Promise<Movie> {
+  // Convert genres array to comma-separated string for database
+  const genreString = movie.genres.join(', ')
+
   const result = await pool.query<any>(
     `INSERT INTO movies (
-      tmdb_id, title, director, genres, runtime, release_date,
-      poster_image, backdrop_image, date_watched, rating, notes,
-      created_at, updated_at
-    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, NOW(), NOW())
+      tmdb_id, title, director, genre, runtime, release_year,
+      poster_image, backdrop_image, status, watched_date, watchlist_added_date,
+      rating, notes, created_at, updated_at
+    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, NOW(), NOW())
     RETURNING *`,
     [
       movie.tmdbId,
       movie.title,
       movie.director,
-      movie.genres,
+      genreString,
       movie.runtime,
-      movie.releaseDate,
+      movie.releaseYear,
       movie.posterImage,
       movie.backdropImage,
+      movie.status,
       movie.dateWatched,
+      movie.watchlistAddedDate,
       movie.rating,
       movie.notes,
     ]
@@ -58,31 +81,38 @@ export async function addMovie(movie: Omit<Movie, 'id' | 'createdAt' | 'updatedA
 }
 
 export async function updateMovie(id: number, movie: Partial<Movie>): Promise<void> {
+  // Convert genres array to comma-separated string if provided
+  const genreString = movie.genres ? movie.genres.join(', ') : undefined
+
   await pool.query(
     `UPDATE movies SET
       tmdb_id = COALESCE($1, tmdb_id),
       title = COALESCE($2, title),
       director = COALESCE($3, director),
-      genres = COALESCE($4, genres),
+      genre = COALESCE($4, genre),
       runtime = COALESCE($5, runtime),
-      release_date = COALESCE($6, release_date),
+      release_year = COALESCE($6, release_year),
       poster_image = COALESCE($7, poster_image),
       backdrop_image = COALESCE($8, backdrop_image),
-      date_watched = $9,
-      rating = $10,
-      notes = COALESCE($11, notes),
+      status = COALESCE($9, status),
+      watched_date = $10,
+      watchlist_added_date = $11,
+      rating = $12,
+      notes = COALESCE($13, notes),
       updated_at = NOW()
-    WHERE id = $12`,
+    WHERE id = $14`,
     [
       movie.tmdbId,
       movie.title,
       movie.director,
-      movie.genres,
+      genreString,
       movie.runtime,
-      movie.releaseDate,
+      movie.releaseYear,
       movie.posterImage,
       movie.backdropImage,
+      movie.status,
       movie.dateWatched,
+      movie.watchlistAddedDate,
       movie.rating,
       movie.notes,
       id,

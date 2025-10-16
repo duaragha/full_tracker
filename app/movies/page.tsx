@@ -19,6 +19,7 @@ export default function MoviesPage() {
   const [selectedMovie, setSelectedMovie] = React.useState<MovieSearchResult | null>(null)
   const [editingMovie, setEditingMovie] = React.useState<Movie | null>(null)
   const [showForm, setShowForm] = React.useState(false)
+  const [statusFilter, setStatusFilter] = React.useState<string>("All")
   const [searchQuery, setSearchQuery] = React.useState("")
   const [sortBy, setSortBy] = React.useState<"title" | "runtime" | "rating" | "dateWatched" | "releaseDate">("title")
   const [sortOrder, setSortOrder] = React.useState<"asc" | "desc">("asc")
@@ -65,7 +66,10 @@ export default function MoviesPage() {
   }
 
   const filteredAndSortedMovies = React.useMemo(() => {
-    let filtered = movies
+    // Apply status filter
+    let filtered = statusFilter === "All"
+      ? movies
+      : movies.filter(m => m.status === statusFilter)
 
     // Apply search filter
     if (searchQuery) {
@@ -102,7 +106,14 @@ export default function MoviesPage() {
     })
 
     return sorted
-  }, [movies, searchQuery, sortBy, sortOrder])
+  }, [movies, statusFilter, searchQuery, sortBy, sortOrder])
+
+  const getStatusColor = (status: Movie['status']) => {
+    switch (status) {
+      case 'Watched': return 'secondary'
+      case 'Watchlist': return 'default'
+    }
+  }
 
   const totalMovies = movies.length
   const totalRuntime = movies.reduce((total, movie) => total + (movie.runtime || 0), 0)
@@ -168,7 +179,19 @@ export default function MoviesPage() {
       <Card>
         <CardHeader>
           <div className="flex flex-col gap-4">
-            <CardTitle>Your Movies</CardTitle>
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+              <CardTitle>Your Movies</CardTitle>
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="w-full sm:w-[180px]">
+                  <SelectValue placeholder="Filter by status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="All">All Movies</SelectItem>
+                  <SelectItem value="Watched">Watched</SelectItem>
+                  <SelectItem value="Watchlist">Watchlist</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
             <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
               <Input
                 placeholder="Search movies by title..."
@@ -214,6 +237,7 @@ export default function MoviesPage() {
                     <TableRow>
                       <TableHead>Poster</TableHead>
                       <TableHead>Title</TableHead>
+                      <TableHead>Status</TableHead>
                       <TableHead>Director</TableHead>
                       <TableHead>Genres</TableHead>
                       <TableHead>Runtime</TableHead>
@@ -240,6 +264,11 @@ export default function MoviesPage() {
                             )}
                           </TableCell>
                           <TableCell className="font-medium">{movie.title}</TableCell>
+                          <TableCell>
+                            <Badge variant={getStatusColor(movie.status)}>
+                              {movie.status}
+                            </Badge>
+                          </TableCell>
                           <TableCell>{movie.director}</TableCell>
                           <TableCell>
                             <div className="flex flex-wrap gap-1">
@@ -318,6 +347,12 @@ export default function MoviesPage() {
                             <p className="text-sm text-muted-foreground mt-1">
                               {movie.director}
                             </p>
+                          </div>
+
+                          <div className="flex items-center gap-2">
+                            <Badge variant={getStatusColor(movie.status)}>
+                              {movie.status}
+                            </Badge>
                           </div>
 
                           <div className="flex flex-wrap gap-1">

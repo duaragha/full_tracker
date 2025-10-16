@@ -6,10 +6,13 @@ export interface Movie {
   genres: string[]
   runtime: number // minutes
   releaseDate: string
+  releaseYear: number | null
   posterImage: string
   backdropImage: string
+  status: 'Watched' | 'Watchlist'
   dateWatched: string | null
-  rating: number // user's personal rating 1-10
+  watchlistAddedDate: string | null
+  rating: number | null // user's personal rating 1-10
   notes: string
   createdAt: string
   updatedAt: string

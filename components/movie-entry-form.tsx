@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Input } from "@/components/ui/input"
 import { DatePicker } from "@/components/ui/date-picker"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Loader2, Star } from "lucide-react"
 
 interface MovieEntryFormProps {
@@ -19,8 +20,16 @@ interface MovieEntryFormProps {
 
 export function MovieEntryForm({ selectedMovie, onSubmit, onCancel, initialData }: MovieEntryFormProps) {
   const [loading, setLoading] = React.useState(false)
-  const [formData, setFormData] = React.useState({
+  const [formData, setFormData] = React.useState<{
+    status: 'Watched' | 'Watchlist'
+    dateWatched: Date | null
+    watchlistAddedDate: Date | null
+    rating: number
+    notes: string
+  }>({
+    status: initialData?.status || 'Watched',
     dateWatched: initialData?.dateWatched ? new Date(initialData.dateWatched) : null,
+    watchlistAddedDate: initialData?.watchlistAddedDate ? new Date(initialData.watchlistAddedDate) : null,
     rating: initialData?.rating || 5,
     notes: initialData?.notes || "",
   })
@@ -67,7 +76,9 @@ export function MovieEntryForm({ selectedMovie, onSubmit, onCancel, initialData 
       // Update existing movie
       onSubmit({
         ...initialData,
-        dateWatched: formData.dateWatched?.toISOString() || null,
+        status: formData.status,
+        dateWatched: formData.dateWatched?.toISOString().split('T')[0] || null,
+        watchlistAddedDate: formData.watchlistAddedDate?.toISOString().split('T')[0] || null,
         rating: formData.rating,
         notes: formData.notes,
       })
@@ -76,6 +87,10 @@ export function MovieEntryForm({ selectedMovie, onSubmit, onCancel, initialData 
 
     if (!selectedMovie || !movieDetails) return
 
+    const releaseYear = movieDetails.release_date
+      ? parseInt(movieDetails.release_date.substring(0, 4))
+      : null
+
     onSubmit({
       tmdbId: selectedMovie.id,
       title: movieDetails.title,
@@ -83,9 +98,12 @@ export function MovieEntryForm({ selectedMovie, onSubmit, onCancel, initialData 
       genres: movieDetails.genres.map((g: any) => g.name),
       runtime: movieDetails.runtime || 0,
       releaseDate: movieDetails.release_date || "",
+      releaseYear,
       posterImage: getMoviePosterUrl(movieDetails.poster_path, 'w342'),
       backdropImage: getMovieBackdropUrl(movieDetails.backdrop_path, 'w780'),
-      dateWatched: formData.dateWatched?.toISOString() || null,
+      status: formData.status,
+      dateWatched: formData.dateWatched?.toISOString().split('T')[0] || null,
+      watchlistAddedDate: formData.watchlistAddedDate?.toISOString().split('T')[0] || null,
       rating: formData.rating,
       notes: formData.notes,
     })
@@ -136,13 +154,53 @@ export function MovieEntryForm({ selectedMovie, onSubmit, onCancel, initialData 
 
       <div className="space-y-4">
         <div className="space-y-2">
-          <Label>Date Watched</Label>
-          <DatePicker
-            date={formData.dateWatched}
-            onDateChange={(date) => setFormData({ ...formData, dateWatched: date })}
-            placeholder="Pick date watched"
-          />
+          <Label>Status</Label>
+          <Select
+            value={formData.status}
+            onValueChange={(value: 'Watched' | 'Watchlist') => {
+              setFormData({
+                ...formData,
+                status: value,
+                // Auto-set watchlistAddedDate when switching to Watchlist
+                watchlistAddedDate: value === 'Watchlist' && !formData.watchlistAddedDate
+                  ? new Date()
+                  : formData.watchlistAddedDate,
+                // Clear dateWatched when switching to Watchlist
+                dateWatched: value === 'Watchlist' ? null : formData.dateWatched,
+              })
+            }}
+          >
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="Watched">Watched</SelectItem>
+              <SelectItem value="Watchlist">Watchlist</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
+
+        {formData.status === 'Watched' && (
+          <div className="space-y-2">
+            <Label>Date Watched</Label>
+            <DatePicker
+              date={formData.dateWatched}
+              onDateChange={(date) => setFormData({ ...formData, dateWatched: date })}
+              placeholder="Pick date watched"
+            />
+          </div>
+        )}
+
+        {formData.status === 'Watchlist' && (
+          <div className="space-y-2">
+            <Label>Watchlist Added Date</Label>
+            <DatePicker
+              date={formData.watchlistAddedDate}
+              onDateChange={(date) => setFormData({ ...formData, watchlistAddedDate: date })}
+              placeholder="Pick watchlist added date"
+            />
+          </div>
+        )}
 
         <div className="space-y-2">
           <Label htmlFor="rating">Your Rating: {formData.rating}/10</Label>
