@@ -1,9 +1,11 @@
 "use client"
 
 import * as React from "react"
-import { Plus, Pencil, Trash2 } from "lucide-react"
+import Image from "next/image"
+import { Plus, Pencil, Trash2, Calendar, Clock, BookOpen } from "lucide-react"
 import { Book, BookSearchResult } from "@/types/book"
 import { getBooksAction, addBookAction, updateBookAction, deleteBookAction } from "@/app/actions/books"
+import { getBookDetailAction } from "@/app/actions/books-paginated"
 import { BookSearch } from "@/components/book-search"
 import { BookEntryForm } from "@/components/book-entry-form"
 import { Button } from "@/components/ui/button"
@@ -13,16 +15,28 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Input } from "@/components/ui/input"
+import { GridView, GridViewItem } from "@/components/ui/grid-view"
+import { ViewToggle, useViewMode } from "@/components/ui/view-toggle"
+import { MediaDetailModal } from "@/components/ui/media-detail-modal"
+
+type BookSortField = "title" | "author" | "pages" | "minutes" | "days"
+type BookSortOrder = "asc" | "desc"
+type BookTypeFilter = "All" | Book["type"]
 
 export default function BooksPage() {
   const [books, setBooks] = React.useState<Book[]>([])
   const [selectedBook, setSelectedBook] = React.useState<BookSearchResult | null>(null)
   const [editingBook, setEditingBook] = React.useState<Book | null>(null)
   const [showForm, setShowForm] = React.useState(false)
-  const [typeFilter, setTypeFilter] = React.useState<string>("All")
+  const [typeFilter, setTypeFilter] = React.useState<BookTypeFilter>("All")
   const [searchQuery, setSearchQuery] = React.useState("")
-  const [sortBy, setSortBy] = React.useState<"title" | "author" | "pages" | "minutes" | "days">("title")
-  const [sortOrder, setSortOrder] = React.useState<"asc" | "desc">("asc")
+  const [sortBy, setSortBy] = React.useState<BookSortField>("title")
+  const [sortOrder, setSortOrder] = React.useState<BookSortOrder>("asc")
+
+  // Grid view state
+  const [viewMode, setViewMode] = useViewMode("table", "books-view-mode")
+  const [detailModalOpen, setDetailModalOpen] = React.useState(false)
+  const [detailBook, setDetailBook] = React.useState<Book | null>(null)
 
   React.useEffect(() => {
     const loadBooks = async () => {
@@ -65,6 +79,30 @@ export default function BooksPage() {
     }
   }
 
+  // Handle grid item click - load full details and show modal
+  const handleGridItemClick = async (item: GridViewItem) => {
+    setDetailModalOpen(true)
+    try {
+      const book = await getBookDetailAction(item.id)
+      setDetailBook(book)
+    } catch (error) {
+      console.error("Failed to load book details:", error)
+      // Fallback to using existing book data
+      const book = books.find(b => b.id === item.id)
+      setDetailBook(book || null)
+    }
+  }
+
+  // Close detail modal and reset state
+  const handleCloseDetailModal = () => {
+    setDetailModalOpen(false)
+    setDetailBook(null)
+  }
+
+  const getTypeBadgeVariant = (type: Book['type']): GridViewItem['badgeVariant'] => {
+    return type === 'Ebook' ? 'default' : 'secondary'
+  }
+
   const filteredAndSortedBooks = React.useMemo(() => {
     let filtered = typeFilter === "All"
       ? books
@@ -104,8 +142,38 @@ export default function BooksPage() {
     return sorted
   }, [books, typeFilter, searchQuery, sortBy, sortOrder])
 
+  // Convert books to grid items
+  const gridItems = React.useMemo((): GridViewItem[] => {
+    return filteredAndSortedBooks.map(book => {
+      const readingInfo = book.type === 'Ebook'
+        ? `${book.pages || 0} pages`
+        : `${book.minutes || 0} min`
+
+      // Determine reading status
+      let statusText = 'Reading'
+      if (book.dateCompleted) {
+        statusText = 'Completed'
+      } else if (!book.dateStarted) {
+        statusText = 'To Read'
+      }
+
+      return {
+        id: book.id,
+        title: book.title,
+        imageUrl: book.coverImage || '/placeholder-image.png',
+        subtitle: book.author,
+        badge: book.type,
+        badgeVariant: getTypeBadgeVariant(book.type),
+        metadata: [
+          { label: book.type === 'Ebook' ? 'Pages' : 'Minutes', value: readingInfo },
+          { label: "Status", value: statusText }
+        ]
+      }
+    })
+  }, [filteredAndSortedBooks])
+
   const totalPages = books.reduce((total, book) => total + (book.pages || 0), 0)
-  const totalMinutes = books.reduce((total, book) => total + (book.hours * 60 + book.minutes || 0), 0)
+  const totalMinutes = books.reduce((total, book) => total + (book.minutes || 0), 0)
   const totalDays = books.reduce((sum, b) => sum + b.daysRead, 0)
   const totalHours = Math.floor(totalMinutes / 60)
   const remainingMinutes = totalMinutes % 60
@@ -165,16 +233,23 @@ export default function BooksPage() {
           <div className="flex flex-col gap-4">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
               <CardTitle>Your Books</CardTitle>
-              <Select value={typeFilter} onValueChange={setTypeFilter}>
-                <SelectTrigger className="w-full sm:w-[180px]">
-                  <SelectValue placeholder="Filter by type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="All">All Books</SelectItem>
-                  <SelectItem value="Ebook">Ebooks</SelectItem>
-                  <SelectItem value="Audiobook">Audiobooks</SelectItem>
-                </SelectContent>
-              </Select>
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+                <ViewToggle
+                  value={viewMode}
+                  onValueChange={setViewMode}
+                  storageKey="books-view-mode"
+                />
+                <Select value={typeFilter} onValueChange={(value) => setTypeFilter(value as BookTypeFilter)}>
+                  <SelectTrigger className="w-full sm:w-[180px]">
+                    <SelectValue placeholder="Filter by type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="All">All Books</SelectItem>
+                    <SelectItem value="Ebook">Ebooks</SelectItem>
+                    <SelectItem value="Audiobook">Audiobooks</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
             <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
               <Input
@@ -183,7 +258,7 @@ export default function BooksPage() {
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full sm:max-w-sm"
               />
-              <Select value={sortBy} onValueChange={(value: any) => setSortBy(value)}>
+              <Select value={sortBy} onValueChange={(value) => setSortBy(value as BookSortField)}>
                 <SelectTrigger className="w-full sm:w-[180px]">
                   <SelectValue placeholder="Sort by" />
                 </SelectTrigger>
@@ -195,7 +270,7 @@ export default function BooksPage() {
                   <SelectItem value="days">Days</SelectItem>
                 </SelectContent>
               </Select>
-              <Select value={sortOrder} onValueChange={(value: any) => setSortOrder(value)}>
+              <Select value={sortOrder} onValueChange={(value) => setSortOrder(value as BookSortOrder)}>
                 <SelectTrigger className="w-full sm:w-[150px]">
                   <SelectValue placeholder="Order" />
                 </SelectTrigger>
@@ -212,6 +287,15 @@ export default function BooksPage() {
             <div className="text-center py-8 text-muted-foreground">
               No books found. Start adding books to track your reading!
             </div>
+          ) : viewMode === "grid" ? (
+            <GridView
+              items={gridItems}
+              onItemClick={handleGridItemClick}
+              aspectRatio="portrait"
+              emptyMessage="No books found"
+              emptyActionLabel="Add Book"
+              onEmptyAction={() => setShowForm(true)}
+            />
           ) : (
             <>
               {/* Desktop Table View */}
@@ -235,9 +319,11 @@ export default function BooksPage() {
                       <TableRow key={book.id}>
                         <TableCell>
                           {book.coverImage && (
-                            <img
+                            <Image
                               src={book.coverImage}
                               alt={book.title}
+                              width={48}
+                              height={64}
                               className="h-16 w-12 rounded object-cover"
                             />
                           )}
@@ -298,9 +384,11 @@ export default function BooksPage() {
                   <Card key={book.id} className="overflow-hidden">
                     <div className="flex gap-4 p-4">
                       {book.coverImage && (
-                        <img
+                        <Image
                           src={book.coverImage}
                           alt={book.title}
+                          width={96}
+                          height={128}
                           className="h-32 w-24 rounded object-cover flex-shrink-0"
                         />
                       )}
@@ -386,6 +474,82 @@ export default function BooksPage() {
         </CardContent>
       </Card>
 
+      {/* Book Detail Modal */}
+      <MediaDetailModal
+        open={detailModalOpen}
+        onOpenChange={setDetailModalOpen}
+        title={detailBook?.title || "Loading..."}
+        subtitle={detailBook?.author}
+        imageUrl={detailBook?.coverImage || '/placeholder-image.png'}
+        posterAspectRatio="portrait"
+        badges={detailBook ? [{ label: detailBook.type, variant: getTypeBadgeVariant(detailBook.type) }] : []}
+        primaryFields={detailBook ? [
+          {
+            label: detailBook.type === 'Ebook' ? 'Pages' : 'Listening Time',
+            value: detailBook.type === 'Ebook' ? `${detailBook.pages || 0} pages` : `${detailBook.minutes || 0} minutes`,
+            icon: detailBook.type === 'Ebook' ? <BookOpen className="h-4 w-4" /> : <Clock className="h-4 w-4" />
+          },
+          {
+            label: "Days Reading",
+            value: detailBook.daysRead.toString(),
+          },
+          {
+            label: "Started",
+            value: detailBook.dateStarted ? new Date(detailBook.dateStarted).toLocaleDateString() : "Not started yet",
+            icon: <Calendar className="h-4 w-4" />
+          },
+          {
+            label: "Completed",
+            value: detailBook.dateCompleted ? new Date(detailBook.dateCompleted).toLocaleDateString() : "Not completed",
+            icon: <Calendar className="h-4 w-4" />
+          },
+        ] : []}
+        secondaryFields={detailBook ? [
+          {
+            label: "Genre",
+            value: detailBook.genre || "N/A",
+          },
+          {
+            label: "Publisher",
+            value: detailBook.publisher || "N/A",
+          },
+          {
+            label: "Release Date",
+            value: detailBook.releaseDate ? new Date(detailBook.releaseDate).toLocaleDateString() : "N/A",
+          },
+          {
+            label: "Added",
+            value: new Date(detailBook.createdAt).toLocaleDateString(),
+          },
+          {
+            label: "Last Updated",
+            value: new Date(detailBook.updatedAt).toLocaleDateString(),
+          },
+        ] : []}
+        notes={detailBook?.notes}
+        actions={detailBook ? [
+          {
+            label: "Edit",
+            icon: <Pencil className="h-4 w-4" />,
+            onClick: () => {
+              handleEdit(detailBook)
+              handleCloseDetailModal()
+            },
+            variant: "outline"
+          },
+          {
+            label: "Delete",
+            icon: <Trash2 className="h-4 w-4" />,
+            onClick: async () => {
+              handleCloseDetailModal()
+              await handleDelete(detailBook.id)
+            },
+            variant: "destructive"
+          }
+        ] : []}
+      />
+
+      {/* Add/Edit Book Form Dialog */}
       <Dialog open={showForm} onOpenChange={setShowForm}>
         <DialogContent className="w-[calc(100%-1rem)] max-w-3xl h-[90vh] flex flex-col p-0 gap-0 sm:h-auto sm:max-h-[90vh]">
           <DialogHeader className="p-4 sm:p-6 pb-4">

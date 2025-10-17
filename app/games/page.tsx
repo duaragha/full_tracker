@@ -1,9 +1,11 @@
 "use client"
 
 import * as React from "react"
-import { Plus, Pencil, Trash2, Download } from "lucide-react"
+import Image from "next/image"
+import { Plus, Pencil, Trash2, Download, Calendar, Clock, DollarSign, Gamepad2 } from "lucide-react"
 import { Game, GameSearchResult } from "@/types/game"
 import { getGamesAction, addGameAction, updateGameAction, deleteGameAction, enrichGamesWithRAWGDataAction } from "@/app/actions/games"
+import { getGameDetailAction } from "@/app/actions/games-paginated"
 import { getGameDetails } from "@/lib/api/games"
 import { GameSearch } from "@/components/game-search"
 import { GameEntryForm } from "@/components/game-entry-form"
@@ -11,23 +13,39 @@ import { GameTableRow } from "@/components/game-table-row"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { Table, TableBody, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Input } from "@/components/ui/input"
+import { GridView, GridViewItem } from "@/components/ui/grid-view"
+import { ViewToggle, useViewMode } from "@/components/ui/view-toggle"
+import { MediaDetailModal } from "@/components/ui/media-detail-modal"
+
+type GameSortField = "title" | "progress" | "hours" | "days"
+type GameSortOrder = "asc" | "desc"
+type GameStatusFilter = "All" | Game["status"]
+type EnhancedGameSearchResult = GameSearchResult & {
+  developers?: string[]
+  genres?: string[]
+}
 
 export default function GamesPage() {
   const [games, setGames] = React.useState<Game[]>([])
-  const [selectedGame, setSelectedGame] = React.useState<GameSearchResult | null>(null)
+  const [selectedGame, setSelectedGame] = React.useState<EnhancedGameSearchResult | null>(null)
   const [editingGame, setEditingGame] = React.useState<Game | null>(null)
   const [showForm, setShowForm] = React.useState(false)
-  const [statusFilter, setStatusFilter] = React.useState<string>("All")
+  const [statusFilter, setStatusFilter] = React.useState<GameStatusFilter>("All")
   const [searchQuery, setSearchQuery] = React.useState("")
-  const [sortBy, setSortBy] = React.useState<"title" | "progress" | "hours" | "days">("title")
-  const [sortOrder, setSortOrder] = React.useState<"asc" | "desc">("asc")
+  const [sortBy, setSortBy] = React.useState<GameSortField>("title")
+  const [sortOrder, setSortOrder] = React.useState<GameSortOrder>("asc")
   const [isEnriching, setIsEnriching] = React.useState(false)
   const [currentPage, setCurrentPage] = React.useState(1)
   const [itemsPerPage, setItemsPerPage] = React.useState<number>(20)
+
+  // Grid view state
+  const [viewMode, setViewMode] = useViewMode("table", "games-view-mode")
+  const [detailModalOpen, setDetailModalOpen] = React.useState(false)
+  const [detailGame, setDetailGame] = React.useState<Game | null>(null)
 
   React.useEffect(() => {
     const loadGames = async () => {
@@ -41,12 +59,12 @@ export default function GamesPage() {
     // Fetch full game details including developer and genres
     const fullDetails = await getGameDetails(game.id)
     if (fullDetails) {
-      const enhancedGame = {
+      const enhancedGame: EnhancedGameSearchResult = {
         ...game,
         developers: fullDetails.developers,
         genres: fullDetails.genres,
       }
-      setSelectedGame(enhancedGame as any)
+      setSelectedGame(enhancedGame)
     } else {
       setSelectedGame(game)
     }
@@ -115,6 +133,26 @@ export default function GamesPage() {
     }
   }
 
+  // Handle grid item click - load full details and show modal
+  const handleGridItemClick = async (item: GridViewItem) => {
+    setDetailModalOpen(true)
+    try {
+      const game = await getGameDetailAction(item.id)
+      setDetailGame(game)
+    } catch (error) {
+      console.error("Failed to load game details:", error)
+      // Fallback to using existing game data
+      const game = games.find(g => g.id === item.id)
+      setDetailGame(game || null)
+    }
+  }
+
+  // Close detail modal and reset state
+  const handleCloseDetailModal = () => {
+    setDetailModalOpen(false)
+    setDetailGame(null)
+  }
+
   const filteredAndSortedGames = React.useMemo(() => {
     let filtered = statusFilter === "All"
       ? games
@@ -152,6 +190,28 @@ export default function GamesPage() {
     return sorted
   }, [games, statusFilter, searchQuery, sortBy, sortOrder])
 
+  // Convert games to grid items
+  const gridItems = React.useMemo((): GridViewItem[] => {
+    return filteredAndSortedGames.map(game => {
+      const hoursText = `${game.hoursPlayed}h ${game.minutesPlayed}m`
+
+      return {
+        id: game.id,
+        title: game.title,
+        imageUrl: game.coverImage || '/placeholder-image.png',
+        subtitle: game.console,
+        badge: game.status,
+        badgeVariant: getStatusColor(game.status),
+        metadata: game.percentage ? [
+          { label: "Hours", value: hoursText },
+          { label: "Progress", value: `${game.percentage}%` }
+        ] : [
+          { label: "Hours", value: hoursText }
+        ]
+      }
+    })
+  }, [filteredAndSortedGames])
+
   // Pagination
   const showAll = itemsPerPage === filteredAndSortedGames.length || itemsPerPage >= 999
   const totalPages = showAll ? 1 : Math.ceil(filteredAndSortedGames.length / itemsPerPage)
@@ -184,11 +244,16 @@ export default function GamesPage() {
       )
     : null
 
-  const getStatusColor = (status: Game['status']) => {
+  function getStatusColor(status: Game['status']): 'default' | 'secondary' | 'destructive' {
     switch (status) {
-      case 'Playing': return 'default'
-      case 'Completed': return 'secondary'
-      case 'Stopped': return 'destructive'
+      case 'Playing':
+        return 'default'
+      case 'Completed':
+        return 'secondary'
+      case 'Stopped':
+        return 'destructive'
+      default:
+        return 'default'
     }
   }
 
@@ -286,17 +351,24 @@ export default function GamesPage() {
           <div className="flex flex-col gap-4">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
               <CardTitle>Your Games</CardTitle>
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-full sm:w-[180px]">
-                  <SelectValue placeholder="Filter by status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="All">All Games</SelectItem>
-                  <SelectItem value="Playing">Playing</SelectItem>
-                  <SelectItem value="Completed">Completed</SelectItem>
-                  <SelectItem value="Stopped">Stopped</SelectItem>
-                </SelectContent>
-              </Select>
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+                <ViewToggle
+                  value={viewMode}
+                  onValueChange={setViewMode}
+                  storageKey="games-view-mode"
+                />
+                <Select value={statusFilter} onValueChange={(value) => setStatusFilter(value as GameStatusFilter)}>
+                  <SelectTrigger className="w-full sm:w-[180px]">
+                    <SelectValue placeholder="Filter by status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="All">All Games</SelectItem>
+                    <SelectItem value="Playing">Playing</SelectItem>
+                    <SelectItem value="Completed">Completed</SelectItem>
+                    <SelectItem value="Stopped">Stopped</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
             <div className="flex flex-col sm:flex-row gap-3 sm:gap-4" suppressHydrationWarning>
               <Input
@@ -305,7 +377,7 @@ export default function GamesPage() {
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full sm:max-w-sm"
               />
-              <Select value={sortBy} onValueChange={(value: any) => setSortBy(value)}>
+              <Select value={sortBy} onValueChange={(value) => setSortBy(value as GameSortField)}>
                 <SelectTrigger className="w-full sm:w-[180px]">
                   <SelectValue placeholder="Sort by" />
                 </SelectTrigger>
@@ -316,7 +388,7 @@ export default function GamesPage() {
                   <SelectItem value="days">Days Played</SelectItem>
                 </SelectContent>
               </Select>
-              <Select value={sortOrder} onValueChange={(value: any) => setSortOrder(value)}>
+              <Select value={sortOrder} onValueChange={(value) => setSortOrder(value as GameSortOrder)}>
                 <SelectTrigger className="w-full sm:w-[150px]">
                   <SelectValue placeholder="Order" />
                 </SelectTrigger>
@@ -333,6 +405,15 @@ export default function GamesPage() {
             <div className="text-center py-8 text-muted-foreground">
               No games found. Start adding games to track your progress!
             </div>
+          ) : viewMode === "grid" ? (
+            <GridView
+              items={gridItems}
+              onItemClick={handleGridItemClick}
+              aspectRatio="portrait"
+              emptyMessage="No games found"
+              emptyActionLabel="Add Game"
+              onEmptyAction={() => setShowForm(true)}
+            />
           ) : (
             <>
               {/* Desktop Table View */}
@@ -372,9 +453,11 @@ export default function GamesPage() {
                   <Card key={game.id} className="overflow-hidden">
                     <div className="flex gap-4 p-4">
                       {game.coverImage && (
-                        <img
+                        <Image
                           src={game.coverImage}
                           alt={game.title}
+                          width={96}
+                          height={128}
                           className="h-32 w-24 rounded object-cover flex-shrink-0"
                         />
                       )}
@@ -523,6 +606,113 @@ export default function GamesPage() {
         </CardContent>
       </Card>
 
+      {/* Game Detail Modal */}
+      <MediaDetailModal
+        open={detailModalOpen}
+        onOpenChange={setDetailModalOpen}
+        title={detailGame?.title || "Loading..."}
+        subtitle={detailGame?.console}
+        imageUrl={detailGame?.coverImage || '/placeholder-image.png'}
+        posterAspectRatio="portrait"
+        badges={detailGame ? [{ label: detailGame.status, variant: getStatusColor(detailGame.status) }] : []}
+        primaryFields={detailGame ? [
+          {
+            label: "Hours Played",
+            value: `${detailGame.hoursPlayed}h ${detailGame.minutesPlayed}m`,
+            icon: <Clock className="h-4 w-4" />
+          },
+          {
+            label: "Progress",
+            value: `${detailGame.percentage}%`,
+            icon: <Gamepad2 className="h-4 w-4" />
+          },
+          {
+            label: "Days Played",
+            value: detailGame.daysPlayed.toString(),
+          },
+          {
+            label: "Started",
+            value: detailGame.dateStarted ? new Date(detailGame.dateStarted).toLocaleDateString() : "Not started yet",
+            icon: <Calendar className="h-4 w-4" />
+          },
+          {
+            label: "Completed",
+            value: detailGame.dateCompleted ? new Date(detailGame.dateCompleted).toLocaleDateString() : "Not completed",
+            icon: <Calendar className="h-4 w-4" />
+          },
+          {
+            label: "Price",
+            value: detailGame.isGift ? "Gift" : `$${detailGame.price.toFixed(2)}`,
+            icon: <DollarSign className="h-4 w-4" />
+          },
+        ] : []}
+        secondaryFields={detailGame ? [
+          {
+            label: "Genres",
+            value: detailGame.genres.length > 0 ? (
+              <div className="flex flex-wrap gap-1">
+                {detailGame.genres.map((genre) => (
+                  <Badge key={genre} variant="secondary" className="text-xs">
+                    {genre}
+                  </Badge>
+                ))}
+              </div>
+            ) : "No genres",
+            fullWidth: true
+          },
+          {
+            label: "Developer",
+            value: detailGame.developer || "N/A",
+          },
+          {
+            label: "Publisher",
+            value: detailGame.publisher || "N/A",
+          },
+          {
+            label: "Store",
+            value: detailGame.store || "N/A",
+          },
+          {
+            label: "Release Date",
+            value: detailGame.releaseDate ? new Date(detailGame.releaseDate).toLocaleDateString() : "N/A",
+          },
+          {
+            label: "$/Hour",
+            value: detailGame.isGift ? "Gift" : `$${detailGame.pricePerHour.toFixed(2)}`,
+          },
+          {
+            label: "Added",
+            value: new Date(detailGame.createdAt).toLocaleDateString(),
+          },
+          {
+            label: "Last Updated",
+            value: new Date(detailGame.updatedAt).toLocaleDateString(),
+          },
+        ] : []}
+        notes={detailGame?.notes}
+        actions={detailGame ? [
+          {
+            label: "Edit",
+            icon: <Pencil className="h-4 w-4" />,
+            onClick: () => {
+              handleEdit(detailGame)
+              handleCloseDetailModal()
+            },
+            variant: "outline"
+          },
+          {
+            label: "Delete",
+            icon: <Trash2 className="h-4 w-4" />,
+            onClick: async () => {
+              handleCloseDetailModal()
+              await handleDelete(detailGame.id)
+            },
+            variant: "destructive"
+          }
+        ] : []}
+      />
+
+      {/* Add/Edit Game Form Dialog */}
       <Dialog open={showForm} onOpenChange={setShowForm}>
         <DialogContent className="w-[calc(100%-1rem)] max-w-3xl h-[90vh] flex flex-col p-0 gap-0 sm:h-auto sm:max-h-[90vh]">
           <DialogHeader className="p-4 sm:p-6 pb-4">

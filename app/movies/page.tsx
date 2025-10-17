@@ -1,9 +1,11 @@
 "use client"
 
 import * as React from "react"
-import { Plus, Pencil, Trash2, Star } from "lucide-react"
+import Image from "next/image"
+import { Plus, Pencil, Trash2, Star, Calendar, Clock } from "lucide-react"
 import { Movie, MovieSearchResult } from "@/types/movie"
 import { getMoviesAction, addMovieAction, updateMovieAction, deleteMovieAction } from "@/app/actions/movies"
+import { getMovieDetailAction } from "@/app/actions/movies-paginated"
 import { MovieSearch } from "@/components/movie-search"
 import { MovieEntryForm } from "@/components/movie-entry-form"
 import { Button } from "@/components/ui/button"
@@ -13,16 +15,28 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Input } from "@/components/ui/input"
+import { GridView, GridViewItem } from "@/components/ui/grid-view"
+import { ViewToggle, useViewMode } from "@/components/ui/view-toggle"
+import { MediaDetailModal } from "@/components/ui/media-detail-modal"
+
+type MovieSortField = "title" | "runtime" | "rating" | "dateWatched" | "releaseDate"
+type SortDirection = "asc" | "desc"
+type MovieStatusFilter = "All" | Movie["status"]
 
 export default function MoviesPage() {
   const [movies, setMovies] = React.useState<Movie[]>([])
   const [selectedMovie, setSelectedMovie] = React.useState<MovieSearchResult | null>(null)
   const [editingMovie, setEditingMovie] = React.useState<Movie | null>(null)
   const [showForm, setShowForm] = React.useState(false)
-  const [statusFilter, setStatusFilter] = React.useState<string>("All")
+  const [statusFilter, setStatusFilter] = React.useState<MovieStatusFilter>("All")
   const [searchQuery, setSearchQuery] = React.useState("")
-  const [sortBy, setSortBy] = React.useState<"title" | "runtime" | "rating" | "dateWatched" | "releaseDate">("title")
-  const [sortOrder, setSortOrder] = React.useState<"asc" | "desc">("asc")
+  const [sortBy, setSortBy] = React.useState<MovieSortField>("title")
+  const [sortOrder, setSortOrder] = React.useState<SortDirection>("asc")
+
+  // Grid view state
+  const [viewMode, setViewMode] = useViewMode("table", "movies-view-mode")
+  const [detailModalOpen, setDetailModalOpen] = React.useState(false)
+  const [detailMovie, setDetailMovie] = React.useState<Movie | null>(null)
 
   React.useEffect(() => {
     const loadMovies = async () => {
@@ -63,6 +77,26 @@ export default function MoviesPage() {
       const data = await getMoviesAction()
       setMovies(data)
     }
+  }
+
+  // Handle grid item click - load full details and show modal
+  const handleGridItemClick = async (item: GridViewItem) => {
+    setDetailModalOpen(true)
+    try {
+      const movie = await getMovieDetailAction(item.id)
+      setDetailMovie(movie)
+    } catch (error) {
+      console.error("Failed to load movie details:", error)
+      // Fallback to using existing movie data
+      const movie = movies.find(m => m.id === item.id)
+      setDetailMovie(movie || null)
+    }
+  }
+
+  // Close detail modal and reset state
+  const handleCloseDetailModal = () => {
+    setDetailModalOpen(false)
+    setDetailMovie(null)
   }
 
   const filteredAndSortedMovies = React.useMemo(() => {
@@ -108,12 +142,40 @@ export default function MoviesPage() {
     return sorted
   }, [movies, statusFilter, searchQuery, sortBy, sortOrder])
 
-  const getStatusColor = (status: Movie['status']) => {
+  const getStatusBadgeVariant = (status: Movie['status']): GridViewItem['badgeVariant'] => {
     switch (status) {
-      case 'Watched': return 'secondary'
-      case 'Watchlist': return 'default'
+      case 'Watched':
+        return 'secondary'
+      case 'Watchlist':
+        return 'default'
+      default:
+        return 'default'
     }
   }
+
+  // Convert movies to grid items
+  const gridItems = React.useMemo((): GridViewItem[] => {
+    return filteredAndSortedMovies.map(movie => {
+      const hours = Math.floor(movie.runtime / 60)
+      const mins = movie.runtime % 60
+      const runtimeText = `${hours > 0 ? `${hours}h ` : ''}${mins}m`
+
+      return {
+        id: movie.id,
+        title: movie.title,
+        imageUrl: movie.posterImage || '/placeholder-image.png',
+        subtitle: movie.director || (movie.releaseYear ? `${movie.releaseYear}` : undefined),
+        badge: movie.status,
+        badgeVariant: getStatusBadgeVariant(movie.status),
+        metadata: movie.rating ? [
+          { label: "Rating", value: `${movie.rating}/10` },
+          { label: "Runtime", value: runtimeText }
+        ] : [
+          { label: "Runtime", value: runtimeText }
+        ]
+      }
+    })
+  }, [filteredAndSortedMovies])
 
   const totalMovies = movies.length
   const totalRuntime = movies.reduce((total, movie) => total + (movie.runtime || 0), 0)
@@ -181,16 +243,23 @@ export default function MoviesPage() {
           <div className="flex flex-col gap-4">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
               <CardTitle>Your Movies</CardTitle>
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+                <ViewToggle
+                  value={viewMode}
+                  onValueChange={setViewMode}
+                  storageKey="movies-view-mode"
+                />
+              <Select value={statusFilter} onValueChange={(value) => setStatusFilter(value as MovieStatusFilter)}>
                 <SelectTrigger className="w-full sm:w-[180px]">
                   <SelectValue placeholder="Filter by status" />
                 </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="All">All Movies</SelectItem>
-                  <SelectItem value="Watched">Watched</SelectItem>
-                  <SelectItem value="Watchlist">Watchlist</SelectItem>
-                </SelectContent>
-              </Select>
+                  <SelectContent>
+                    <SelectItem value="All">All Movies</SelectItem>
+                    <SelectItem value="Watched">Watched</SelectItem>
+                    <SelectItem value="Watchlist">Watchlist</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
             <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
               <Input
@@ -199,7 +268,7 @@ export default function MoviesPage() {
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full sm:max-w-sm"
               />
-              <Select value={sortBy} onValueChange={(value: any) => setSortBy(value)}>
+              <Select value={sortBy} onValueChange={(value) => setSortBy(value as MovieSortField)}>
                 <SelectTrigger className="w-full sm:w-[180px]">
                   <SelectValue placeholder="Sort by" />
                 </SelectTrigger>
@@ -211,7 +280,7 @@ export default function MoviesPage() {
                   <SelectItem value="releaseDate">Release Date</SelectItem>
                 </SelectContent>
               </Select>
-              <Select value={sortOrder} onValueChange={(value: any) => setSortOrder(value)}>
+              <Select value={sortOrder} onValueChange={(value) => setSortOrder(value as SortDirection)}>
                 <SelectTrigger className="w-full sm:w-[150px]">
                   <SelectValue placeholder="Order" />
                 </SelectTrigger>
@@ -228,6 +297,15 @@ export default function MoviesPage() {
             <div className="text-center py-8 text-muted-foreground">
               No movies found. Start adding movies to track your progress!
             </div>
+          ) : viewMode === "grid" ? (
+            <GridView
+              items={gridItems}
+              onItemClick={handleGridItemClick}
+              aspectRatio="portrait"
+              emptyMessage="No movies found"
+              emptyActionLabel="Add Movie"
+              onEmptyAction={() => setShowForm(true)}
+            />
           ) : (
             <>
               {/* Desktop Table View */}
@@ -254,18 +332,20 @@ export default function MoviesPage() {
 
                       return (
                         <TableRow key={movie.id}>
-                          <TableCell>
-                            {movie.posterImage && (
-                              <img
-                                src={movie.posterImage}
-                                alt={movie.title}
-                                className="h-16 w-12 rounded object-cover"
-                              />
-                            )}
-                          </TableCell>
+                        <TableCell>
+                          {movie.posterImage && (
+                            <Image
+                              src={movie.posterImage}
+                              alt={movie.title}
+                              width={48}
+                              height={64}
+                              className="h-16 w-12 rounded object-cover"
+                            />
+                          )}
+                        </TableCell>
                           <TableCell className="font-medium">{movie.title}</TableCell>
                           <TableCell>
-                            <Badge variant={getStatusColor(movie.status)}>
+                            <Badge variant={getStatusBadgeVariant(movie.status)}>
                               {movie.status}
                             </Badge>
                           </TableCell>
@@ -336,13 +416,15 @@ export default function MoviesPage() {
                   return (
                     <Card key={movie.id} className="overflow-hidden">
                       <div className="flex gap-4 p-4">
-                        {movie.posterImage && (
-                          <img
-                            src={movie.posterImage}
-                            alt={movie.title}
-                            className="h-32 w-24 rounded object-cover flex-shrink-0"
-                          />
-                        )}
+                      {movie.posterImage && (
+                        <Image
+                          src={movie.posterImage}
+                          alt={movie.title}
+                          width={96}
+                          height={128}
+                          className="h-32 w-24 rounded object-cover flex-shrink-0"
+                        />
+                      )}
                         <div className="flex-1 min-w-0 space-y-2">
                           <div>
                             <h3 className="font-semibold text-base leading-tight line-clamp-2">
@@ -354,7 +436,7 @@ export default function MoviesPage() {
                           </div>
 
                           <div className="flex items-center gap-2">
-                            <Badge variant={getStatusColor(movie.status)}>
+                            <Badge variant={getStatusBadgeVariant(movie.status)}>
                               {movie.status}
                             </Badge>
                           </div>
@@ -434,6 +516,88 @@ export default function MoviesPage() {
         </CardContent>
       </Card>
 
+      {/* Movie Detail Modal */}
+      <MediaDetailModal
+        open={detailModalOpen}
+        onOpenChange={setDetailModalOpen}
+        title={detailMovie?.title || "Loading..."}
+        subtitle={detailMovie?.director}
+        imageUrl={detailMovie?.posterImage || '/placeholder-image.png'}
+        posterAspectRatio="portrait"
+        badges={detailMovie ? [{ label: detailMovie.status, variant: getStatusBadgeVariant(detailMovie.status) }] : []}
+        rating={detailMovie?.rating ? { value: detailMovie.rating, max: 10, label: "Your Rating" } : undefined}
+        primaryFields={detailMovie ? [
+          {
+            label: "Runtime",
+            value: `${Math.floor(detailMovie.runtime / 60)}h ${detailMovie.runtime % 60}m`,
+            icon: <Clock className="h-4 w-4" />
+          },
+          {
+            label: "Release Date",
+            value: detailMovie.releaseDate ? new Date(detailMovie.releaseDate).toLocaleDateString() : "N/A",
+            icon: <Calendar className="h-4 w-4" />
+          },
+          {
+            label: "Release Year",
+            value: detailMovie.releaseYear || "N/A",
+          },
+          {
+            label: "Date Watched",
+            value: detailMovie.dateWatched ? new Date(detailMovie.dateWatched).toLocaleDateString() : "Not watched yet",
+            icon: <Calendar className="h-4 w-4" />
+          },
+        ] : []}
+        secondaryFields={detailMovie ? [
+          {
+            label: "Genres",
+            value: detailMovie.genres.length > 0 ? (
+              <div className="flex flex-wrap gap-1">
+                {detailMovie.genres.map((genre) => (
+                  <Badge key={genre} variant="secondary" className="text-xs">
+                    {genre}
+                  </Badge>
+                ))}
+              </div>
+            ) : "No genres",
+            fullWidth: true
+          },
+          {
+            label: "TMDb ID",
+            value: detailMovie.tmdbId,
+          },
+          {
+            label: "Added",
+            value: new Date(detailMovie.createdAt).toLocaleDateString(),
+          },
+          {
+            label: "Last Updated",
+            value: new Date(detailMovie.updatedAt).toLocaleDateString(),
+          },
+        ] : []}
+        notes={detailMovie?.notes}
+        actions={detailMovie ? [
+          {
+            label: "Edit",
+            icon: <Pencil className="h-4 w-4" />,
+            onClick: () => {
+              handleEdit(detailMovie)
+              handleCloseDetailModal()
+            },
+            variant: "outline"
+          },
+          {
+            label: "Delete",
+            icon: <Trash2 className="h-4 w-4" />,
+            onClick: async () => {
+              handleCloseDetailModal()
+              await handleDelete(detailMovie.id)
+            },
+            variant: "destructive"
+          }
+        ] : []}
+      />
+
+      {/* Add/Edit Movie Form Dialog */}
       <Dialog open={showForm} onOpenChange={setShowForm}>
         <DialogContent className="w-[calc(100%-1rem)] max-w-3xl h-[90vh] flex flex-col p-0 gap-0 sm:h-auto sm:max-h-[90vh]">
           <DialogHeader className="p-4 sm:p-6 pb-4">

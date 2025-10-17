@@ -1,9 +1,11 @@
 "use client"
 
 import * as React from "react"
-import { Plus, Pencil, Trash2, List } from "lucide-react"
+import Image from "next/image"
+import { Plus, Pencil, Trash2, List, Calendar, Clock, Tv } from "lucide-react"
 import { TVShow, TVShowSearchResult } from "@/types/tvshow"
 import { getTVShowsAction, addTVShowAction, updateTVShowAction, deleteTVShowAction } from "@/app/actions/tvshows"
+import { getTVShowDetailAction } from "@/app/actions/tvshows-paginated"
 import { TVShowSearch } from "@/components/tvshow-search"
 import { TVShowEntryForm } from "@/components/tvshow-entry-form"
 import { EpisodeList } from "@/components/episode-list"
@@ -14,6 +16,36 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Input } from "@/components/ui/input"
+import { GridView, GridViewItem } from "@/components/ui/grid-view"
+import { ViewToggle, useViewMode } from "@/components/ui/view-toggle"
+import { MediaDetailModal } from "@/components/ui/media-detail-modal"
+
+type TVShowSortField = "title" | "hours" | "progress" | "days"
+type SortDirection = "asc" | "desc"
+type TVShowStatus = "Watched" | "Watching" | "Watchlist"
+
+const getShowProgressPercent = (show: TVShow): number => {
+  if (show.totalEpisodes <= 0) return 0
+  return Math.round((show.watchedEpisodes / show.totalEpisodes) * 100)
+}
+
+const getShowStatus = (show: TVShow): TVShowStatus => {
+  const progress = getShowProgressPercent(show)
+  if (progress >= 100) return "Watched"
+  if (progress > 0) return "Watching"
+  return "Watchlist"
+}
+
+const getBadgeVariant = (status: TVShowStatus): GridViewItem['badgeVariant'] => {
+  switch (status) {
+    case "Watched":
+      return "secondary"
+    case "Watchlist":
+      return "outline"
+    default:
+      return "default"
+  }
+}
 
 export default function TVShowsPage() {
   const [tvshows, setTVShows] = React.useState<TVShow[]>([])
@@ -22,8 +54,13 @@ export default function TVShowsPage() {
   const [viewingEpisodes, setViewingEpisodes] = React.useState<TVShow | null>(null)
   const [showForm, setShowForm] = React.useState(false)
   const [searchQuery, setSearchQuery] = React.useState("")
-  const [sortBy, setSortBy] = React.useState<"title" | "hours" | "progress" | "days">("title")
-  const [sortOrder, setSortOrder] = React.useState<"asc" | "desc">("asc")
+  const [sortBy, setSortBy] = React.useState<TVShowSortField>("title")
+  const [sortOrder, setSortOrder] = React.useState<SortDirection>("asc")
+
+  // Grid view state
+  const [viewMode, setViewMode] = useViewMode("table", "tvshows-view-mode")
+  const [detailModalOpen, setDetailModalOpen] = React.useState(false)
+  const [detailShow, setDetailShow] = React.useState<TVShow | null>(null)
 
   React.useEffect(() => {
     const loadTVShows = async () => {
@@ -70,14 +107,42 @@ export default function TVShowsPage() {
     setViewingEpisodes(show)
   }
 
-  const handleEpisodesUpdate = () => {
-    setTVShows(getTVShows())
-    if (viewingEpisodes) {
-      const updated = getTVShows().find(s => s.id === viewingEpisodes.id)
-      if (updated) {
-        setViewingEpisodes(updated)
+  const handleEpisodesUpdate = React.useCallback(() => {
+    ;(async () => {
+      try {
+        const data = await getTVShowsAction()
+        setTVShows(data)
+
+        if (viewingEpisodes) {
+          const updated = data.find(s => s.id === viewingEpisodes.id)
+          if (updated) {
+            setViewingEpisodes(updated)
+          }
+        }
+      } catch (error) {
+        console.error("Failed to refresh TV shows after episode update:", error)
       }
+    })()
+  }, [viewingEpisodes])
+
+  // Handle grid item click - load full details and show modal
+  const handleGridItemClick = async (item: GridViewItem) => {
+    setDetailModalOpen(true)
+    try {
+      const show = await getTVShowDetailAction(item.id)
+      setDetailShow(show)
+    } catch (error) {
+      console.error("Failed to load TV show details:", error)
+      // Fallback to using existing show data
+      const show = tvshows.find(s => s.id === item.id)
+      setDetailShow(show || null)
     }
+  }
+
+  // Close detail modal and reset state
+  const handleCloseDetailModal = () => {
+    setDetailModalOpen(false)
+    setDetailShow(null)
   }
 
   const filteredAndSortedShows = React.useMemo(() => {
@@ -114,6 +179,88 @@ export default function TVShowsPage() {
 
     return sorted
   }, [tvshows, searchQuery, sortBy, sortOrder])
+
+  const groupedShows = React.useMemo(() => {
+    const groups: Record<"watching" | "watchlist" | "watched", TVShow[]> = {
+      watching: [],
+      watchlist: [],
+      watched: [],
+    }
+
+    filteredAndSortedShows.forEach((show) => {
+      const status = getShowStatus(show)
+      if (status === "Watched") {
+        groups.watched.push(show)
+      } else if (status === "Watchlist") {
+        groups.watchlist.push(show)
+      } else {
+        groups.watching.push(show)
+      }
+    })
+
+    return groups
+  }, [filteredAndSortedShows])
+
+  const buildGridItem = (show: TVShow): GridViewItem => {
+    const hours = Math.floor(show.totalMinutes / 60)
+    const mins = show.totalMinutes % 60
+    const timeText = `${hours}h ${mins}m`
+    const progress = getShowProgressPercent(show)
+    const status = getShowStatus(show)
+    const episodeProgress = show.totalEpisodes > 0
+      ? `${show.watchedEpisodes}/${show.totalEpisodes}`
+      : `${show.watchedEpisodes}/?`
+
+    const metadata: GridViewItem['metadata'] = [
+      { label: "Episodes", value: episodeProgress },
+      { label: "Progress", value: `${progress}%` },
+    ]
+
+    if (show.totalMinutes > 0) {
+      metadata.push({ label: "Time", value: timeText })
+    }
+
+    if (show.rewatchCount > 0) {
+      metadata.push({ label: "Rewatches", value: `${show.rewatchCount}` })
+    }
+
+    return {
+      id: show.id,
+      title: show.title,
+      imageUrl: show.posterImage || '/placeholder-image.png',
+      subtitle: show.network || (show.creators?.[0] || undefined),
+      badge: status,
+      badgeVariant: getBadgeVariant(status),
+      metadata,
+    }
+  }
+
+  const gridItemsByStatus = React.useMemo(() => ({
+    watching: groupedShows.watching.map(buildGridItem),
+    watchlist: groupedShows.watchlist.map(buildGridItem),
+    watched: groupedShows.watched.map(buildGridItem),
+  }), [groupedShows])
+
+  const statusSections = [
+    { key: 'watching', title: 'Watching' },
+    { key: 'watchlist', title: 'Watchlist' },
+    { key: 'watched', title: 'Watched' },
+  ] as const
+
+  const detailBadges = React.useMemo(() => {
+    if (!detailShow) return []
+
+    const status = getShowStatus(detailShow)
+    const badges: Array<{ label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }> = [
+      { label: status, variant: getBadgeVariant(status) },
+    ]
+
+    if (detailShow.rewatchCount > 0) {
+      badges.push({ label: `Rewatched ${detailShow.rewatchCount}x`, variant: 'secondary' })
+    }
+
+    return badges
+  }, [detailShow])
 
   const totalShows = tvshows.length
   const totalEpisodesWatched = tvshows.reduce((total, show) => total + (show.watchedEpisodes || 0), 0)
@@ -171,11 +318,17 @@ export default function TVShowsPage() {
           <TVShowSearch onSelectShow={handleShowSelect} />
         </CardContent>
       </Card>
-
       <Card>
         <CardHeader>
           <div className="flex flex-col gap-4">
-            <CardTitle>Your TV Shows</CardTitle>
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+              <CardTitle>Your TV Shows</CardTitle>
+              <ViewToggle
+                value={viewMode}
+                onValueChange={setViewMode}
+                storageKey="tvshows-view-mode"
+              />
+            </div>
             <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
               <Input
                 placeholder="Search shows by title..."
@@ -183,7 +336,7 @@ export default function TVShowsPage() {
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full sm:max-w-sm"
               />
-              <Select value={sortBy} onValueChange={(value: any) => setSortBy(value)}>
+              <Select value={sortBy} onValueChange={(value) => setSortBy(value as TVShowSortField)}>
                 <SelectTrigger className="w-full sm:w-[180px]">
                   <SelectValue placeholder="Sort by" />
                 </SelectTrigger>
@@ -194,7 +347,7 @@ export default function TVShowsPage() {
                   <SelectItem value="days">Days Tracking</SelectItem>
                 </SelectContent>
               </Select>
-              <Select value={sortOrder} onValueChange={(value: any) => setSortOrder(value)}>
+              <Select value={sortOrder} onValueChange={(value) => setSortOrder(value as SortDirection)}>
                 <SelectTrigger className="w-full sm:w-[150px]">
                   <SelectValue placeholder="Order" />
                 </SelectTrigger>
@@ -211,234 +364,373 @@ export default function TVShowsPage() {
             <div className="text-center py-8 text-muted-foreground">
               No TV shows found. Start adding shows to track your progress!
             </div>
-          ) : (
-            <>
-              {/* Desktop Table View */}
-              <div className="hidden md:block overflow-x-auto">
-                <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Poster</TableHead>
-                    <TableHead>Title</TableHead>
-                    <TableHead>Creator(s)</TableHead>
-                    <TableHead>Network</TableHead>
-                    <TableHead>Genres</TableHead>
-                    <TableHead>Progress</TableHead>
-                    <TableHead>Hours</TableHead>
-                    <TableHead>Aired</TableHead>
-                    <TableHead>Watched</TableHead>
-                    <TableHead>Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredAndSortedShows.map((show) => {
-                    const hours = Math.floor(show.totalMinutes / 60)
-                    const mins = show.totalMinutes % 60
-                    const progress = show.totalEpisodes > 0
-                      ? Math.round((show.watchedEpisodes / show.totalEpisodes) * 100)
-                      : 0
-
-                    return (
-                      <TableRow key={show.id}>
-                        <TableCell>
-                          {show.posterImage && (
-                            <img
-                              src={show.posterImage}
-                              alt={show.title}
-                              className="h-16 w-12 rounded object-cover"
-                            />
-                          )}
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex flex-col">
-                            <span className="font-medium">{show.title}</span>
-                            {show.rewatchCount > 0 && (
-                              <Badge variant="secondary" className="text-xs w-fit mt-1">
-                                Rewatched {show.rewatchCount}x
-                              </Badge>
-                            )}
-                          </div>
-                        </TableCell>
-                        <TableCell className="text-sm">
-                          {show.creators && show.creators.length > 0
-                            ? show.creators.slice(0, 2).join(", ")
-                            : "-"}
-                        </TableCell>
-                        <TableCell>{show.network}</TableCell>
-                        <TableCell>
-                          <div className="flex flex-wrap gap-1">
-                            {show.genres.slice(0, 2).map((genre) => (
-                              <Badge key={genre} variant="secondary" className="text-xs">
-                                {genre}
-                              </Badge>
-                            ))}
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex flex-col">
-                            <span className="text-sm">{show.watchedEpisodes}/{show.totalEpisodes}</span>
-                            <span className="text-xs text-muted-foreground">{progress}%</span>
-                          </div>
-                        </TableCell>
-                        <TableCell>{hours}h {mins}m</TableCell>
-                        <TableCell className="text-sm">
-                          {show.showStartDate
-                            ? new Date(show.showStartDate).getFullYear()
-                            : "N/A"}
-                          {show.showEndDate && ` - ${new Date(show.showEndDate).getFullYear()}`}
-                        </TableCell>
-                        <TableCell className="text-sm">
-                          {show.dateIStarted
-                            ? new Date(show.dateIStarted).toLocaleDateString("en-US", {
-                                month: "short",
-                                year: "numeric",
-                              })
-                            : "-"}
-                          {show.dateIEnded &&
-                            ` - ${new Date(show.dateIEnded).toLocaleDateString("en-US", {
-                              month: "short",
-                              year: "numeric",
-                            })}`}
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex gap-2">
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => handleViewEpisodes(show)}
-                              title="View Episodes"
-                            >
-                              <List className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => handleEdit(show)}
-                            >
-                              <Pencil className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => handleDelete(show.id)}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    )
-                  })}
-                </TableBody>
-              </Table>
-            </div>
-
-            {/* Mobile Card View */}
-            <div className="grid md:hidden grid-cols-1 gap-4">
-              {filteredAndSortedShows.map((show) => {
-                const hours = Math.floor(show.totalMinutes / 60)
-                const mins = show.totalMinutes % 60
-                const progress = show.totalEpisodes > 0
-                  ? Math.round((show.watchedEpisodes / show.totalEpisodes) * 100)
-                  : 0
+          ) : viewMode === "grid" ? (
+            <div className="space-y-8">
+              {statusSections.map(({ key, title }) => {
+                const items = gridItemsByStatus[key]
+                if (items.length === 0) return null
 
                 return (
-                  <Card key={show.id} className="overflow-hidden">
-                    <div className="flex gap-4 p-4">
-                      {show.posterImage && (
-                        <img
-                          src={show.posterImage}
-                          alt={show.title}
-                          className="h-32 w-24 rounded object-cover flex-shrink-0"
-                        />
-                      )}
-                      <div className="flex-1 min-w-0 space-y-2">
-                        <div>
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <h3 className="font-semibold text-base leading-tight line-clamp-2">
-                              {show.title}
-                            </h3>
-                            {show.rewatchCount > 0 && (
-                              <Badge variant="secondary" className="text-xs">
-                                {show.rewatchCount}x
-                              </Badge>
-                            )}
-                          </div>
-                          {show.creators && show.creators.length > 0 && (
-                            <p className="text-xs text-muted-foreground mt-0.5">
-                              by {show.creators[0]}
-                            </p>
-                          )}
-                          <p className="text-sm text-muted-foreground mt-1">
-                            {show.network}
-                          </p>
-                        </div>
-
-                        <div className="flex flex-wrap gap-1">
-                          {show.genres.slice(0, 3).map((genre) => (
-                            <Badge key={genre} variant="secondary" className="text-xs">
-                              {genre}
-                            </Badge>
-                          ))}
-                        </div>
-
-                        <div className="space-y-1 text-sm">
-                          <div className="flex justify-between">
-                            <span className="text-muted-foreground">Progress:</span>
-                            <span className="font-medium">
-                              {show.watchedEpisodes}/{show.totalEpisodes} ({progress}%)
-                            </span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-muted-foreground">Hours:</span>
-                            <span className="font-medium">{hours}h {mins}m</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-muted-foreground">Days:</span>
-                            <span className="font-medium">{show.daysTracking}</span>
-                          </div>
-                        </div>
-
-                        <div className="grid grid-cols-3 gap-2 pt-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleViewEpisodes(show)}
-                            className="text-xs"
-                          >
-                            <List className="h-3.5 w-3.5 mr-1" />
-                            Episodes
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleEdit(show)}
-                            className="text-xs"
-                          >
-                            <Pencil className="h-3.5 w-3.5 mr-1" />
-                            Edit
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleDelete(show.id)}
-                            className="text-xs"
-                          >
-                            <Trash2 className="h-3.5 w-3.5 mr-1" />
-                            Delete
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
-                  </Card>
+                  <div key={key} className="space-y-3">
+                    <h3 className="text-lg font-semibold">{title}</h3>
+                    <GridView
+                      items={items}
+                      onItemClick={handleGridItemClick}
+                      aspectRatio="portrait"
+                      emptyMessage={`No ${title.toLowerCase()} shows`}
+                      emptyActionLabel="Add TV Show"
+                      onEmptyAction={() => setShowForm(true)}
+                    />
+                  </div>
                 )
               })}
             </div>
-          </>
+          ) : (
+            <div className="space-y-8">
+              {statusSections.map(({ key, title }) => {
+                const shows = groupedShows[key]
+                if (shows.length === 0) return null
+
+                return (
+                  <div key={key} className="space-y-3">
+                    <h3 className="text-lg font-semibold">{title}</h3>
+                    <div className="hidden md:block overflow-x-auto">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Poster</TableHead>
+                            <TableHead>Title</TableHead>
+                            <TableHead>Creator(s)</TableHead>
+                            <TableHead>Network</TableHead>
+                            <TableHead>Genres</TableHead>
+                            <TableHead>Progress</TableHead>
+                            <TableHead>Hours</TableHead>
+                            <TableHead>Aired</TableHead>
+                            <TableHead>Watched</TableHead>
+                            <TableHead>Actions</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {shows.map((show) => {
+                            const status = getShowStatus(show)
+                            const progress = getShowProgressPercent(show)
+                            const hours = Math.floor(show.totalMinutes / 60)
+                            const mins = show.totalMinutes % 60
+
+                            return (
+                              <TableRow key={show.id}>
+                                <TableCell>
+                                  {show.posterImage && (
+                                    <Image
+                                      src={show.posterImage}
+                                      alt={show.title}
+                                      width={48}
+                                      height={64}
+                                      className="h-16 w-12 rounded object-cover"
+                                    />
+                                  )}
+                                </TableCell>
+                                <TableCell>
+                                  <div className="flex flex-col gap-1">
+                                    <div className="flex flex-wrap items-center gap-2">
+                                      <span className="font-medium">{show.title}</span>
+                                      <Badge variant={getBadgeVariant(status)} className="text-xs">
+                                        {status}
+                                      </Badge>
+                                      {show.rewatchCount > 0 && (
+                                        <Badge variant="secondary" className="text-xs">
+                                          Rewatched {show.rewatchCount}x
+                                        </Badge>
+                                      )}
+                                    </div>
+                                  </div>
+                                </TableCell>
+                                <TableCell className="text-sm">
+                                  {show.creators && show.creators.length > 0
+                                    ? show.creators.slice(0, 2).join(", ")
+                                    : "-"}
+                                </TableCell>
+                                <TableCell>{show.network}</TableCell>
+                                <TableCell>
+                                  <div className="flex flex-wrap gap-1">
+                                    {show.genres.slice(0, 2).map((genre) => (
+                                      <Badge key={genre} variant="secondary" className="text-xs">
+                                        {genre}
+                                      </Badge>
+                                    ))}
+                                  </div>
+                                </TableCell>
+                                <TableCell>
+                                  <div className="flex flex-col">
+                                    <span className="text-sm">{show.watchedEpisodes}/{show.totalEpisodes}</span>
+                                    <span className="text-xs text-muted-foreground">{progress}%</span>
+                                  </div>
+                                </TableCell>
+                                <TableCell>{hours}h {mins}m</TableCell>
+                                <TableCell className="text-sm">
+                                  {show.showStartDate
+                                    ? new Date(show.showStartDate).getFullYear()
+                                    : "N/A"}
+                                  {show.showEndDate && ` - ${new Date(show.showEndDate).getFullYear()}`}
+                                </TableCell>
+                                <TableCell className="text-sm">
+                                  {show.dateIStarted
+                                    ? new Date(show.dateIStarted).toLocaleDateString("en-US", {
+                                        month: "short",
+                                        year: "numeric",
+                                      })
+                                    : "-"}
+                                  {show.dateIEnded &&
+                                    ` - ${new Date(show.dateIEnded).toLocaleDateString("en-US", {
+                                      month: "short",
+                                      year: "numeric",
+                                    })}`}
+                                </TableCell>
+                                <TableCell>
+                                  <div className="flex gap-2">
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      onClick={() => handleViewEpisodes(show)}
+                                      title="View Episodes"
+                                    >
+                                      <List className="h-4 w-4" />
+                                    </Button>
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      onClick={() => handleEdit(show)}
+                                    >
+                                      <Pencil className="h-4 w-4" />
+                                    </Button>
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      onClick={() => handleDelete(show.id)}
+                                    >
+                                      <Trash2 className="h-4 w-4" />
+                                    </Button>
+                                  </div>
+                                </TableCell>
+                              </TableRow>
+                            )
+                          })}
+                        </TableBody>
+                      </Table>
+                    </div>
+
+                    <div className="grid md:hidden grid-cols-1 gap-4">
+                      {shows.map((show) => {
+                        const status = getShowStatus(show)
+                        const progress = getShowProgressPercent(show)
+                        const hours = Math.floor(show.totalMinutes / 60)
+                        const mins = show.totalMinutes % 60
+
+                        return (
+                          <Card key={show.id} className="overflow-hidden">
+                            <div className="flex gap-4 p-4">
+                              {show.posterImage && (
+                                <Image
+                                  src={show.posterImage}
+                                  alt={show.title}
+                                  width={96}
+                                  height={128}
+                                  className="h-32 w-24 rounded object-cover flex-shrink-0"
+                                />
+                              )}
+                              <div className="flex-1 min-w-0 space-y-2">
+                                <div>
+                                  <div className="flex flex-wrap items-center gap-2">
+                                    <h3 className="font-semibold text-base leading-tight line-clamp-2">
+                                      {show.title}
+                                    </h3>
+                                    <Badge variant={getBadgeVariant(status)} className="text-xs">
+                                      {status}
+                                    </Badge>
+                                    {show.rewatchCount > 0 && (
+                                      <Badge variant="secondary" className="text-xs">
+                                        Rewatched {show.rewatchCount}x
+                                      </Badge>
+                                    )}
+                                  </div>
+                                  {show.creators && show.creators.length > 0 && (
+                                    <p className="text-xs text-muted-foreground mt-0.5">
+                                      by {show.creators[0]}
+                                    </p>
+                                  )}
+                                  <p className="text-sm text-muted-foreground mt-1">
+                                    {show.network}
+                                  </p>
+                                </div>
+
+                                <div className="flex flex-wrap gap-1">
+                                  {show.genres.slice(0, 3).map((genre) => (
+                                    <Badge key={genre} variant="secondary" className="text-xs">
+                                      {genre}
+                                    </Badge>
+                                  ))}
+                                </div>
+
+                                <div className="space-y-1 text-sm">
+                                  <div className="flex justify-between">
+                                    <span className="text-muted-foreground">Progress:</span>
+                                    <span className="font-medium">
+                                      {show.watchedEpisodes}/{show.totalEpisodes} ({progress}%)
+                                    </span>
+                                  </div>
+                                  <div className="flex justify-between">
+                                    <span className="text-muted-foreground">Hours:</span>
+                                    <span className="font-medium">{hours}h {mins}m</span>
+                                  </div>
+                                  <div className="flex justify-between">
+                                    <span className="text-muted-foreground">Days:</span>
+                                    <span className="font-medium">{show.daysTracking}</span>
+                                  </div>
+                                </div>
+
+                                <div className="grid grid-cols-3 gap-2 pt-2">
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => handleViewEpisodes(show)}
+                                    className="text-xs"
+                                  >
+                                    <List className="h-3.5 w-3.5 mr-1" />
+                                    Episodes
+                                  </Button>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => handleEdit(show)}
+                                    className="text-xs"
+                                  >
+                                    <Pencil className="h-3.5 w-3.5 mr-1" />
+                                    Edit
+                                  </Button>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => handleDelete(show.id)}
+                                    className="text-xs"
+                                  >
+                                    <Trash2 className="h-3.5 w-3.5 mr-1" />
+                                    Delete
+                                  </Button>
+                                </div>
+                              </div>
+                            </div>
+                          </Card>
+                        )
+                      })}
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
           )}
         </CardContent>
       </Card>
 
+      {/* TV Show Detail Modal */}
+      <MediaDetailModal
+        open={detailModalOpen}
+        onOpenChange={setDetailModalOpen}
+        title={detailShow?.title || "Loading..."}
+        subtitle={detailShow?.network || detailShow?.creators?.[0]}
+        imageUrl={detailShow?.posterImage || '/placeholder-image.png'}
+        posterAspectRatio="portrait"
+        badges={detailShow ? detailBadges : []}
+        primaryFields={detailShow ? [
+          {
+            label: "Episodes Watched",
+            value: `${detailShow.watchedEpisodes}/${detailShow.totalEpisodes} episodes`,
+            icon: <Tv className="h-4 w-4" />
+          },
+          {
+            label: "Time Watched",
+            value: `${Math.floor(detailShow.totalMinutes / 60)}h ${detailShow.totalMinutes % 60}m`,
+            icon: <Clock className="h-4 w-4" />
+          },
+          {
+            label: "Show Aired",
+            value: detailShow.showStartDate ? `${new Date(detailShow.showStartDate).toLocaleDateString()}${detailShow.showEndDate ? ` - ${new Date(detailShow.showEndDate).toLocaleDateString()}` : ' - Present'}` : "N/A",
+            icon: <Calendar className="h-4 w-4" />
+          },
+          {
+            label: "You Started",
+            value: detailShow.dateIStarted ? new Date(detailShow.dateIStarted).toLocaleDateString() : "Not started yet",
+            icon: <Calendar className="h-4 w-4" />
+          },
+          {
+            label: "Days Tracking",
+            value: detailShow.daysTracking.toString(),
+          },
+        ] : []}
+        secondaryFields={detailShow ? [
+          {
+            label: "Genres",
+            value: detailShow.genres.length > 0 ? (
+              <div className="flex flex-wrap gap-1">
+                {detailShow.genres.map((genre) => (
+                  <Badge key={genre} variant="secondary" className="text-xs">
+                    {genre}
+                  </Badge>
+                ))}
+              </div>
+            ) : "No genres",
+            fullWidth: true
+          },
+          {
+            label: "Creators",
+            value: detailShow.creators?.join(", ") || "N/A",
+            fullWidth: true
+          },
+          {
+            label: "TMDb ID",
+            value: detailShow.tmdbId,
+          },
+          {
+            label: "Added",
+            value: new Date(detailShow.createdAt).toLocaleDateString(),
+          },
+          {
+            label: "Last Updated",
+            value: new Date(detailShow.updatedAt).toLocaleDateString(),
+          },
+        ] : []}
+        notes={detailShow?.notes}
+        actions={detailShow ? [
+          {
+            label: "View Episodes",
+            icon: <List className="h-4 w-4" />,
+            onClick: () => {
+              handleViewEpisodes(detailShow)
+              handleCloseDetailModal()
+            },
+            variant: "outline"
+          },
+          {
+            label: "Edit",
+            icon: <Pencil className="h-4 w-4" />,
+            onClick: () => {
+              handleEdit(detailShow)
+              handleCloseDetailModal()
+            },
+            variant: "outline"
+          },
+          {
+            label: "Delete",
+            icon: <Trash2 className="h-4 w-4" />,
+            onClick: async () => {
+              handleCloseDetailModal()
+              await handleDelete(detailShow.id)
+            },
+            variant: "destructive"
+          }
+        ] : []}
+      />
+
+      {/* Add/Edit TV Show Form Dialog */}
       <Dialog open={showForm} onOpenChange={setShowForm}>
         <DialogContent className="w-[calc(100%-1rem)] max-w-3xl h-[90vh] flex flex-col p-0 gap-0 sm:h-auto sm:max-h-[90vh]">
           <DialogHeader className="p-4 sm:p-6 pb-4">

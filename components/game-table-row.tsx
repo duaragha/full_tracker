@@ -1,4 +1,5 @@
 import * as React from "react"
+import Image from "next/image"
 import { Game } from "@/types/game"
 import { TableCell, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
@@ -17,9 +18,11 @@ export const GameTableRow = React.memo(({ game, onEdit, onDelete, getStatusColor
     <TableRow>
       <TableCell>
         {game.coverImage && (
-          <img
+          <Image
             src={game.coverImage}
             alt={game.title}
+            width={48}
+            height={48}
             className="h-12 w-12 rounded object-cover"
           />
         )}
