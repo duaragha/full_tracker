@@ -19,6 +19,7 @@ import { Input } from "@/components/ui/input"
 import { GridView, GridViewItem } from "@/components/ui/grid-view"
 import { ViewToggle, useViewMode } from "@/components/ui/view-toggle"
 import { MediaDetailModal } from "@/components/ui/media-detail-modal"
+import { CollapsibleSection } from "@/components/ui/collapsible-section"
 
 type TVShowSortField = "title" | "hours" | "progress" | "days"
 type SortDirection = "asc" | "desc"
@@ -371,8 +372,13 @@ export default function TVShowsPage() {
                 if (items.length === 0) return null
 
                 return (
-                  <div key={key} className="space-y-3">
-                    <h3 className="text-lg font-semibold">{title}</h3>
+                  <CollapsibleSection
+                    key={key}
+                    title={title}
+                    count={items.length}
+                    defaultOpen={true}
+                    storageKey={`tvshows-section-${key}`}
+                  >
                     <GridView
                       items={items}
                       onItemClick={handleGridItemClick}
@@ -381,7 +387,7 @@ export default function TVShowsPage() {
                       emptyActionLabel="Add TV Show"
                       onEmptyAction={() => setShowForm(true)}
                     />
-                  </div>
+                  </CollapsibleSection>
                 )
               })}
             </div>
@@ -392,8 +398,13 @@ export default function TVShowsPage() {
                 if (shows.length === 0) return null
 
                 return (
-                  <div key={key} className="space-y-3">
-                    <h3 className="text-lg font-semibold">{title}</h3>
+                  <CollapsibleSection
+                    key={key}
+                    title={title}
+                    count={shows.length}
+                    defaultOpen={true}
+                    storageKey={`tvshows-section-${key}`}
+                  >
                     <div className="hidden md:block overflow-x-auto">
                       <Table>
                         <TableHeader>
@@ -623,7 +634,7 @@ export default function TVShowsPage() {
                         )
                       })}
                     </div>
-                  </div>
+                  </CollapsibleSection>
                 )
               })}
             </div>

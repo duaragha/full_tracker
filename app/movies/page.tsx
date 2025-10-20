@@ -18,6 +18,7 @@ import { Input } from "@/components/ui/input"
 import { GridView, GridViewItem } from "@/components/ui/grid-view"
 import { ViewToggle, useViewMode } from "@/components/ui/view-toggle"
 import { MediaDetailModal } from "@/components/ui/media-detail-modal"
+import { CollapsibleSection } from "@/components/ui/collapsible-section"
 
 type MovieSortField = "title" | "runtime" | "rating" | "dateWatched" | "releaseDate"
 type SortDirection = "asc" | "desc"
@@ -142,6 +143,26 @@ export default function MoviesPage() {
     return sorted
   }, [movies, statusFilter, searchQuery, sortBy, sortOrder])
 
+  const groupedMovies = React.useMemo(() => {
+    const groups: Record<"watched" | "watchlist" | "stopped", Movie[]> = {
+      watched: [],
+      watchlist: [],
+      stopped: [],
+    }
+
+    filteredAndSortedMovies.forEach((movie) => {
+      if (movie.status === "Watched") {
+        groups.watched.push(movie)
+      } else if (movie.status === "Watchlist") {
+        groups.watchlist.push(movie)
+      } else {
+        groups.stopped.push(movie)
+      }
+    })
+
+    return groups
+  }, [filteredAndSortedMovies])
+
   const getStatusBadgeVariant = (status: Movie['status']): GridViewItem['badgeVariant'] => {
     switch (status) {
       case 'Watched':
@@ -154,28 +175,38 @@ export default function MoviesPage() {
   }
 
   // Convert movies to grid items
-  const gridItems = React.useMemo((): GridViewItem[] => {
-    return filteredAndSortedMovies.map(movie => {
-      const hours = Math.floor(movie.runtime / 60)
-      const mins = movie.runtime % 60
-      const runtimeText = `${hours > 0 ? `${hours}h ` : ''}${mins}m`
+  const buildGridItem = (movie: Movie): GridViewItem => {
+    const hours = Math.floor(movie.runtime / 60)
+    const mins = movie.runtime % 60
+    const runtimeText = `${hours > 0 ? `${hours}h ` : ''}${mins}m`
 
-      return {
-        id: movie.id,
-        title: movie.title,
-        imageUrl: movie.posterImage || '/placeholder-image.png',
-        subtitle: movie.director || (movie.releaseYear ? `${movie.releaseYear}` : undefined),
-        badge: movie.status,
-        badgeVariant: getStatusBadgeVariant(movie.status),
-        metadata: movie.rating ? [
-          { label: "Rating", value: `${movie.rating}/10` },
-          { label: "Runtime", value: runtimeText }
-        ] : [
-          { label: "Runtime", value: runtimeText }
-        ]
-      }
-    })
-  }, [filteredAndSortedMovies])
+    return {
+      id: movie.id,
+      title: movie.title,
+      imageUrl: movie.posterImage || '/placeholder-image.png',
+      subtitle: movie.director || (movie.releaseYear ? `${movie.releaseYear}` : undefined),
+      badge: movie.status,
+      badgeVariant: getStatusBadgeVariant(movie.status),
+      metadata: movie.rating ? [
+        { label: "Rating", value: `${movie.rating}/10` },
+        { label: "Runtime", value: runtimeText }
+      ] : [
+        { label: "Runtime", value: runtimeText }
+      ]
+    }
+  }
+
+  const gridItemsByStatus = React.useMemo(() => ({
+    watched: groupedMovies.watched.map(buildGridItem),
+    watchlist: groupedMovies.watchlist.map(buildGridItem),
+    stopped: groupedMovies.stopped.map(buildGridItem),
+  }), [groupedMovies])
+
+  const statusSections = [
+    { key: 'watched', title: 'Watched' },
+    { key: 'watchlist', title: 'Watchlist' },
+    { key: 'stopped', title: 'Stopped' },
+  ] as const
 
   const totalMovies = movies.length
   const totalRuntime = movies.reduce((total, movie) => total + (movie.runtime || 0), 0)
@@ -298,35 +329,64 @@ export default function MoviesPage() {
               No movies found. Start adding movies to track your progress!
             </div>
           ) : viewMode === "grid" ? (
-            <GridView
-              items={gridItems}
-              onItemClick={handleGridItemClick}
-              aspectRatio="portrait"
-              emptyMessage="No movies found"
-              emptyActionLabel="Add Movie"
-              onEmptyAction={() => setShowForm(true)}
-            />
+            <div className="space-y-8">
+              {statusSections.map(({ key, title }) => {
+                const items = gridItemsByStatus[key]
+                if (items.length === 0) return null
+
+                return (
+                  <CollapsibleSection
+                    key={key}
+                    title={title}
+                    count={items.length}
+                    defaultOpen={true}
+                    storageKey={`movies-section-${key}`}
+                  >
+                    <GridView
+                      items={items}
+                      onItemClick={handleGridItemClick}
+                      aspectRatio="portrait"
+                      emptyMessage={`No ${title.toLowerCase()} movies`}
+                      emptyActionLabel="Add Movie"
+                      onEmptyAction={() => setShowForm(true)}
+                    />
+                  </CollapsibleSection>
+                )
+              })}
+            </div>
           ) : (
-            <>
-              {/* Desktop Table View */}
-              <div className="hidden md:block overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Poster</TableHead>
-                      <TableHead>Title</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Director</TableHead>
-                      <TableHead>Genres</TableHead>
-                      <TableHead>Runtime</TableHead>
-                      <TableHead>Released</TableHead>
-                      <TableHead>Watched</TableHead>
-                      <TableHead>Rating</TableHead>
-                      <TableHead>Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredAndSortedMovies.map((movie) => {
+            <div className="space-y-8">
+              {statusSections.map(({ key, title }) => {
+                const movies = groupedMovies[key]
+                if (movies.length === 0) return null
+
+                return (
+                  <CollapsibleSection
+                    key={key}
+                    title={title}
+                    count={movies.length}
+                    defaultOpen={true}
+                    storageKey={`movies-section-${key}`}
+                  >
+                    {/* Desktop Table View */}
+                    <div className="hidden md:block overflow-x-auto">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Poster</TableHead>
+                            <TableHead>Title</TableHead>
+                            <TableHead>Status</TableHead>
+                            <TableHead>Director</TableHead>
+                            <TableHead>Genres</TableHead>
+                            <TableHead>Runtime</TableHead>
+                            <TableHead>Released</TableHead>
+                            <TableHead>Watched</TableHead>
+                            <TableHead>Rating</TableHead>
+                            <TableHead>Actions</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {movies.map((movie) => {
                       const hours = Math.floor(movie.runtime / 60)
                       const mins = movie.runtime % 60
 
@@ -402,14 +462,14 @@ export default function MoviesPage() {
                           </TableCell>
                         </TableRow>
                       )
-                    })}
-                  </TableBody>
-                </Table>
-              </div>
+                          })}
+                        </TableBody>
+                      </Table>
+                    </div>
 
-              {/* Mobile Card View */}
-              <div className="grid md:hidden grid-cols-1 gap-4">
-                {filteredAndSortedMovies.map((movie) => {
+                    {/* Mobile Card View */}
+                    <div className="grid md:hidden grid-cols-1 gap-4">
+                      {movies.map((movie) => {
                   const hours = Math.floor(movie.runtime / 60)
                   const mins = movie.runtime % 60
 
@@ -508,10 +568,13 @@ export default function MoviesPage() {
                         </div>
                       </div>
                     </Card>
-                  )
-                })}
-              </div>
-            </>
+                        )
+                      })}
+                    </div>
+                  </CollapsibleSection>
+                )
+              })}
+            </div>
           )}
         </CardContent>
       </Card>

@@ -20,6 +20,7 @@ import { Input } from "@/components/ui/input"
 import { GridView, GridViewItem } from "@/components/ui/grid-view"
 import { ViewToggle, useViewMode } from "@/components/ui/view-toggle"
 import { MediaDetailModal } from "@/components/ui/media-detail-modal"
+import { CollapsibleSection } from "@/components/ui/collapsible-section"
 
 type GameSortField = "title" | "progress" | "hours" | "days"
 type GameSortOrder = "asc" | "desc"
@@ -190,27 +191,62 @@ export default function GamesPage() {
     return sorted
   }, [games, statusFilter, searchQuery, sortBy, sortOrder])
 
-  // Convert games to grid items
-  const gridItems = React.useMemo((): GridViewItem[] => {
-    return filteredAndSortedGames.map(game => {
-      const hoursText = `${game.hoursPlayed}h ${game.minutesPlayed}m`
+  const groupedGames = React.useMemo(() => {
+    const groups: Record<"completed" | "playing" | "playlist" | "stopped", Game[]> = {
+      completed: [],
+      playing: [],
+      playlist: [],
+      stopped: [],
+    }
 
-      return {
-        id: game.id,
-        title: game.title,
-        imageUrl: game.coverImage || '/placeholder-image.png',
-        subtitle: game.console,
-        badge: game.status,
-        badgeVariant: getStatusColor(game.status),
-        metadata: game.percentage ? [
-          { label: "Hours", value: hoursText },
-          { label: "Progress", value: `${game.percentage}%` }
-        ] : [
-          { label: "Hours", value: hoursText }
-        ]
+    filteredAndSortedGames.forEach((game) => {
+      if (game.status === "Completed") {
+        groups.completed.push(game)
+      } else if (game.status === "Playing") {
+        groups.playing.push(game)
+      } else if (game.status === "Playlist") {
+        groups.playlist.push(game)
+      } else {
+        groups.stopped.push(game)
       }
     })
+
+    return groups
   }, [filteredAndSortedGames])
+
+  // Convert games to grid items
+  const buildGridItem = (game: Game): GridViewItem => {
+    const hoursText = `${game.hoursPlayed}h ${game.minutesPlayed}m`
+
+    return {
+      id: game.id,
+      title: game.title,
+      imageUrl: game.coverImage || '/placeholder-image.png',
+      subtitle: game.console,
+      badge: game.status,
+      badgeVariant: getStatusColor(game.status),
+      metadata: game.percentage ? [
+        { label: "Hours", value: hoursText },
+        { label: "Progress", value: `${game.percentage}%` }
+      ] : [
+        { label: "Hours", value: hoursText }
+      ]
+    }
+  }
+
+  const gridItemsByStatus = React.useMemo(() => ({
+    completed: groupedGames.completed.map(buildGridItem),
+    playing: groupedGames.playing.map(buildGridItem),
+    playlist: groupedGames.playlist.map(buildGridItem),
+    stopped: groupedGames.stopped.map(buildGridItem),
+  }), [groupedGames])
+
+  const statusSections = [
+    { key: 'completed', title: 'Completed' },
+    { key: 'playing', title: 'Playing' },
+    { key: 'playlist', title: 'Playlist' },
+    { key: 'stopped', title: 'Stopped' },
+  ] as const
 
   // Pagination
   const showAll = itemsPerPage === filteredAndSortedGames.length || itemsPerPage >= 999
@@ -406,14 +442,31 @@ export default function GamesPage() {
               No games found. Start adding games to track your progress!
             </div>
           ) : viewMode === "grid" ? (
-            <GridView
-              items={gridItems}
-              onItemClick={handleGridItemClick}
-              aspectRatio="portrait"
-              emptyMessage="No games found"
-              emptyActionLabel="Add Game"
-              onEmptyAction={() => setShowForm(true)}
-            />
+            <div className="space-y-8">
+              {statusSections.map(({ key, title }) => {
+                const items = gridItemsByStatus[key]
+                if (items.length === 0) return null
+
+                return (
+                  <CollapsibleSection
+                    key={key}
+                    title={title}
+                    count={items.length}
+                    defaultOpen={true}
+                    storageKey={`games-section-${key}`}
+                  >
+                    <GridView
+                      items={items}
+                      onItemClick={handleGridItemClick}
+                      aspectRatio="portrait"
+                      emptyMessage={`No ${title.toLowerCase()} games`}
+                      emptyActionLabel="Add Game"
+                      onEmptyAction={() => setShowForm(true)}
+                    />
+                  </CollapsibleSection>
+                )
+              })}
+            </div>
           ) : (
             <>
               {/* Desktop Table View */}

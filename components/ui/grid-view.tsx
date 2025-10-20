@@ -107,12 +107,12 @@ function EmptyGridState({
  * - Lazy-loaded images
  *
  * Responsive Grid Layout:
- * - Mobile (< 640px): 2 columns, 12px gap
- * - Small (640px - 768px): 3 columns, 16px gap
- * - Medium (768px - 1024px): 4 columns, 20px gap
- * - Large (1024px - 1280px): 5 columns, 24px gap
- * - XL (1280px - 1536px): 6 columns, 24px gap
- * - 2XL (≥ 1536px): 7 columns, 28px gap
+ * - Mobile (< 640px): 4 columns, 12px gap
+ * - Small (640px - 768px): 5 columns, 16px gap
+ * - Medium (768px - 1024px): 6 columns, 20px gap
+ * - Large (1024px - 1280px): 7 columns, 24px gap
+ * - XL (1280px - 1536px): 8 columns, 24px gap
+ * - 2XL (≥ 1536px): 9 columns, 28px gap
  *
  * @example
  * ```tsx
@@ -178,7 +178,7 @@ export function GridView({
       className={cn(
         // Responsive grid layout with gaps
         "grid",
-        "grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7",
+        "grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-7 xl:grid-cols-8 2xl:grid-cols-9",
         "gap-3 sm:gap-4 md:gap-5 lg:gap-6 2xl:gap-7",
         className
       )}

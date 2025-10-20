@@ -104,109 +104,59 @@ export default function Dashboard() {
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-8">
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Games</CardTitle>
-            <Gamepad2 className="h-4 w-4 text-muted-foreground" />
+          <CardHeader>
+            <CardTitle>{gamesCount}</CardTitle>
+            <CardDescription>Total Games</CardDescription>
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{gamesCount}</div>
-            <p className="text-xs text-muted-foreground">
-              {totalGameHours.toFixed(1)} hours played
-            </p>
-          </CardContent>
         </Card>
 
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Books</CardTitle>
-            <BookOpen className="h-4 w-4 text-muted-foreground" />
+          <CardHeader>
+            <CardTitle>{booksCount}</CardTitle>
+            <CardDescription>Total Books</CardDescription>
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{booksCount}</div>
-            <p className="text-xs text-muted-foreground">
-              {totalBookPages.toLocaleString()} pages read
-            </p>
-          </CardContent>
         </Card>
 
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Gaming Time</CardTitle>
-            <Clock className="h-4 w-4 text-muted-foreground" />
+          <CardHeader>
+            <CardTitle>{totalGameHours.toFixed(0)}h</CardTitle>
+            <CardDescription>Gaming Time</CardDescription>
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{totalGameHours.toFixed(0)}h</div>
-            <p className="text-xs text-muted-foreground">
-              Across {totalGameDays} days
-            </p>
-          </CardContent>
         </Card>
 
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Reading Time</CardTitle>
-            <TrendingUp className="h-4 w-4 text-muted-foreground" />
+          <CardHeader>
+            <CardTitle>{Math.floor(totalBookMinutes / 60)}h {totalBookMinutes % 60}m</CardTitle>
+            <CardDescription>Reading Time</CardDescription>
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {Math.floor(totalBookMinutes / 60)}h {totalBookMinutes % 60}m
-            </div>
-            <p className="text-xs text-muted-foreground">
-              Audio time listened
-            </p>
-          </CardContent>
         </Card>
 
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">TV Shows</CardTitle>
-            <Tv className="h-4 w-4 text-muted-foreground" />
+          <CardHeader>
+            <CardTitle>{tvshowsCount}</CardTitle>
+            <CardDescription>TV Shows</CardDescription>
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{tvshowsCount}</div>
-            <p className="text-xs text-muted-foreground">
-              {totalTVEpisodes} episodes watched
-            </p>
-          </CardContent>
         </Card>
 
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Movies</CardTitle>
-            <Film className="h-4 w-4 text-muted-foreground" />
+          <CardHeader>
+            <CardTitle>{moviesCount}</CardTitle>
+            <CardDescription>Movies</CardDescription>
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{moviesCount}</div>
-            <p className="text-xs text-muted-foreground">
-              {Math.floor(totalMovieRuntime / 60)}h {totalMovieRuntime % 60}m watched
-            </p>
-          </CardContent>
         </Card>
 
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">This Month KMs</CardTitle>
-            <Car className="h-4 w-4 text-muted-foreground" />
+          <CardHeader>
+            <CardTitle>{monthlyKm.toFixed(0)} km</CardTitle>
+            <CardDescription>This Month KMs</CardDescription>
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{monthlyKm.toFixed(0)} km</div>
-            <p className="text-xs text-muted-foreground">
-              {currentMonth}
-            </p>
-          </CardContent>
         </Card>
 
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">This Month Cost</CardTitle>
-            <DollarSign className="h-4 w-4 text-muted-foreground" />
+          <CardHeader>
+            <CardTitle>${monthlyCost.toFixed(2)}</CardTitle>
+            <CardDescription>This Month Cost</CardDescription>
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">${monthlyCost.toFixed(2)}</div>
-            <p className="text-xs text-muted-foreground">
-              {currentMonth}
-            </p>
-          </CardContent>
         </Card>
       </div>
 

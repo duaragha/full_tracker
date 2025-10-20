@@ -91,7 +91,7 @@ export function MediaDetailModal({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
         className={cn(
-          "max-w-4xl w-[calc(100%-2rem)] max-h-[90vh] p-0",
+          "max-w-6xl w-[calc(100%-2rem)] max-h-[90vh] p-0",
           "data-[state=open]:animate-in data-[state=closed]:animate-out",
           "data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
           "data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95",
