@@ -153,7 +153,7 @@ export function MovieEntryForm({ selectedMovie, onSubmit, onCancel, initialData 
         </div>
       )}
 
-      <div className="space-y-4">
+      <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
         <div className="space-y-2">
           <Label>Status</Label>
           <Select
@@ -203,7 +203,7 @@ export function MovieEntryForm({ selectedMovie, onSubmit, onCancel, initialData 
           </div>
         )}
 
-        <div className="space-y-2">
+        <div className="space-y-2 md:col-span-2 lg:col-span-3">
           <Label htmlFor="rating">Your Rating: {formData.rating}/10</Label>
           <div className="flex items-center gap-2">
             <Input
@@ -222,17 +222,17 @@ export function MovieEntryForm({ selectedMovie, onSubmit, onCancel, initialData 
             </div>
           </div>
         </div>
+      </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="notes">Notes</Label>
-          <Textarea
-            id="notes"
-            value={formData.notes}
-            onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-            rows={4}
-            placeholder="Add your thoughts about this movie..."
-          />
-        </div>
+      <div className="space-y-2">
+        <Label htmlFor="notes">Notes</Label>
+        <Textarea
+          id="notes"
+          value={formData.notes}
+          onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+          rows={4}
+          placeholder="Add your thoughts about this movie..."
+        />
       </div>
 
       <div className="flex flex-col sm:flex-row justify-end gap-2">

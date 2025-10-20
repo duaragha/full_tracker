@@ -166,7 +166,7 @@ export function TVShowEntryForm({ selectedShow, onSubmit, onCancel, initialData 
         </div>
       )}
 
-      <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
+      <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-4">
         <div className="space-y-2">
           <Label>Date I Started Watching</Label>
           <DatePicker

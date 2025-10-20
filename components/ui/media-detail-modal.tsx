@@ -91,7 +91,7 @@ export function MediaDetailModal({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
         className={cn(
-          "max-w-[95vw] w-[95vw] max-h-[95vh] p-0",
+          "max-w-[95vw] w-[95vw] md:max-w-[90vw] md:w-[90vw] lg:max-w-[85vw] lg:w-[85vw] max-h-[95vh] p-0",
           "data-[state=open]:animate-in data-[state=closed]:animate-out",
           "data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
           "data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95",
@@ -115,18 +115,18 @@ export function MediaDetailModal({
             </Button>
 
             {/* Header with Image */}
-            <div className="grid md:grid-cols-[400px_1fr] gap-8 p-8">
+            <div className="grid md:grid-cols-[350px_1fr] lg:grid-cols-[400px_1fr] gap-6 md:gap-8 p-6 md:p-8">
               {/* Poster Image */}
               <div className="flex justify-center md:justify-start">
                 <div className={cn(
-                  "relative overflow-hidden rounded-lg bg-muted w-full max-w-[400px]",
+                  "relative overflow-hidden rounded-lg bg-muted w-full max-w-[350px] md:max-w-[400px]",
                   getAspectRatioClass()
                 )}>
                   <Image
                     src={imageUrl}
                     alt={title}
                     fill
-                    sizes="400px"
+                    sizes="(max-width: 768px) 350px, 400px"
                     className="object-cover"
                     priority
                     onError={(e) => {
@@ -138,7 +138,7 @@ export function MediaDetailModal({
               </div>
 
               {/* Title and Primary Info */}
-              <div className="space-y-5">
+              <div className="space-y-4 md:space-y-5">
                 <div className="space-y-2">
                   <DialogTitle className="text-3xl md:text-4xl font-bold leading-tight">
                     {title}
@@ -178,13 +178,13 @@ export function MediaDetailModal({
 
                 {/* Primary Fields */}
                 {primaryFields.length > 0 && (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                     {primaryFields.map((field, index) => (
                       <div
                         key={index}
                         className={cn(
                           "space-y-1.5",
-                          field.fullWidth && "sm:col-span-2"
+                          field.fullWidth && "sm:col-span-2 lg:col-span-3"
                         )}
                       >
                         <div className="flex items-center gap-2">
@@ -230,15 +230,15 @@ export function MediaDetailModal({
             {secondaryFields.length > 0 && (
               <>
                 <Separator />
-                <div className="p-8 space-y-5">
+                <div className="p-6 md:p-8 space-y-4 md:space-y-5">
                   <h3 className="text-xl font-semibold">Additional Information</h3>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-5">
                     {secondaryFields.map((field, index) => (
                       <div
                         key={index}
                         className={cn(
                           "space-y-1.5",
-                          field.fullWidth && "sm:col-span-2 md:col-span-3"
+                          field.fullWidth && "sm:col-span-2 md:col-span-3 lg:col-span-4 xl:col-span-5"
                         )}
                       >
                         <div className="flex items-center gap-2">
