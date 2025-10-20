@@ -468,26 +468,38 @@ export default function GamesPage() {
               })}
             </div>
           ) : (
-            <>
-              {/* Desktop Table View */}
-              <div className="hidden md:block overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Cover</TableHead>
-                      <TableHead>Title</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Progress</TableHead>
-                      <TableHead>Hours</TableHead>
-                      <TableHead>Days</TableHead>
-                      <TableHead>Console</TableHead>
-                      <TableHead>Price</TableHead>
-                      <TableHead>Hrs/$</TableHead>
-                      <TableHead>Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {paginatedGames.map((game) => (
+            <div className="space-y-8">
+              {statusSections.map(({ key, title }) => {
+                const games = groupedGames[key]
+                if (games.length === 0) return null
+
+                return (
+                  <CollapsibleSection
+                    key={key}
+                    title={title}
+                    count={games.length}
+                    defaultOpen={true}
+                    storageKey={`games-section-${key}`}
+                  >
+                    {/* Desktop Table View */}
+                    <div className="hidden md:block overflow-x-auto">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Cover</TableHead>
+                            <TableHead>Title</TableHead>
+                            <TableHead>Status</TableHead>
+                            <TableHead>Progress</TableHead>
+                            <TableHead>Hours</TableHead>
+                            <TableHead>Days</TableHead>
+                            <TableHead>Console</TableHead>
+                            <TableHead>Price</TableHead>
+                            <TableHead>Hrs/$</TableHead>
+                            <TableHead>Actions</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {games.map((game) => (
                       <GameTableRow
                         key={game.id}
                         game={game}
@@ -495,14 +507,14 @@ export default function GamesPage() {
                         onDelete={handleDelete}
                         getStatusColor={getStatusColor}
                       />
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
 
-              {/* Mobile Card View */}
-              <div className="grid md:hidden grid-cols-1 gap-4">
-                {paginatedGames.map((game) => (
+                    {/* Mobile Card View */}
+                    <div className="grid md:hidden grid-cols-1 gap-4">
+                      {games.map((game) => (
                   <Card key={game.id} className="overflow-hidden">
                     <div className="flex gap-4 p-4">
                       {game.coverImage && (
@@ -577,11 +589,14 @@ export default function GamesPage() {
                           </Button>
                         </div>
                       </div>
+                        </div>
+                      </Card>
+                      ))}
                     </div>
-                  </Card>
-                ))}
-              </div>
-            </>
+                  </CollapsibleSection>
+                )
+              })}
+            </div>
           )}
 
           <div className="flex items-center justify-between px-2 py-4">

@@ -91,7 +91,7 @@ export function MediaDetailModal({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
         className={cn(
-          "max-w-6xl w-[calc(100%-2rem)] max-h-[90vh] p-0",
+          "max-w-[95vw] w-[95vw] max-h-[95vh] p-0",
           "data-[state=open]:animate-in data-[state=closed]:animate-out",
           "data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
           "data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95",
@@ -101,32 +101,32 @@ export function MediaDetailModal({
         )}
         showCloseButton={false}
       >
-        <ScrollArea className="max-h-[90vh]">
+        <ScrollArea className="max-h-[95vh]">
           <div className="relative">
             {/* Close Button */}
             <Button
               variant="ghost"
               size="icon"
-              className="absolute top-4 right-4 z-20 h-8 w-8 rounded-full bg-background/80 backdrop-blur-sm hover:bg-background/95"
+              className="absolute top-4 right-4 z-20 h-10 w-10 rounded-full bg-background/80 backdrop-blur-sm hover:bg-background/95"
               onClick={() => onOpenChange(false)}
             >
-              <X className="h-4 w-4" />
+              <X className="h-5 w-5" />
               <span className="sr-only">Close</span>
             </Button>
 
             {/* Header with Image */}
-            <div className="grid md:grid-cols-[300px_1fr] gap-6 p-6">
+            <div className="grid md:grid-cols-[400px_1fr] gap-8 p-8">
               {/* Poster Image */}
               <div className="flex justify-center md:justify-start">
                 <div className={cn(
-                  "relative overflow-hidden rounded-lg bg-muted w-full max-w-[300px]",
+                  "relative overflow-hidden rounded-lg bg-muted w-full max-w-[400px]",
                   getAspectRatioClass()
                 )}>
                   <Image
                     src={imageUrl}
                     alt={title}
                     fill
-                    sizes="300px"
+                    sizes="400px"
                     className="object-cover"
                     priority
                     onError={(e) => {
@@ -138,13 +138,13 @@ export function MediaDetailModal({
               </div>
 
               {/* Title and Primary Info */}
-              <div className="space-y-4">
+              <div className="space-y-5">
                 <div className="space-y-2">
-                  <DialogTitle className="text-2xl md:text-3xl font-bold leading-tight">
+                  <DialogTitle className="text-3xl md:text-4xl font-bold leading-tight">
                     {title}
                   </DialogTitle>
                   {subtitle && (
-                    <p className="text-base text-muted-foreground">{subtitle}</p>
+                    <p className="text-lg text-muted-foreground">{subtitle}</p>
                   )}
                 </div>
 
@@ -161,15 +161,15 @@ export function MediaDetailModal({
 
                 {/* Rating */}
                 {rating && (
-                  <div className="flex items-center gap-2">
-                    <div className="flex items-center gap-1">
-                      <Star className="h-5 w-5 fill-yellow-400 text-yellow-400" />
-                      <span className="text-lg font-semibold">
+                  <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-2">
+                      <Star className="h-6 w-6 fill-yellow-400 text-yellow-400" />
+                      <span className="text-2xl font-semibold">
                         {rating.value}/{rating.max}
                       </span>
                     </div>
                     {rating.label && (
-                      <span className="text-sm text-muted-foreground">
+                      <span className="text-base text-muted-foreground">
                         {rating.label}
                       </span>
                     )}
@@ -178,12 +178,12 @@ export function MediaDetailModal({
 
                 {/* Primary Fields */}
                 {primaryFields.length > 0 && (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     {primaryFields.map((field, index) => (
                       <div
                         key={index}
                         className={cn(
-                          "space-y-1",
+                          "space-y-1.5",
                           field.fullWidth && "sm:col-span-2"
                         )}
                       >
@@ -193,11 +193,11 @@ export function MediaDetailModal({
                               {field.icon}
                             </span>
                           )}
-                          <span className="text-sm font-medium text-muted-foreground">
+                          <span className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
                             {field.label}
                           </span>
                         </div>
-                        <div className="text-base">
+                        <div className="text-lg font-medium">
                           {field.value}
                         </div>
                       </div>
@@ -230,14 +230,14 @@ export function MediaDetailModal({
             {secondaryFields.length > 0 && (
               <>
                 <Separator />
-                <div className="p-6 space-y-4">
-                  <h3 className="text-lg font-semibold">Additional Information</h3>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                <div className="p-8 space-y-5">
+                  <h3 className="text-xl font-semibold">Additional Information</h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5">
                     {secondaryFields.map((field, index) => (
                       <div
                         key={index}
                         className={cn(
-                          "space-y-1",
+                          "space-y-1.5",
                           field.fullWidth && "sm:col-span-2 md:col-span-3"
                         )}
                       >
@@ -247,7 +247,7 @@ export function MediaDetailModal({
                               {field.icon}
                             </span>
                           )}
-                          <span className="text-sm font-medium text-muted-foreground">
+                          <span className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
                             {field.label}
                           </span>
                         </div>
@@ -265,9 +265,9 @@ export function MediaDetailModal({
             {notes && (
               <>
                 <Separator />
-                <div className="p-6 space-y-3">
-                  <h3 className="text-lg font-semibold">Notes</h3>
-                  <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap">
+                <div className="p-8 space-y-4">
+                  <h3 className="text-xl font-semibold">Notes</h3>
+                  <p className="text-base text-muted-foreground leading-relaxed whitespace-pre-wrap">
                     {notes}
                   </p>
                 </div>
