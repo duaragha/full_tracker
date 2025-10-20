@@ -18,6 +18,7 @@ import { Input } from "@/components/ui/input"
 import { GridView, GridViewItem } from "@/components/ui/grid-view"
 import { ViewToggle, useViewMode } from "@/components/ui/view-toggle"
 import { MediaDetailModal } from "@/components/ui/media-detail-modal"
+import { CollapsibleSection } from "@/components/ui/collapsible-section"
 
 type BookSortField = "title" | "author" | "pages" | "minutes" | "days"
 type BookSortOrder = "asc" | "desc"
@@ -142,35 +143,65 @@ export default function BooksPage() {
     return sorted
   }, [books, typeFilter, searchQuery, sortBy, sortOrder])
 
-  // Convert books to grid items
-  const gridItems = React.useMemo((): GridViewItem[] => {
-    return filteredAndSortedBooks.map(book => {
-      const readingInfo = book.type === 'Ebook'
-        ? `${book.pages || 0} pages`
-        : `${book.minutes || 0} min`
+  const groupedBooks = React.useMemo(() => {
+    const groups: Record<"reading" | "toRead" | "completed", Book[]> = {
+      reading: [],
+      toRead: [],
+      completed: [],
+    }
 
-      // Determine reading status
-      let statusText = 'Reading'
+    filteredAndSortedBooks.forEach((book) => {
       if (book.dateCompleted) {
-        statusText = 'Completed'
-      } else if (!book.dateStarted) {
-        statusText = 'To Read'
-      }
-
-      return {
-        id: book.id,
-        title: book.title,
-        imageUrl: book.coverImage || '/placeholder-image.png',
-        subtitle: book.author,
-        badge: book.type,
-        badgeVariant: getTypeBadgeVariant(book.type),
-        metadata: [
-          { label: book.type === 'Ebook' ? 'Pages' : 'Minutes', value: readingInfo },
-          { label: "Status", value: statusText }
-        ]
+        groups.completed.push(book)
+      } else if (book.dateStarted) {
+        groups.reading.push(book)
+      } else {
+        groups.toRead.push(book)
       }
     })
+
+    return groups
   }, [filteredAndSortedBooks])
+
+  // Convert books to grid items
+  const buildGridItem = (book: Book): GridViewItem => {
+    const readingInfo = book.type === 'Ebook'
+      ? `${book.pages || 0} pages`
+      : `${book.minutes || 0} min`
+
+    // Determine reading status
+    let statusText = 'Reading'
+    if (book.dateCompleted) {
+      statusText = 'Completed'
+    } else if (!book.dateStarted) {
+      statusText = 'To Read'
+    }
+
+    return {
+      id: book.id,
+      title: book.title,
+      imageUrl: book.coverImage || '/placeholder-image.png',
+      subtitle: book.author,
+      badge: book.type,
+      badgeVariant: getTypeBadgeVariant(book.type),
+      metadata: [
+        { label: book.type === 'Ebook' ? 'Pages' : 'Minutes', value: readingInfo },
+        { label: "Status", value: statusText }
+      ]
+    }
+  }
+
+  const gridItemsByStatus = React.useMemo(() => ({
+    reading: groupedBooks.reading.map(buildGridItem),
+    toRead: groupedBooks.toRead.map(buildGridItem),
+    completed: groupedBooks.completed.map(buildGridItem),
+  }), [groupedBooks])
+
+  const statusSections = [
+    { key: 'reading', title: 'Reading' },
+    { key: 'toRead', title: 'To Read' },
+    { key: 'completed', title: 'Completed' },
+  ] as const
 
   const totalPages = books.reduce((total, book) => total + (book.pages || 0), 0)
   const totalMinutes = books.reduce((total, book) => total + (book.minutes || 0), 0)
@@ -288,34 +319,63 @@ export default function BooksPage() {
               No books found. Start adding books to track your reading!
             </div>
           ) : viewMode === "grid" ? (
-            <GridView
-              items={gridItems}
-              onItemClick={handleGridItemClick}
-              aspectRatio="portrait"
-              emptyMessage="No books found"
-              emptyActionLabel="Add Book"
-              onEmptyAction={() => setShowForm(true)}
-            />
+            <div className="space-y-8">
+              {statusSections.map(({ key, title }) => {
+                const items = gridItemsByStatus[key]
+                if (items.length === 0) return null
+
+                return (
+                  <CollapsibleSection
+                    key={key}
+                    title={title}
+                    count={items.length}
+                    defaultOpen={true}
+                    storageKey={`books-section-${key}`}
+                  >
+                    <GridView
+                      items={items}
+                      onItemClick={handleGridItemClick}
+                      aspectRatio="portrait"
+                      emptyMessage={`No ${title.toLowerCase()} books`}
+                      emptyActionLabel="Add Book"
+                      onEmptyAction={() => setShowForm(true)}
+                    />
+                  </CollapsibleSection>
+                )
+              })}
+            </div>
           ) : (
-            <>
-              {/* Desktop Table View */}
-              <div className="hidden md:block overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Cover</TableHead>
-                      <TableHead>Title</TableHead>
-                      <TableHead>Author</TableHead>
-                      <TableHead>Type</TableHead>
-                      <TableHead>Pages/Minutes</TableHead>
-                      <TableHead>Days</TableHead>
-                      <TableHead>Started</TableHead>
-                      <TableHead>Completed</TableHead>
-                      <TableHead>Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredAndSortedBooks.map((book) => (
+            <div className="space-y-8">
+              {statusSections.map(({ key, title }) => {
+                const books = groupedBooks[key]
+                if (books.length === 0) return null
+
+                return (
+                  <CollapsibleSection
+                    key={key}
+                    title={title}
+                    count={books.length}
+                    defaultOpen={true}
+                    storageKey={`books-section-${key}`}
+                  >
+                    {/* Desktop Table View */}
+                    <div className="hidden md:block overflow-x-auto">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Cover</TableHead>
+                            <TableHead>Title</TableHead>
+                            <TableHead>Author</TableHead>
+                            <TableHead>Type</TableHead>
+                            <TableHead>Pages/Minutes</TableHead>
+                            <TableHead>Days</TableHead>
+                            <TableHead>Started</TableHead>
+                            <TableHead>Completed</TableHead>
+                            <TableHead>Actions</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {books.map((book) => (
                       <TableRow key={book.id}>
                         <TableCell>
                           {book.coverImage && (
@@ -372,15 +432,15 @@ export default function BooksPage() {
                             </Button>
                           </div>
                         </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
 
-              {/* Mobile Card View */}
-              <div className="grid md:hidden grid-cols-1 gap-4">
-                {filteredAndSortedBooks.map((book) => (
+                    {/* Mobile Card View */}
+                    <div className="grid md:hidden grid-cols-1 gap-4">
+                      {books.map((book) => (
                   <Card key={book.id} className="overflow-hidden">
                     <div className="flex gap-4 p-4">
                       {book.coverImage && (
@@ -465,11 +525,14 @@ export default function BooksPage() {
                           </Button>
                         </div>
                       </div>
+                        </div>
+                      </Card>
+                      ))}
                     </div>
-                  </Card>
-                ))}
-              </div>
-            </>
+                  </CollapsibleSection>
+                )
+              })}
+            </div>
           )}
         </CardContent>
       </Card>
