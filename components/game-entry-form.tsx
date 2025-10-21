@@ -80,8 +80,8 @@ export function GameEntryForm({ selectedGame, onSubmit, onCancel, initialData }:
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
-      <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+    <form onSubmit={handleSubmit} className="space-y-6">
+      <div className="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
         <div className="space-y-2">
           <Label htmlFor="title">Title</Label>
           <Input
@@ -198,7 +198,7 @@ export function GameEntryForm({ selectedGame, onSubmit, onCancel, initialData }:
           />
         </div>
 
-        <div className="space-y-2">
+        <div className="space-y-2 md:col-span-2 lg:col-span-1">
           <Label htmlFor="store">Store</Label>
           <Input
             id="store"
@@ -206,19 +206,6 @@ export function GameEntryForm({ selectedGame, onSubmit, onCancel, initialData }:
             onChange={(e) => setFormData({ ...formData, store: e.target.value })}
             placeholder="Steam, Epic, PlayStation..."
           />
-        </div>
-
-        <div className="space-y-2">
-          <div className="flex items-center space-x-2 mb-2">
-            <Checkbox
-              id="isGift"
-              checked={formData.isGift}
-              onCheckedChange={(checked) => setFormData({ ...formData, isGift: checked === true })}
-            />
-            <Label htmlFor="isGift" className="font-normal cursor-pointer">
-              This game was a gift
-            </Label>
-          </div>
         </div>
 
         <div className="space-y-2">
@@ -233,6 +220,19 @@ export function GameEntryForm({ selectedGame, onSubmit, onCancel, initialData }:
             placeholder="0.00"
             disabled={formData.isGift}
           />
+        </div>
+
+        <div className="space-y-2 flex items-end pb-2">
+          <div className="flex items-center space-x-2">
+            <Checkbox
+              id="isGift"
+              checked={formData.isGift}
+              onCheckedChange={(checked) => setFormData({ ...formData, isGift: checked === true })}
+            />
+            <Label htmlFor="isGift" className="font-normal cursor-pointer">
+              This game was a gift
+            </Label>
+          </div>
         </div>
       </div>
 

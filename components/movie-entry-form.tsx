@@ -121,7 +121,7 @@ export function MovieEntryForm({ selectedMovie, onSubmit, onCancel, initialData 
   const minutes = movieDetails ? movieDetails.runtime % 60 : 0
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
+    <form onSubmit={handleSubmit} className="space-y-6">
       {movieDetails && !initialData && (
         <div className="space-y-2">
           <div className="flex flex-col sm:flex-row gap-4">
@@ -153,7 +153,7 @@ export function MovieEntryForm({ selectedMovie, onSubmit, onCancel, initialData 
         </div>
       )}
 
-      <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
         <div className="space-y-2">
           <Label>Status</Label>
           <Select
@@ -203,7 +203,7 @@ export function MovieEntryForm({ selectedMovie, onSubmit, onCancel, initialData 
           </div>
         )}
 
-        <div className="space-y-2 md:col-span-2 lg:col-span-3">
+        <div className="space-y-2">
           <Label htmlFor="rating">Your Rating: {formData.rating}/10</Label>
           <div className="flex items-center gap-2">
             <Input

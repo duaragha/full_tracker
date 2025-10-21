@@ -127,7 +127,7 @@ export function TVShowEntryForm({ selectedShow, onSubmit, onCancel, initialData 
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
+    <form onSubmit={handleSubmit} className="space-y-6">
       {showDetails && !initialData && (
         <div className="space-y-2">
           <div className="flex flex-col sm:flex-row gap-4">
@@ -166,7 +166,7 @@ export function TVShowEntryForm({ selectedShow, onSubmit, onCancel, initialData 
         </div>
       )}
 
-      <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-6 grid-cols-1 md:grid-cols-2">
         <div className="space-y-2">
           <Label>Date I Started Watching</Label>
           <DatePicker

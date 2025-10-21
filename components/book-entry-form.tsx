@@ -65,8 +65,8 @@ export function BookEntryForm({ selectedBook, onSubmit, onCancel, initialData }:
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
-      <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+    <form onSubmit={handleSubmit} className="space-y-6">
+      <div className="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
         <div className="space-y-2">
           <Label htmlFor="title">Title</Label>
           <Input
@@ -134,7 +134,7 @@ export function BookEntryForm({ selectedBook, onSubmit, onCancel, initialData }:
         )}
 
         {formData.type === 'Audiobook' && (
-          <div className="grid grid-cols-2 gap-4">
+          <>
             <div className="space-y-2">
               <Label htmlFor="hours">Hours</Label>
               <Input
@@ -158,7 +158,7 @@ export function BookEntryForm({ selectedBook, onSubmit, onCancel, initialData }:
                 placeholder="0"
               />
             </div>
-          </div>
+          </>
         )}
 
         <div className="space-y-2">
