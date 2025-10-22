@@ -6,7 +6,8 @@
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "backfill-energy": "npx tsx scripts/backfill-energy-kwh.ts"
   },
   "engines": {
     "node": ">=18.0.0"

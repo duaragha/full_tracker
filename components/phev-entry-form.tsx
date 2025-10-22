@@ -14,6 +14,7 @@ interface PhevEntryFormProps {
     date: string
     cost: number
     km_driven: number
+    energy_kwh: number | null
     notes: string
   }) => Promise<void>
 }
@@ -23,9 +24,53 @@ export function PhevEntryForm({ activeCarId, onSubmit }: PhevEntryFormProps) {
     date: null as Date | null,
     cost: "",
     km_driven: "",
+    energy_kwh: "",
     notes: ""
   })
   const [isSubmitting, setIsSubmitting] = React.useState(false)
+  const [isFetchingTuya, setIsFetchingTuya] = React.useState(false)
+  const [tuyaError, setTuyaError] = React.useState<string | null>(null)
+
+  // Fetch charging data from Tuya API when date changes
+  React.useEffect(() => {
+    const fetchTuyaData = async () => {
+      if (!formData.date) return
+
+      setIsFetchingTuya(true)
+      setTuyaError(null)
+      try {
+        const response = await fetch('/api/tuya/charging-data', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            date: format(formData.date, 'yyyy-MM-dd'),
+            electricityRate: 0.20 // Default rate, can be made configurable
+          })
+        })
+
+        const data = await response.json()
+
+        if (data.success) {
+          setFormData(prev => ({
+            ...prev,
+            cost: data.data.cost.toString(),
+            energy_kwh: data.data.energy_kwh.toString()
+          }))
+          setTuyaError(null)
+        } else {
+          console.error('Failed to fetch Tuya data:', data.error)
+          setTuyaError(data.message || data.error || 'Failed to fetch data from smart plug')
+        }
+      } catch (error) {
+        console.error('Error fetching Tuya data:', error)
+        setTuyaError('Failed to connect to smart plug API')
+      } finally {
+        setIsFetchingTuya(false)
+      }
+    }
+
+    fetchTuyaData()
+  }, [formData.date])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -47,6 +92,7 @@ export function PhevEntryForm({ activeCarId, onSubmit }: PhevEntryFormProps) {
         date: format(formData.date, "yyyy-MM-dd"),
         cost: parseFloat(formData.cost),
         km_driven: parseFloat(formData.km_driven),
+        energy_kwh: formData.energy_kwh ? parseFloat(formData.energy_kwh) : null,
         notes: formData.notes
       })
 
@@ -55,6 +101,7 @@ export function PhevEntryForm({ activeCarId, onSubmit }: PhevEntryFormProps) {
         date: null,
         cost: "",
         km_driven: "",
+        energy_kwh: "",
         notes: ""
       })
     } catch (error) {
@@ -67,7 +114,17 @@ export function PhevEntryForm({ activeCarId, onSubmit }: PhevEntryFormProps) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-4">
+      {tuyaError && (
+        <div className="bg-yellow-50 border border-yellow-200 rounded-md p-3">
+          <p className="text-sm text-yellow-800">
+            <strong>⚠️ Tuya API:</strong> {tuyaError}
+          </p>
+          <p className="text-xs text-yellow-700 mt-1">
+            You can still manually enter the cost and energy values.
+          </p>
+        </div>
+      )}
+      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-5">
         <div className="space-y-2">
           <Label htmlFor="date">Date</Label>
           <DatePicker
@@ -85,6 +142,21 @@ export function PhevEntryForm({ activeCarId, onSubmit }: PhevEntryFormProps) {
             step="0.01"
             value={formData.cost}
             onChange={(e) => setFormData({ ...formData, cost: e.target.value })}
+            disabled={isFetchingTuya}
+          />
+          {isFetchingTuya && <p className="text-xs text-muted-foreground">Fetching from smart plug...</p>}
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="energy_kwh">Energy (kWh)</Label>
+          <Input
+            id="energy_kwh"
+            type="number"
+            step="0.001"
+            value={formData.energy_kwh}
+            onChange={(e) => setFormData({ ...formData, energy_kwh: e.target.value })}
+            disabled={isFetchingTuya}
+            placeholder="Auto-filled from smart plug"
           />
         </div>
 

@@ -7,7 +7,7 @@ interface PhevStatsProps {
 
 export function PhevStatsCards({ stats }: PhevStatsProps) {
   return (
-    <div className="grid gap-4 md:grid-cols-4">
+    <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-6">
       <Card>
         <CardHeader>
           <CardTitle>{stats.totalKm.toFixed(2)}</CardTitle>
@@ -24,6 +24,13 @@ export function PhevStatsCards({ stats }: PhevStatsProps) {
 
       <Card>
         <CardHeader>
+          <CardTitle>{stats.totalEnergyKwh.toFixed(2)} kWh</CardTitle>
+          <CardDescription>Total Energy</CardDescription>
+        </CardHeader>
+      </Card>
+
+      <Card>
+        <CardHeader>
           <CardTitle>${stats.costPerKm.toFixed(4)}</CardTitle>
           <CardDescription>Cost per KM</CardDescription>
         </CardHeader>
@@ -31,8 +38,15 @@ export function PhevStatsCards({ stats }: PhevStatsProps) {
 
       <Card>
         <CardHeader>
-          <CardTitle>{stats.entryCount}</CardTitle>
-          <CardDescription>Total Entries</CardDescription>
+          <CardTitle>${stats.costPerKwh > 0 ? stats.costPerKwh.toFixed(3) : 'N/A'}</CardTitle>
+          <CardDescription>Cost per kWh</CardDescription>
+        </CardHeader>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>{stats.kwhPerKm > 0 ? (stats.kwhPerKm * 100).toFixed(2) : 'N/A'}</CardTitle>
+          <CardDescription>kWh/100km</CardDescription>
         </CardHeader>
       </Card>
     </div>

@@ -12,6 +12,7 @@ export async function addEntryAction(entry: {
   date: string
   cost: number
   km_driven: number
+  energy_kwh: number | null
   notes: string
   car_id: number
 }) {

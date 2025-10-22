@@ -12,6 +12,7 @@ export interface PhevEntry {
   date: string
   cost: number
   km_driven: number
+  energy_kwh: number | null
   notes: string | null
   car_id: number | null
   created_at: string
@@ -20,10 +21,14 @@ export interface PhevEntry {
 export interface PhevStats {
   totalKm: number
   totalCost: number
+  totalEnergyKwh: number
   entryCount: number
   costPerKm: number
+  costPerKwh: number
+  kwhPerKm: number
   averageCostPerEntry: number
   averageKmPerEntry: number
+  averageEnergyPerEntry: number
   firstDate: string | null
   latestDate: string | null
 }
@@ -39,6 +44,7 @@ export interface MonthlyGroup {
   month: string // Format: YYYY-MM
   totalKm: number
   totalCost: number
+  totalEnergyKwh: number
   entries: PhevEntry[]
 }
 
@@ -46,6 +52,7 @@ export interface YearlyGroup {
   year: string // Format: YYYY
   totalKm: number
   totalCost: number
+  totalEnergyKwh: number
   entryCount: number
   months: MonthlyGroup[]
 }

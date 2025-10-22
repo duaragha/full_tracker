@@ -203,7 +203,7 @@ export function PhevClient({ initialCars, initialCarSummaries, initialUnassigned
               {unassigned.slice(0, 5).map((entry) => (
                 <div key={entry.id} className="flex items-center justify-between rounded border p-2">
                   <div>
-                    <span className="font-medium">{entry.date}</span>: ${entry.cost.toFixed(2)}, {entry.km_driven.toFixed(1)} km
+                    <span className="font-medium">{entry.date}</span>: {entry.km_driven.toFixed(1)} km | {entry.energy_kwh ? `${entry.energy_kwh.toFixed(2)} kWh` : 'N/A'} | ${entry.cost.toFixed(2)}
                     {entry.notes && <span className="ml-2 text-sm text-muted-foreground">({entry.notes})</span>}
                   </div>
                 </div>
@@ -244,7 +244,7 @@ export function PhevClient({ initialCars, initialCarSummaries, initialUnassigned
                     )}
                   </div>
                   <div className="text-sm text-muted-foreground">
-                    {summary.stats.totalKm.toFixed(2)} km | ${summary.stats.totalCost.toFixed(2)} | {summary.stats.entryCount} entries
+                    {summary.stats.totalKm.toFixed(2)} km | {summary.stats.totalEnergyKwh.toFixed(2)} kWh | ${summary.stats.totalCost.toFixed(2)} | {summary.stats.entryCount} entries
                   </div>
                 </div>
               </CardHeader>
@@ -269,7 +269,7 @@ export function PhevClient({ initialCars, initialCarSummaries, initialUnassigned
                               {isExpanded ? <ChevronDown className="mr-2 h-4 w-4" /> : <ChevronRight className="mr-2 h-4 w-4" />}
                               📆 {formatMonth(group.month)}
                               <span className="ml-auto text-sm font-normal text-muted-foreground">
-                                {group.totalKm.toFixed(2)} km | ${group.totalCost.toFixed(2)} | {group.entries.length} entries
+                                {group.totalKm.toFixed(2)} km | {group.totalEnergyKwh.toFixed(2)} kWh | ${group.totalCost.toFixed(2)} | {group.entries.length} entries
                               </span>
                             </Button>
                           </CollapsibleTrigger>
@@ -277,7 +277,7 @@ export function PhevClient({ initialCars, initialCarSummaries, initialUnassigned
                             <ul className="space-y-1">
                               {group.entries.map((entry) => (
                                 <li key={entry.id} className="text-sm">
-                                  {entry.date}: ${entry.cost.toFixed(2)}, {entry.km_driven.toFixed(1)} km
+                                  {entry.date}: {entry.km_driven.toFixed(1)} km | {entry.energy_kwh ? `${entry.energy_kwh.toFixed(2)} kWh` : 'N/A'} | ${entry.cost.toFixed(2)}
                                   {entry.notes && ` (${entry.notes})`}
                                 </li>
                               ))}
@@ -324,7 +324,7 @@ export function PhevClient({ initialCars, initialCarSummaries, initialUnassigned
                               {isExpanded ? <ChevronDown className="mr-2 h-5 w-5" /> : <ChevronRight className="mr-2 h-5 w-5" />}
                               🗓️ {yearGroup.year}
                               <span className="ml-auto text-sm font-normal text-muted-foreground">
-                                {yearGroup.totalKm.toFixed(2)} km | ${yearGroup.totalCost.toFixed(2)} | {yearGroup.entryCount} entries
+                                {yearGroup.totalKm.toFixed(2)} km | {yearGroup.totalEnergyKwh.toFixed(2)} kWh | ${yearGroup.totalCost.toFixed(2)} | {yearGroup.entryCount} entries
                               </span>
                             </Button>
                           </CollapsibleTrigger>
@@ -334,13 +334,13 @@ export function PhevClient({ initialCars, initialCarSummaries, initialUnassigned
                                 <div className="font-medium">
                                   📅 {formatMonth(monthGroup.month)}
                                   <span className="ml-2 text-sm font-normal text-muted-foreground">
-                                    {monthGroup.totalKm.toFixed(2)} km | ${monthGroup.totalCost.toFixed(2)}
+                                    {monthGroup.totalKm.toFixed(2)} km | {monthGroup.totalEnergyKwh.toFixed(2)} kWh | ${monthGroup.totalCost.toFixed(2)}
                                   </span>
                                 </div>
                                 <ul className="pl-4 space-y-1">
                                   {monthGroup.entries.map((entry) => (
                                     <li key={entry.id} className="text-sm">
-                                      {entry.date}: ${entry.cost.toFixed(2)}, {entry.km_driven.toFixed(1)} km
+                                      {entry.date}: {entry.km_driven.toFixed(1)} km | {entry.energy_kwh ? `${entry.energy_kwh.toFixed(2)} kWh` : 'N/A'} | ${entry.cost.toFixed(2)}
                                       {entry.notes && ` (${entry.notes})`}
                                     </li>
                                   ))}
@@ -393,9 +393,9 @@ export function PhevClient({ initialCars, initialCarSummaries, initialUnassigned
                       {summary.car?.id === activeCarId && <Badge variant="default" className="ml-2">Active</Badge>}
                     </div>
                     <div className="mt-2 text-sm text-muted-foreground">
-                      KM: {summary.stats.totalKm.toFixed(2)} | Cost: ${summary.stats.totalCost.toFixed(2)} | Entries: {summary.stats.entryCount}
+                      KM: {summary.stats.totalKm.toFixed(2)} | Energy: {summary.stats.totalEnergyKwh.toFixed(2)} kWh | Cost: ${summary.stats.totalCost.toFixed(2)} | Entries: {summary.stats.entryCount}
                       <br />
-                      Cost per KM: ${summary.stats.costPerKm > 0 ? summary.stats.costPerKm.toFixed(4) : "N/A"}
+                      Cost per KM: ${summary.stats.costPerKm > 0 ? summary.stats.costPerKm.toFixed(4) : "N/A"} | Cost per kWh: ${summary.stats.costPerKwh > 0 ? summary.stats.costPerKwh.toFixed(3) : "N/A"} | Efficiency: {summary.stats.kwhPerKm > 0 ? (summary.stats.kwhPerKm * 100).toFixed(2) : "N/A"} kWh/100km
                     </div>
                   </div>
                 ))}

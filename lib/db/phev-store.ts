@@ -16,7 +16,8 @@ function normalizeEntry(entry: any): PhevEntry {
     ...entry,
     date: entry.date instanceof Date ? entry.date.toISOString().split('T')[0] : entry.date,
     cost: Number(entry.cost),
-    km_driven: Number(entry.km_driven)
+    km_driven: Number(entry.km_driven),
+    energy_kwh: entry.energy_kwh ? Number(entry.energy_kwh) : null
   }
 }
 
@@ -95,17 +96,17 @@ export async function getUnassignedEntries(): Promise<PhevEntry[]> {
 }
 
 export async function addEntry(entry: Omit<PhevEntry, 'id' | 'created_at'>): Promise<PhevEntry> {
-  const { date, cost, km_driven, notes, car_id } = entry
+  const { date, cost, km_driven, energy_kwh, notes, car_id } = entry
 
   const result = await pool.query<PhevEntry>(
-    'INSERT INTO phev_tracker (date, cost, km_driven, notes, car_id, created_at) VALUES ($1, $2, $3, $4, $5, NOW()) RETURNING *',
-    [date, cost, km_driven, notes || '', car_id]
+    'INSERT INTO phev_tracker (date, cost, km_driven, energy_kwh, notes, car_id, created_at) VALUES ($1, $2, $3, $4, $5, $6, NOW()) RETURNING *',
+    [date, cost, km_driven, energy_kwh, notes || '', car_id]
   )
   return normalizeEntry(result.rows[0])
 }
 
 export async function updateEntry(id: number, updates: Partial<PhevEntry>): Promise<void> {
-  const { date, cost, km_driven, notes, car_id } = updates
+  const { date, cost, km_driven, energy_kwh, notes, car_id } = updates
 
   await pool.query(
     `UPDATE phev_tracker
@@ -113,10 +114,11 @@ export async function updateEntry(id: number, updates: Partial<PhevEntry>): Prom
        date = COALESCE($1, date),
        cost = COALESCE($2, cost),
        km_driven = COALESCE($3, km_driven),
-       notes = COALESCE($4, notes),
-       car_id = $5
-     WHERE id = $6`,
-    [date, cost, km_driven, notes, car_id, id]
+       energy_kwh = COALESCE($4, energy_kwh),
+       notes = COALESCE($5, notes),
+       car_id = $6
+     WHERE id = $7`,
+    [date, cost, km_driven, energy_kwh, notes, car_id, id]
   )
 }
 
@@ -159,11 +161,15 @@ export async function calculateAllTimeStats(): Promise<PhevStats> {
 function calculateStatsFromEntries(entries: PhevEntry[]): PhevStats {
   const totalKm = entries.reduce((sum, entry) => sum + Number(entry.km_driven), 0)
   const totalCost = entries.reduce((sum, entry) => sum + Number(entry.cost), 0)
+  const totalEnergyKwh = entries.reduce((sum, entry) => sum + (entry.energy_kwh ? Number(entry.energy_kwh) : 0), 0)
   const entryCount = entries.length
 
   const costPerKm = totalKm > 0 ? totalCost / totalKm : 0
+  const costPerKwh = totalEnergyKwh > 0 ? totalCost / totalEnergyKwh : 0
+  const kwhPerKm = totalKm > 0 ? totalEnergyKwh / totalKm : 0
   const averageCostPerEntry = entryCount > 0 ? totalCost / entryCount : 0
   const averageKmPerEntry = entryCount > 0 ? totalKm / entryCount : 0
+  const averageEnergyPerEntry = entryCount > 0 ? totalEnergyKwh / entryCount : 0
 
   const dates = entries.map(e => e.date).filter(Boolean).sort()
   const firstDate = dates.length > 0 ? dates[0] : null
@@ -172,10 +178,14 @@ function calculateStatsFromEntries(entries: PhevEntry[]): PhevStats {
   return {
     totalKm,
     totalCost,
+    totalEnergyKwh,
     entryCount,
     costPerKm,
+    costPerKwh,
+    kwhPerKm,
     averageCostPerEntry,
     averageKmPerEntry,
+    averageEnergyPerEntry,
     firstDate,
     latestDate
   }
@@ -240,6 +250,7 @@ function groupByMonth(entries: PhevEntry[]): MonthlyGroup[] {
       month,
       totalKm: monthEntries.reduce((sum, e) => sum + Number(e.km_driven), 0),
       totalCost: monthEntries.reduce((sum, e) => sum + Number(e.cost), 0),
+      totalEnergyKwh: monthEntries.reduce((sum, e) => sum + (e.energy_kwh ? Number(e.energy_kwh) : 0), 0),
       entries: monthEntries.sort((a, b) => b.date.localeCompare(a.date))
     }))
     .sort((a, b) => b.month.localeCompare(a.month))
@@ -261,6 +272,7 @@ function groupByYear(entries: PhevEntry[]): YearlyGroup[] {
       year,
       totalKm: yearEntries.reduce((sum, e) => sum + Number(e.km_driven), 0),
       totalCost: yearEntries.reduce((sum, e) => sum + Number(e.cost), 0),
+      totalEnergyKwh: yearEntries.reduce((sum, e) => sum + (e.energy_kwh ? Number(e.energy_kwh) : 0), 0),
       entryCount: yearEntries.length,
       months: groupByMonth(yearEntries)
     }))
