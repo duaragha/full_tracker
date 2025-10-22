@@ -28,12 +28,15 @@ export async function POST(request: NextRequest) {
     // Fetch energy data for the specified date
     const energyKwh = await tuyaClient.getEnergyForDate(date)
 
-    // Check if API returned valid data
+    // Calculate cost based on energy consumption (even if 0)
+    const rate = electricityRate || 0.20 // Default to $0.20/kWh if not provided
+    const cost = tuyaClient.calculateChargingCost(energyKwh, rate)
+
+    // Return data with a message if energy is 0
     if (energyKwh === 0) {
       return NextResponse.json({
-        success: false,
-        error: 'Energy Management API not subscribed',
-        message: 'Please enable the Energy Management API in your Tuya IoT Platform project. Go to Cloud > Cloud Services > Energy Management > Free Trial',
+        success: true,
+        message: 'No energy data available for this date. The device may not have been actively charging, or data may not be available yet.',
         data: {
           energy_kwh: 0,
           cost: 0,
@@ -41,10 +44,6 @@ export async function POST(request: NextRequest) {
         },
       })
     }
-
-    // Calculate cost based on energy consumption
-    const rate = electricityRate || 0.20 // Default to $0.20/kWh if not provided
-    const cost = tuyaClient.calculateChargingCost(energyKwh, rate)
 
     return NextResponse.json({
       success: true,

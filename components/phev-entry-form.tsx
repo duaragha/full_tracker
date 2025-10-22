@@ -56,7 +56,13 @@ export function PhevEntryForm({ activeCarId, onSubmit }: PhevEntryFormProps) {
             cost: data.data.cost.toString(),
             energy_kwh: data.data.energy_kwh.toString()
           }))
-          setTuyaError(null)
+
+          // Show message if no data available but API worked
+          if (data.message) {
+            setTuyaError(data.message)
+          } else {
+            setTuyaError(null)
+          }
         } else {
           console.error('Failed to fetch Tuya data:', data.error)
           setTuyaError(data.message || data.error || 'Failed to fetch data from smart plug')
@@ -115,12 +121,24 @@ export function PhevEntryForm({ activeCarId, onSubmit }: PhevEntryFormProps) {
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       {tuyaError && (
-        <div className="bg-yellow-50 border border-yellow-200 rounded-md p-3">
-          <p className="text-sm text-yellow-800">
-            <strong>⚠️ Tuya API:</strong> {tuyaError}
+        <div className={`border rounded-md p-3 ${
+          tuyaError.includes('not been actively charging') || tuyaError.includes('not be available yet')
+            ? 'bg-blue-50 border-blue-200'
+            : 'bg-yellow-50 border-yellow-200'
+        }`}>
+          <p className={`text-sm ${
+            tuyaError.includes('not been actively charging') || tuyaError.includes('not be available yet')
+              ? 'text-blue-800'
+              : 'text-yellow-800'
+          }`}>
+            <strong>{tuyaError.includes('not been actively charging') || tuyaError.includes('not be available yet') ? 'ℹ️' : '⚠️'} Tuya API:</strong> {tuyaError}
           </p>
-          <p className="text-xs text-yellow-700 mt-1">
-            You can still manually enter the cost and energy values.
+          <p className={`text-xs mt-1 ${
+            tuyaError.includes('not been actively charging') || tuyaError.includes('not be available yet')
+              ? 'text-blue-700'
+              : 'text-yellow-700'
+          }`}>
+            You can manually enter the cost and energy values.
           </p>
         </div>
       )}
