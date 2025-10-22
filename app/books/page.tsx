@@ -614,13 +614,13 @@ export default function BooksPage() {
 
       {/* Add/Edit Book Form Dialog */}
       <Dialog open={showForm} onOpenChange={setShowForm}>
-        <DialogContent className="w-[calc(100%-1rem)] max-w-3xl h-[90vh] flex flex-col p-0 gap-0 sm:h-auto sm:max-h-[90vh]">
-          <DialogHeader className="p-4 sm:p-6 pb-4">
+        <DialogContent className="max-w-[calc(100%-2rem)] sm:max-w-3xl lg:max-w-7xl max-h-[90vh] flex flex-col p-0 gap-0">
+          <DialogHeader className="p-3 sm:p-4 md:p-6 pb-3 sm:pb-4">
             <DialogTitle>
               {editingBook ? "Edit Book" : "Add New Book"}
             </DialogTitle>
           </DialogHeader>
-          <div className="overflow-y-auto flex-1 px-4 sm:px-6">
+          <div className="overflow-y-auto flex-1 px-3 sm:px-4 md:px-6 pb-3 sm:pb-4 md:pb-6">
             <BookEntryForm
               selectedBook={selectedBook}
               initialData={editingBook || undefined}

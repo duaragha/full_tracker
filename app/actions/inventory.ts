@@ -1,9 +1,11 @@
 'use server'
 
-import { InventoryItem, Container, Area } from '@/types/inventory'
+import { InventoryItem, Container, Area, Section } from '@/types/inventory'
 import {
   getAreas,
   getContainers,
+  getSections,
+  getSectionsByContainer,
   getInventoryItems,
   addInventoryItem,
   updateInventoryItem,
@@ -11,6 +13,9 @@ import {
   addContainer,
   updateContainer,
   deleteContainer,
+  addSection,
+  updateSection,
+  deleteSection,
   addArea,
   updateArea,
   deleteArea,
@@ -52,6 +57,26 @@ export async function updateContainerAction(id: number, container: Partial<Conta
 
 export async function deleteContainerAction(id: number) {
   return await deleteContainer(id)
+}
+
+export async function getSectionsAction() {
+  return await getSections()
+}
+
+export async function getSectionsByContainerAction(containerId: number) {
+  return await getSectionsByContainer(containerId)
+}
+
+export async function addSectionAction(section: Omit<Section, 'id' | 'createdAt' | 'updatedAt'>) {
+  return await addSection(section)
+}
+
+export async function updateSectionAction(id: number, section: Partial<Section>) {
+  return await updateSection(id, section)
+}
+
+export async function deleteSectionAction(id: number) {
+  return await deleteSection(id)
 }
 
 export async function addAreaAction(area: Omit<Area, 'id' | 'createdAt' | 'updatedAt'>) {

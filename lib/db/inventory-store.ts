@@ -1,5 +1,5 @@
 import { Pool } from 'pg'
-import { InventoryItem, Container, Area } from '@/types/inventory'
+import { InventoryItem, Container, Area, Section } from '@/types/inventory'
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL || process.env.POSTGRES_URL,
@@ -10,11 +10,17 @@ const pool = new Pool({
 })
 
 function normalizeInventoryItem(item: any): InventoryItem {
+  // Handle location - support both JSONB and separate section_id column
+  let location = item.location || { areaId: '', containerId: '' }
+  if (item.section_id) {
+    location = { ...location, sectionId: String(item.section_id) }
+  }
+
   return {
     id: String(item.id),
     name: item.name,
     usedInLastYear: Boolean(item.used_in_last_year),
-    location: item.location || { areaId: '', containerId: '' },
+    location,
     type: item.type || '',
     cost: Number(item.cost || 0),
     isGift: Boolean(item.is_gift),
@@ -28,6 +34,7 @@ function normalizeInventoryItem(item: any): InventoryItem {
     notes: item.notes || '',
     photo: item.photo,
     parentItemId: item.parent_item_id ? String(item.parent_item_id) : null,
+    isReplacement: Boolean(item.is_replacement),
     children: item.children || undefined,
     createdAt: item.created_at,
     updatedAt: item.updated_at,
@@ -60,6 +67,19 @@ function normalizeContainer(container: any): Container {
   }
 }
 
+function normalizeSection(section: any): Section {
+  return {
+    id: String(section.id),
+    name: section.name,
+    containerId: String(section.container_id),
+    type: section.type || undefined,
+    position: section.position || undefined,
+    notes: section.notes || undefined,
+    createdAt: section.created_at,
+    updatedAt: section.updated_at,
+  }
+}
+
 function normalizeArea(area: any): Area {
   return {
     id: String(area.id),
@@ -83,8 +103,8 @@ export async function addInventoryItem(item: Omit<InventoryItem, 'id' | 'created
     `INSERT INTO inventory_items (
       name, used_in_last_year, location, type, cost, is_gift, gift_from,
       purchased_where, purchased_when, keep_until, kept, sold_date,
-      sold_price, notes, photo, parent_item_id, created_at, updated_at
-    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, NOW(), NOW())
+      sold_price, notes, photo, parent_item_id, is_replacement, section_id, created_at, updated_at
+    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, NOW(), NOW())
     RETURNING *`,
     [
       item.name,
@@ -103,6 +123,8 @@ export async function addInventoryItem(item: Omit<InventoryItem, 'id' | 'created
       item.notes,
       item.photo,
       item.parentItemId ? parseInt(item.parentItemId, 10) : null,
+      item.isReplacement || false,
+      item.location.sectionId ? parseInt(item.location.sectionId, 10) : null,
     ]
   )
   return normalizeInventoryItem(result.rows[0])
@@ -127,8 +149,10 @@ export async function updateInventoryItem(id: number, item: Partial<InventoryIte
       notes = COALESCE($14, notes),
       photo = $15,
       parent_item_id = $16,
+      is_replacement = COALESCE($17, is_replacement),
+      section_id = $18,
       updated_at = NOW()
-    WHERE id = $17`,
+    WHERE id = $19`,
     [
       item.name,
       item.usedInLastYear,
@@ -146,6 +170,8 @@ export async function updateInventoryItem(id: number, item: Partial<InventoryIte
       item.notes,
       item.photo,
       item.parentItemId !== undefined ? (item.parentItemId ? parseInt(item.parentItemId, 10) : null) : undefined,
+      item.isReplacement,
+      item.location?.sectionId !== undefined ? (item.location.sectionId ? parseInt(item.location.sectionId, 10) : null) : undefined,
       id,
     ]
   )
@@ -306,6 +332,64 @@ export async function updateArea(id: number, area: Partial<Area>): Promise<void>
 
 export async function deleteArea(id: number): Promise<void> {
   await pool.query('DELETE FROM inventory_areas WHERE id = $1', [id])
+}
+
+// Sections
+export async function getSections(): Promise<Section[]> {
+  const result = await pool.query<any>(
+    'SELECT * FROM inventory_sections ORDER BY created_at DESC'
+  )
+  return result.rows.map(normalizeSection)
+}
+
+export async function getSectionsByContainer(containerId: number): Promise<Section[]> {
+  const result = await pool.query<any>(
+    'SELECT * FROM inventory_sections WHERE container_id = $1 ORDER BY name ASC',
+    [containerId]
+  )
+  return result.rows.map(normalizeSection)
+}
+
+export async function addSection(section: Omit<Section, 'id' | 'createdAt' | 'updatedAt'>): Promise<Section> {
+  const result = await pool.query<any>(
+    `INSERT INTO inventory_sections (
+      name, container_id, type, position, notes, created_at, updated_at
+    ) VALUES ($1, $2, $3, $4, $5, NOW(), NOW())
+    RETURNING *`,
+    [
+      section.name,
+      parseInt(section.containerId, 10),
+      section.type || null,
+      section.position || null,
+      section.notes || null,
+    ]
+  )
+  return normalizeSection(result.rows[0])
+}
+
+export async function updateSection(id: number, section: Partial<Section>): Promise<void> {
+  await pool.query(
+    `UPDATE inventory_sections SET
+      name = COALESCE($1, name),
+      container_id = COALESCE($2, container_id),
+      type = $3,
+      position = $4,
+      notes = $5,
+      updated_at = NOW()
+    WHERE id = $6`,
+    [
+      section.name,
+      section.containerId ? parseInt(section.containerId, 10) : null,
+      section.type || null,
+      section.position || null,
+      section.notes || null,
+      id,
+    ]
+  )
+}
+
+export async function deleteSection(id: number): Promise<void> {
+  await pool.query('DELETE FROM inventory_sections WHERE id = $1', [id])
 }
 
 export function calculateTotalValue(items: InventoryItem[]): number {

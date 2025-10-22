@@ -111,7 +111,7 @@ export function ContainerManager({ open, onOpenChange, onContainerAdded, areaId,
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-[calc(100%-1rem)] max-w-2xl h-[90vh] flex flex-col p-0 gap-0 sm:h-auto sm:max-h-[90vh]">
+      <DialogContent className="max-w-[calc(100%-2rem)] sm:max-w-3xl lg:max-w-7xl max-h-[90vh] flex flex-col p-0 gap-0">
         <DialogHeader className="p-4 sm:p-6 pb-0">
           <DialogTitle>{editingContainer ? "Edit Container" : "Add New Container"}</DialogTitle>
         </DialogHeader>

@@ -1,8 +1,8 @@
 "use client"
 
 import * as React from "react"
-import { InventoryItem, Area, Container } from "@/types/inventory"
-import { addInventoryItemAction, updateInventoryItemAction } from "@/app/actions/inventory"
+import { InventoryItem, Area, Container, Section } from "@/types/inventory"
+import { addInventoryItemAction, updateInventoryItemAction, getSectionsByContainerAction } from "@/app/actions/inventory"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -30,12 +30,15 @@ interface ItemFormProps {
 }
 
 export function ItemForm({ open, onOpenChange, onItemAdded, areas, containers, items, selectedArea, selectedContainer, editingItem }: ItemFormProps) {
+  const [sections, setSections] = React.useState<Section[]>([])
   const [formData, setFormData] = React.useState({
     name: "",
     usedInLastYear: false,
     areaId: selectedArea || "",
     containerId: selectedContainer || "",
+    sectionId: "",
     parentItemId: "",
+    isReplacement: false,
     type: "",
     cost: "",
     isGift: false,
@@ -49,6 +52,19 @@ export function ItemForm({ open, onOpenChange, onItemAdded, areas, containers, i
     notes: "",
   })
 
+  // Load sections when container changes
+  React.useEffect(() => {
+    const loadSections = async () => {
+      if (formData.containerId) {
+        const fetchedSections = await getSectionsByContainerAction(Number(formData.containerId))
+        setSections(fetchedSections)
+      } else {
+        setSections([])
+      }
+    }
+    loadSections()
+  }, [formData.containerId])
+
   React.useEffect(() => {
     if (editingItem) {
       setFormData({
@@ -56,7 +72,9 @@ export function ItemForm({ open, onOpenChange, onItemAdded, areas, containers, i
         usedInLastYear: editingItem.usedInLastYear,
         areaId: editingItem.location.areaId,
         containerId: editingItem.location.containerId,
+        sectionId: editingItem.location.sectionId || "",
         parentItemId: editingItem.parentItemId || "",
+        isReplacement: editingItem.isReplacement || false,
         type: editingItem.type,
         cost: editingItem.cost.toString(),
         isGift: editingItem.isGift,
@@ -75,7 +93,9 @@ export function ItemForm({ open, onOpenChange, onItemAdded, areas, containers, i
         usedInLastYear: false,
         areaId: selectedArea || "",
         containerId: selectedContainer || "",
+        sectionId: "",
         parentItemId: "",
+        isReplacement: false,
         type: "",
         cost: "",
         isGift: false,
@@ -122,6 +142,15 @@ export function ItemForm({ open, onOpenChange, onItemAdded, areas, containers, i
     }
   }, [formData.cost, formData.purchasedWhen, editingItem])
 
+  // Helper function to format date as YYYY-MM-DD in local timezone
+  const formatDateLocal = (date: Date | null): string | null => {
+    if (!date) return null
+    const year = date.getFullYear()
+    const month = String(date.getMonth() + 1).padStart(2, '0')
+    const day = String(date.getDate()).padStart(2, '0')
+    return `${year}-${month}-${day}`
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
@@ -131,17 +160,19 @@ export function ItemForm({ open, onOpenChange, onItemAdded, areas, containers, i
       location: {
         areaId: formData.areaId,
         containerId: formData.containerId,
+        sectionId: formData.sectionId || undefined,
       },
       parentItemId: formData.parentItemId && formData.parentItemId !== "" ? formData.parentItemId : null,
+      isReplacement: formData.isReplacement,
       type: formData.type,
       cost: parseFloat(formData.cost) || 0,
       isGift: formData.isGift,
       giftFrom: formData.giftFrom || null,
       purchasedWhere: formData.purchasedWhere,
-      purchasedWhen: formData.purchasedWhen?.toISOString() || "",
-      keepUntil: formData.keepUntil?.toISOString() || null,
+      purchasedWhen: formatDateLocal(formData.purchasedWhen) || "",
+      keepUntil: formatDateLocal(formData.keepUntil),
       kept: formData.kept,
-      soldDate: formData.soldDate?.toISOString() || null,
+      soldDate: formatDateLocal(formData.soldDate),
       soldPrice: formData.soldPrice ? parseFloat(formData.soldPrice) : null,
       notes: formData.notes,
     }
@@ -187,7 +218,7 @@ export function ItemForm({ open, onOpenChange, onItemAdded, areas, containers, i
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-[calc(100%-1rem)] max-w-3xl h-[90vh] flex flex-col p-0 gap-0 sm:h-auto sm:max-h-[90vh]">
+      <DialogContent className="max-w-[calc(100%-2rem)] sm:max-w-3xl lg:max-w-7xl max-h-[90vh] flex flex-col p-0 gap-0">
         <DialogHeader className="p-4 sm:p-6 pb-0">
           <DialogTitle>{editingItem ? "Edit Item" : "Add New Item"}</DialogTitle>
         </DialogHeader>
@@ -237,7 +268,7 @@ export function ItemForm({ open, onOpenChange, onItemAdded, areas, containers, i
 
             <div className="space-y-2">
               <Label htmlFor="containerId">Container</Label>
-              <Select value={formData.containerId} onValueChange={(value) => setFormData({ ...formData, containerId: value })}>
+              <Select value={formData.containerId} onValueChange={(value) => setFormData({ ...formData, containerId: value, sectionId: "" })}>
                 <SelectTrigger className="h-11 text-base">
                   <SelectValue placeholder="Select container (optional)" />
                 </SelectTrigger>
@@ -248,6 +279,25 @@ export function ItemForm({ open, onOpenChange, onItemAdded, areas, containers, i
                 </SelectContent>
               </Select>
             </div>
+
+            {formData.containerId && sections.length > 0 && (
+              <div className="space-y-2">
+                <Label htmlFor="sectionId">Section (Optional)</Label>
+                <Select value={formData.sectionId} onValueChange={(value) => setFormData({ ...formData, sectionId: value })}>
+                  <SelectTrigger className="h-11 text-base">
+                    <SelectValue placeholder="Select section (optional)" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {sections.map(section => (
+                      <SelectItem key={section.id} value={section.id}>{section.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground">
+                  Sections help organize items within containers (e.g., "Top Shelf", "Left Pocket")
+                </p>
+              </div>
+            )}
 
             <div className="space-y-2">
               <Label htmlFor="parentItemId">Parent Item (Optional)</Label>
@@ -266,6 +316,19 @@ export function ItemForm({ open, onOpenChange, onItemAdded, areas, containers, i
                 For nested items (e.g., GPU inside PC, tools in toolbox)
               </p>
             </div>
+
+            {formData.parentItemId && formData.parentItemId !== "" && (
+              <div className="flex items-center space-x-2 pt-2">
+                <Checkbox
+                  id="isReplacement"
+                  checked={formData.isReplacement}
+                  onCheckedChange={(checked) => setFormData({ ...formData, isReplacement: checked as boolean })}
+                />
+                <Label htmlFor="isReplacement" className="cursor-pointer text-sm">
+                  This is a replacement item (parent is new, this child is the old item being replaced)
+                </Label>
+              </div>
+            )}
 
             {!formData.isGift && (
               <div className="space-y-2">

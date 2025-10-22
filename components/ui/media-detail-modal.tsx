@@ -91,7 +91,7 @@ export function MediaDetailModal({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
         className={cn(
-          "max-w-[95vw] w-[95vw] md:max-w-[90vw] md:w-[90vw] lg:max-w-[85vw] lg:w-[85vw] max-h-[95vh] p-0",
+          "max-w-[calc(100%-2rem)] sm:max-w-2xl md:max-w-4xl lg:max-w-6xl max-h-[90vh] p-0",
           "data-[state=open]:animate-in data-[state=closed]:animate-out",
           "data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
           "data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95",
@@ -101,7 +101,7 @@ export function MediaDetailModal({
         )}
         showCloseButton={false}
       >
-        <ScrollArea className="max-h-[95vh]">
+        <ScrollArea className="max-h-[90vh]">
           <div className="relative">
             {/* Close Button */}
             <Button
@@ -115,18 +115,18 @@ export function MediaDetailModal({
             </Button>
 
             {/* Header with Image */}
-            <div className="grid md:grid-cols-[300px_1fr] gap-6 md:gap-8 p-6 md:p-8">
+            <div className="grid md:grid-cols-[250px_1fr] lg:grid-cols-[300px_1fr] gap-3 sm:gap-4 md:gap-6 lg:gap-8 p-3 sm:p-4 md:p-6 lg:p-8">
               {/* Poster Image */}
               <div className="flex justify-center md:justify-start">
                 <div className={cn(
-                  "relative overflow-hidden rounded-lg bg-muted w-full max-w-[300px]",
+                  "relative overflow-hidden rounded-lg bg-muted w-full max-w-[200px] sm:max-w-[250px] md:max-w-[250px] lg:max-w-[300px]",
                   getAspectRatioClass()
                 )}>
                   <Image
                     src={imageUrl}
                     alt={title}
                     fill
-                    sizes="300px"
+                    sizes="(max-width: 640px) 200px, (max-width: 1024px) 250px, 300px"
                     className="object-cover"
                     priority
                     onError={(e) => {
@@ -138,13 +138,13 @@ export function MediaDetailModal({
               </div>
 
               {/* Title and Primary Info */}
-              <div className="space-y-4 md:space-y-5">
+              <div className="space-y-2 sm:space-y-3 md:space-y-4 lg:space-y-5">
                 <div className="space-y-2">
-                  <DialogTitle className="text-3xl md:text-4xl font-bold leading-tight">
+                  <DialogTitle className="text-2xl sm:text-3xl md:text-4xl font-bold leading-tight">
                     {title}
                   </DialogTitle>
                   {subtitle && (
-                    <p className="text-lg text-muted-foreground">{subtitle}</p>
+                    <p className="text-base sm:text-lg text-muted-foreground">{subtitle}</p>
                   )}
                 </div>
 
@@ -178,7 +178,7 @@ export function MediaDetailModal({
 
                 {/* Primary Fields */}
                 {primaryFields.length > 0 && (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                     {primaryFields.map((field, index) => (
                       <div
                         key={index}
@@ -230,15 +230,15 @@ export function MediaDetailModal({
             {secondaryFields.length > 0 && (
               <>
                 <Separator />
-                <div className="p-6 md:p-8 space-y-4 md:space-y-5">
-                  <h3 className="text-xl font-semibold">Additional Information</h3>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-5">
+                <div className="p-3 sm:p-4 md:p-6 lg:p-8 space-y-2 sm:space-y-3 md:space-y-4 lg:space-y-5">
+                  <h3 className="text-lg sm:text-xl font-semibold">Additional Information</h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-5">
                     {secondaryFields.map((field, index) => (
                       <div
                         key={index}
                         className={cn(
                           "space-y-1.5",
-                          field.fullWidth && "sm:col-span-2 md:col-span-3 lg:col-span-4 xl:col-span-5"
+                          field.fullWidth && "sm:col-span-2 md:col-span-3 lg:col-span-4"
                         )}
                       >
                         <div className="flex items-center gap-2">
@@ -265,9 +265,9 @@ export function MediaDetailModal({
             {notes && (
               <>
                 <Separator />
-                <div className="p-8 space-y-4">
-                  <h3 className="text-xl font-semibold">Notes</h3>
-                  <p className="text-base text-muted-foreground leading-relaxed whitespace-pre-wrap">
+                <div className="p-3 sm:p-4 md:p-6 lg:p-8 space-y-2 sm:space-y-3 md:space-y-4">
+                  <h3 className="text-lg sm:text-xl font-semibold">Notes</h3>
+                  <p className="text-sm sm:text-base text-muted-foreground leading-relaxed whitespace-pre-wrap">
                     {notes}
                   </p>
                 </div>
@@ -278,7 +278,7 @@ export function MediaDetailModal({
             {children && (
               <>
                 <Separator />
-                <div className="p-6">
+                <div className="p-3 sm:p-4 md:p-6">
                   {children}
                 </div>
               </>

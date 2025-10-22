@@ -5,6 +5,7 @@ export interface InventoryItem {
   location: {
     areaId: string
     containerId: string
+    sectionId?: string // Optional section within container
   }
   type: string // Category/Type of item
   cost: number
@@ -19,6 +20,7 @@ export interface InventoryItem {
   notes: string
   photo?: string // Base64 or URL
   parentItemId?: string | null // Reference to parent item for nested structures (e.g., GPU within PC)
+  isReplacement?: boolean // If true, this child is a replacement for the parent (neither count toward totals)
   children?: InventoryItem[] // Child items when fetched with hierarchy
   createdAt: string
   updatedAt: string
@@ -42,6 +44,17 @@ export interface Container {
   condition?: string // New, Good, Fair, Poor
   notes?: string // Additional notes
   isOwned: boolean // Whether you own it or it's borrowed/rented
+  createdAt: string
+  updatedAt: string
+}
+
+export interface Section {
+  id: string
+  name: string // "Top Drawer", "Left Compartment", "Front Pocket"
+  containerId: string
+  type?: string // Drawer, Shelf, Compartment, Pocket, Tray
+  position?: string // Top, Middle, Bottom, Left, Right, Front, Back
+  notes?: string
   createdAt: string
   updatedAt: string
 }

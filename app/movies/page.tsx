@@ -234,35 +234,35 @@ export default function MoviesPage() {
 
       <div className="grid grid-cols-2 gap-3 md:gap-4 md:grid-cols-4">
         <Card>
-          <CardHeader>
-            <CardTitle>{totalMovies}</CardTitle>
-            <CardDescription>Total Movies</CardDescription>
+          <CardHeader className="pb-3 sm:pb-6">
+            <CardTitle className="text-xl sm:text-2xl">{totalMovies}</CardTitle>
+            <CardDescription className="text-xs sm:text-sm">Total Movies</CardDescription>
           </CardHeader>
         </Card>
         <Card>
-          <CardHeader>
-            <CardTitle>{totalHours}h {totalMinutes}m</CardTitle>
-            <CardDescription>Total Runtime</CardDescription>
+          <CardHeader className="pb-3 sm:pb-6">
+            <CardTitle className="text-xl sm:text-2xl">{totalHours}h {totalMinutes}m</CardTitle>
+            <CardDescription className="text-xs sm:text-sm">Total Runtime</CardDescription>
           </CardHeader>
         </Card>
         <Card>
-          <CardHeader>
-            <CardTitle>{avgRating}/10</CardTitle>
-            <CardDescription>Average Rating</CardDescription>
+          <CardHeader className="pb-3 sm:pb-6">
+            <CardTitle className="text-xl sm:text-2xl">{avgRating}/10</CardTitle>
+            <CardDescription className="text-xs sm:text-sm">Average Rating</CardDescription>
           </CardHeader>
         </Card>
         <Card>
-          <CardHeader>
-            <CardTitle>{moviesThisYear}</CardTitle>
-            <CardDescription>Movies This Year</CardDescription>
+          <CardHeader className="pb-3 sm:pb-6">
+            <CardTitle className="text-xl sm:text-2xl">{moviesThisYear}</CardTitle>
+            <CardDescription className="text-xs sm:text-sm">Movies This Year</CardDescription>
           </CardHeader>
         </Card>
       </div>
 
       <Card>
-        <CardHeader>
-          <CardTitle>Search for a Movie</CardTitle>
-          <CardDescription>Find movies from The Movie Database</CardDescription>
+        <CardHeader className="pb-3 sm:pb-6">
+          <CardTitle className="text-xl sm:text-2xl">Search for a Movie</CardTitle>
+          <CardDescription className="text-xs sm:text-sm">Find movies from The Movie Database</CardDescription>
         </CardHeader>
         <CardContent>
           <MovieSearch onSelectMovie={handleMovieSelect} />
@@ -270,10 +270,10 @@ export default function MoviesPage() {
       </Card>
 
       <Card>
-        <CardHeader>
+        <CardHeader className="pb-3 sm:pb-6">
           <div className="flex flex-col gap-4">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-              <CardTitle>Your Movies</CardTitle>
+              <CardTitle className="text-xl sm:text-2xl">Your Movies</CardTitle>
               <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
                 <ViewToggle
                   value={viewMode}
@@ -662,13 +662,13 @@ export default function MoviesPage() {
 
       {/* Add/Edit Movie Form Dialog */}
       <Dialog open={showForm} onOpenChange={setShowForm}>
-        <DialogContent className="w-[calc(100%-1rem)] max-w-3xl h-[90vh] flex flex-col p-0 gap-0 sm:h-auto sm:max-h-[90vh]">
-          <DialogHeader className="p-4 sm:p-6 pb-4">
+        <DialogContent className="max-w-[calc(100%-2rem)] sm:max-w-3xl lg:max-w-7xl max-h-[90vh] flex flex-col p-0 gap-0">
+          <DialogHeader className="p-3 sm:p-4 md:p-6 pb-3 sm:pb-4">
             <DialogTitle>
               {editingMovie ? "Edit Movie" : "Add New Movie"}
             </DialogTitle>
           </DialogHeader>
-          <div className="overflow-y-auto flex-1 px-4 sm:px-6">
+          <div className="overflow-y-auto flex-1 px-3 sm:px-4 md:px-6 pb-3 sm:pb-4 md:pb-6">
             <MovieEntryForm
               selectedMovie={selectedMovie}
               initialData={editingMovie || undefined}

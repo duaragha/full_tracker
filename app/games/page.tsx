@@ -317,53 +317,53 @@ export default function GamesPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-3 md:gap-4 md:grid-cols-7">
+      <div className="grid grid-cols-2 gap-3 md:gap-4 md:grid-cols-4 lg:grid-cols-7">
         <Card>
-          <CardHeader>
-            <CardTitle>{games.length}</CardTitle>
-            <CardDescription>Total Games</CardDescription>
+          <CardHeader className="pb-3 sm:pb-6">
+            <CardTitle className="text-xl sm:text-2xl">{games.length}</CardTitle>
+            <CardDescription className="text-xs sm:text-sm">Total Games</CardDescription>
           </CardHeader>
         </Card>
         <Card>
-          <CardHeader>
-            <CardTitle>{totalHours.toFixed(1)}h</CardTitle>
-            <CardDescription>Total Hours Played</CardDescription>
+          <CardHeader className="pb-3 sm:pb-6">
+            <CardTitle className="text-xl sm:text-2xl">{totalHours.toFixed(1)}h</CardTitle>
+            <CardDescription className="text-xs sm:text-sm">Total Hours Played</CardDescription>
           </CardHeader>
         </Card>
         <Card>
-          <CardHeader>
-            <CardTitle>{avgPercentage}%</CardTitle>
-            <CardDescription>Average Percentage</CardDescription>
+          <CardHeader className="pb-3 sm:pb-6">
+            <CardTitle className="text-xl sm:text-2xl">{avgPercentage}%</CardTitle>
+            <CardDescription className="text-xs sm:text-sm">Average Percentage</CardDescription>
           </CardHeader>
         </Card>
         <Card>
-          <CardHeader>
-            <CardTitle>{totalDays}</CardTitle>
-            <CardDescription>Total Days</CardDescription>
+          <CardHeader className="pb-3 sm:pb-6">
+            <CardTitle className="text-xl sm:text-2xl">{totalDays}</CardTitle>
+            <CardDescription className="text-xs sm:text-sm">Total Days</CardDescription>
           </CardHeader>
         </Card>
         <Card>
-          <CardHeader>
-            <CardTitle>${totalCost.toFixed(2)}</CardTitle>
-            <CardDescription>Total Cost</CardDescription>
+          <CardHeader className="pb-3 sm:pb-6">
+            <CardTitle className="text-xl sm:text-2xl">${totalCost.toFixed(2)}</CardTitle>
+            <CardDescription className="text-xs sm:text-sm">Total Cost</CardDescription>
           </CardHeader>
         </Card>
         <Card>
-          <CardHeader>
+          <CardHeader className="pb-3 sm:pb-6">
             <CardTitle className="truncate">
               {oldestGame ? oldestGame.title : 'N/A'}
             </CardTitle>
-            <CardDescription>
+            <CardDescription className="text-xs sm:text-sm">
               Oldest Game {oldestGame && `(${new Date(oldestGame.dateStarted).getFullYear()})`}
             </CardDescription>
           </CardHeader>
         </Card>
         <Card>
-          <CardHeader>
+          <CardHeader className="pb-3 sm:pb-6">
             <CardTitle className="truncate">
               {newestGame ? newestGame.title : 'N/A'}
             </CardTitle>
-            <CardDescription>
+            <CardDescription className="text-xs sm:text-sm">
               Newest Game {newestGame && `(${new Date(newestGame.dateStarted).getFullYear()})`}
             </CardDescription>
           </CardHeader>
@@ -372,9 +372,9 @@ export default function GamesPage() {
 
       <div className="grid gap-4 md:grid-cols-2">
         <Card>
-          <CardHeader>
-            <CardTitle>Search for a Game</CardTitle>
-            <CardDescription>Find games from the RAWG database</CardDescription>
+          <CardHeader className="pb-3 sm:pb-6">
+            <CardTitle className="text-xl sm:text-2xl">Search for a Game</CardTitle>
+            <CardDescription className="text-xs sm:text-sm">Find games from the RAWG database</CardDescription>
           </CardHeader>
           <CardContent>
             <GameSearch onSelectGame={handleGameSelect} />
@@ -383,10 +383,10 @@ export default function GamesPage() {
       </div>
 
       <Card>
-        <CardHeader>
+        <CardHeader className="pb-3 sm:pb-6">
           <div className="flex flex-col gap-4">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-              <CardTitle>Your Games</CardTitle>
+              <CardTitle className="text-xl sm:text-2xl">Your Games</CardTitle>
               <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
                 <ViewToggle
                   value={viewMode}
@@ -782,13 +782,13 @@ export default function GamesPage() {
 
       {/* Add/Edit Game Form Dialog */}
       <Dialog open={showForm} onOpenChange={setShowForm}>
-        <DialogContent className="w-[calc(100%-1rem)] max-w-3xl h-[90vh] flex flex-col p-0 gap-0 sm:h-auto sm:max-h-[90vh]">
-          <DialogHeader className="p-4 sm:p-6 pb-4">
+        <DialogContent className="max-w-[calc(100%-2rem)] sm:max-w-3xl lg:max-w-7xl max-h-[90vh] flex flex-col p-0 gap-0">
+          <DialogHeader className="p-3 sm:p-4 md:p-6 pb-3 sm:pb-4">
             <DialogTitle>
               {editingGame ? "Edit Game" : "Add New Game"}
             </DialogTitle>
           </DialogHeader>
-          <div className="overflow-y-auto flex-1 px-4 sm:px-6">
+          <div className="overflow-y-auto flex-1 px-3 sm:px-4 md:px-6 pb-3 sm:pb-4 md:pb-6">
             <GameEntryForm
               selectedGame={selectedGame}
               initialData={editingGame || undefined}

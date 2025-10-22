@@ -96,98 +96,98 @@ export default function Dashboard() {
     .slice(0, 5)
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
-        <p className="text-muted-foreground">Welcome to your tracking hub</p>
+        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Dashboard</h1>
+        <p className="text-sm sm:text-base text-muted-foreground">Welcome to your tracking hub</p>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-8">
+      <div className="grid gap-3 sm:gap-4 grid-cols-2 md:grid-cols-4 lg:grid-cols-8">
         <Card>
-          <CardHeader>
+          <CardHeader className="pb-3">
             <CardTitle>{gamesCount}</CardTitle>
             <CardDescription>Total Games</CardDescription>
           </CardHeader>
         </Card>
 
         <Card>
-          <CardHeader>
+          <CardHeader className="pb-3">
             <CardTitle>{booksCount}</CardTitle>
             <CardDescription>Total Books</CardDescription>
           </CardHeader>
         </Card>
 
         <Card>
-          <CardHeader>
+          <CardHeader className="pb-3">
             <CardTitle>{totalGameHours.toFixed(0)}h</CardTitle>
             <CardDescription>Gaming Time</CardDescription>
           </CardHeader>
         </Card>
 
         <Card>
-          <CardHeader>
+          <CardHeader className="pb-3">
             <CardTitle>{Math.floor(totalBookMinutes / 60)}h {totalBookMinutes % 60}m</CardTitle>
             <CardDescription>Reading Time</CardDescription>
           </CardHeader>
         </Card>
 
         <Card>
-          <CardHeader>
+          <CardHeader className="pb-3">
             <CardTitle>{tvshowsCount}</CardTitle>
             <CardDescription>TV Shows</CardDescription>
           </CardHeader>
         </Card>
 
         <Card>
-          <CardHeader>
+          <CardHeader className="pb-3">
             <CardTitle>{moviesCount}</CardTitle>
             <CardDescription>Movies</CardDescription>
           </CardHeader>
         </Card>
 
         <Card>
-          <CardHeader>
+          <CardHeader className="pb-3">
             <CardTitle>{monthlyKm.toFixed(0)} km</CardTitle>
             <CardDescription>This Month KMs</CardDescription>
           </CardHeader>
         </Card>
 
         <Card>
-          <CardHeader>
+          <CardHeader className="pb-3">
             <CardTitle>${monthlyCost.toFixed(2)}</CardTitle>
             <CardDescription>This Month Cost</CardDescription>
           </CardHeader>
         </Card>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
+      <div className="grid gap-3 sm:gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
         <Card>
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <div>
-                <CardTitle>Recent Games</CardTitle>
-                <CardDescription>Recently updated games</CardDescription>
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between gap-2">
+              <div className="min-w-0 flex-1">
+                <CardTitle className="text-base sm:text-lg">Recent Games</CardTitle>
+                <CardDescription className="text-xs sm:text-sm">Recently updated games</CardDescription>
               </div>
-              <Button asChild variant="outline" size="sm">
+              <Button asChild variant="outline" size="sm" className="shrink-0">
                 <Link href="/games">View All</Link>
               </Button>
             </div>
           </CardHeader>
           <CardContent>
             {recentGames.length > 0 ? (
-              <div className="space-y-4">
+              <div className="space-y-3 sm:space-y-4">
                 {recentGames.map((game) => (
-                  <div key={game.id} className="flex items-center gap-4">
+                  <div key={game.id} className="flex items-center gap-3 sm:gap-4">
                     {game.coverImage && (
                       <img
                         src={game.coverImage}
                         alt={game.title}
-                        className="h-16 w-16 rounded object-cover"
+                        className="h-14 w-14 sm:h-16 sm:w-16 rounded object-cover shrink-0"
                       />
                     )}
                     <div className="flex-1 min-w-0">
-                      <p className="font-medium truncate">{game.title}</p>
-                      <p className="text-sm text-muted-foreground">
+                      <p className="font-medium truncate text-sm sm:text-base">{game.title}</p>
+                      <p className="text-xs sm:text-sm text-muted-foreground truncate">
                         {game.status} • {game.percentage}% • {game.hoursPlayed}h
                       </p>
                     </div>
@@ -195,7 +195,7 @@ export default function Dashboard() {
                 ))}
               </div>
             ) : (
-              <div className="text-center py-8 text-muted-foreground">
+              <div className="text-center py-6 sm:py-8 text-sm sm:text-base text-muted-foreground">
                 No games yet. Start tracking!
               </div>
             )}
@@ -203,32 +203,32 @@ export default function Dashboard() {
         </Card>
 
         <Card>
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <div>
-                <CardTitle>Recent Books</CardTitle>
-                <CardDescription>Recently updated books</CardDescription>
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between gap-2">
+              <div className="min-w-0 flex-1">
+                <CardTitle className="text-base sm:text-lg">Recent Books</CardTitle>
+                <CardDescription className="text-xs sm:text-sm">Recently updated books</CardDescription>
               </div>
-              <Button asChild variant="outline" size="sm">
+              <Button asChild variant="outline" size="sm" className="shrink-0">
                 <Link href="/books">View All</Link>
               </Button>
             </div>
           </CardHeader>
           <CardContent>
             {recentBooks.length > 0 ? (
-              <div className="space-y-4">
+              <div className="space-y-3 sm:space-y-4">
                 {recentBooks.map((book) => (
-                  <div key={book.id} className="flex items-center gap-4">
+                  <div key={book.id} className="flex items-center gap-3 sm:gap-4">
                     {book.coverImage && (
                       <img
                         src={book.coverImage}
                         alt={book.title}
-                        className="h-16 w-12 rounded object-cover"
+                        className="h-14 w-10 sm:h-16 sm:w-12 rounded object-cover shrink-0"
                       />
                     )}
                     <div className="flex-1 min-w-0">
-                      <p className="font-medium truncate">{book.title}</p>
-                      <p className="text-sm text-muted-foreground">
+                      <p className="font-medium truncate text-sm sm:text-base">{book.title}</p>
+                      <p className="text-xs sm:text-sm text-muted-foreground truncate">
                         {book.author} • {book.type}
                       </p>
                     </div>
@@ -236,7 +236,7 @@ export default function Dashboard() {
                 ))}
               </div>
             ) : (
-              <div className="text-center py-8 text-muted-foreground">
+              <div className="text-center py-6 sm:py-8 text-sm sm:text-base text-muted-foreground">
                 No books yet. Start reading!
               </div>
             )}
@@ -244,32 +244,32 @@ export default function Dashboard() {
         </Card>
 
         <Card>
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <div>
-                <CardTitle>Recent TV Shows</CardTitle>
-                <CardDescription>Recently updated shows</CardDescription>
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between gap-2">
+              <div className="min-w-0 flex-1">
+                <CardTitle className="text-base sm:text-lg">Recent TV Shows</CardTitle>
+                <CardDescription className="text-xs sm:text-sm">Recently updated shows</CardDescription>
               </div>
-              <Button asChild variant="outline" size="sm">
+              <Button asChild variant="outline" size="sm" className="shrink-0">
                 <Link href="/tvshows">View All</Link>
               </Button>
             </div>
           </CardHeader>
           <CardContent>
             {recentTVShows.length > 0 ? (
-              <div className="space-y-4">
+              <div className="space-y-3 sm:space-y-4">
                 {recentTVShows.map((show) => (
-                  <div key={show.id} className="flex items-center gap-4">
+                  <div key={show.id} className="flex items-center gap-3 sm:gap-4">
                     {show.posterImage && (
                       <img
                         src={show.posterImage}
                         alt={show.title}
-                        className="h-16 w-12 rounded object-cover"
+                        className="h-14 w-10 sm:h-16 sm:w-12 rounded object-cover shrink-0"
                       />
                     )}
                     <div className="flex-1 min-w-0">
-                      <p className="font-medium truncate">{show.title}</p>
-                      <p className="text-sm text-muted-foreground">
+                      <p className="font-medium truncate text-sm sm:text-base">{show.title}</p>
+                      <p className="text-xs sm:text-sm text-muted-foreground truncate">
                         {show.watchedEpisodes}/{show.totalEpisodes} episodes
                       </p>
                     </div>
@@ -277,7 +277,7 @@ export default function Dashboard() {
                 ))}
               </div>
             ) : (
-              <div className="text-center py-8 text-muted-foreground">
+              <div className="text-center py-6 sm:py-8 text-sm sm:text-base text-muted-foreground">
                 No TV shows yet. Start watching!
               </div>
             )}
@@ -285,32 +285,32 @@ export default function Dashboard() {
         </Card>
 
         <Card>
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <div>
-                <CardTitle>Recent Movies</CardTitle>
-                <CardDescription>Recently updated movies</CardDescription>
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between gap-2">
+              <div className="min-w-0 flex-1">
+                <CardTitle className="text-base sm:text-lg">Recent Movies</CardTitle>
+                <CardDescription className="text-xs sm:text-sm">Recently updated movies</CardDescription>
               </div>
-              <Button asChild variant="outline" size="sm">
+              <Button asChild variant="outline" size="sm" className="shrink-0">
                 <Link href="/movies">View All</Link>
               </Button>
             </div>
           </CardHeader>
           <CardContent>
             {recentMovies.length > 0 ? (
-              <div className="space-y-4">
+              <div className="space-y-3 sm:space-y-4">
                 {recentMovies.map((movie) => (
-                  <div key={movie.id} className="flex items-center gap-4">
+                  <div key={movie.id} className="flex items-center gap-3 sm:gap-4">
                     {movie.posterImage && (
                       <img
                         src={movie.posterImage}
                         alt={movie.title}
-                        className="h-16 w-12 rounded object-cover"
+                        className="h-14 w-10 sm:h-16 sm:w-12 rounded object-cover shrink-0"
                       />
                     )}
                     <div className="flex-1 min-w-0">
-                      <p className="font-medium truncate">{movie.title}</p>
-                      <p className="text-sm text-muted-foreground">
+                      <p className="font-medium truncate text-sm sm:text-base">{movie.title}</p>
+                      <p className="text-xs sm:text-sm text-muted-foreground truncate">
                         {movie.status} • {movie.releaseYear || 'N/A'}
                       </p>
                     </div>
@@ -318,7 +318,7 @@ export default function Dashboard() {
                 ))}
               </div>
             ) : (
-              <div className="text-center py-8 text-muted-foreground">
+              <div className="text-center py-6 sm:py-8 text-sm sm:text-base text-muted-foreground">
                 No movies yet. Start watching!
               </div>
             )}
@@ -326,28 +326,28 @@ export default function Dashboard() {
         </Card>
 
         <Card>
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <div>
-                <CardTitle>Recent Inventory</CardTitle>
-                <CardDescription>Recently added items</CardDescription>
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between gap-2">
+              <div className="min-w-0 flex-1">
+                <CardTitle className="text-base sm:text-lg">Recent Inventory</CardTitle>
+                <CardDescription className="text-xs sm:text-sm">Recently added items</CardDescription>
               </div>
-              <Button asChild variant="outline" size="sm">
+              <Button asChild variant="outline" size="sm" className="shrink-0">
                 <Link href="/inventory">View All</Link>
               </Button>
             </div>
           </CardHeader>
           <CardContent>
             {recentInventory.length > 0 ? (
-              <div className="space-y-4">
+              <div className="space-y-3 sm:space-y-4">
                 {recentInventory.map((item) => (
-                  <div key={item.id} className="flex items-center gap-4">
-                    <div className="flex h-16 w-16 items-center justify-center rounded bg-muted">
-                      <Package className="h-8 w-8 text-muted-foreground" />
+                  <div key={item.id} className="flex items-center gap-3 sm:gap-4">
+                    <div className="flex h-14 w-14 sm:h-16 sm:w-16 items-center justify-center rounded bg-muted shrink-0">
+                      <Package className="h-7 w-7 sm:h-8 sm:w-8 text-muted-foreground" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="font-medium truncate">{item.name}</p>
-                      <p className="text-sm text-muted-foreground">
+                      <p className="font-medium truncate text-sm sm:text-base">{item.name}</p>
+                      <p className="text-xs sm:text-sm text-muted-foreground truncate">
                         Qty: {item.quantity} • ${item.purchasePrice?.toFixed(2) || '0.00'}
                       </p>
                     </div>
@@ -355,7 +355,7 @@ export default function Dashboard() {
                 ))}
               </div>
             ) : (
-              <div className="text-center py-8 text-muted-foreground">
+              <div className="text-center py-6 sm:py-8 text-sm sm:text-base text-muted-foreground">
                 No inventory items yet. Start tracking!
               </div>
             )}

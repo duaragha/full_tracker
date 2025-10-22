@@ -49,11 +49,11 @@ export function AreaManager({ open, onOpenChange, onAreaAdded, editingArea }: Ar
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-[calc(100%-2rem)] sm:max-w-md">
-        <DialogHeader>
+      <DialogContent className="max-w-[calc(100%-2rem)] sm:max-w-3xl lg:max-w-7xl max-h-[90vh] flex flex-col p-0 gap-0">
+        <DialogHeader className="p-4 sm:p-6 pb-0">
           <DialogTitle>{editingArea ? "Edit Area" : "Add New Area"}</DialogTitle>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form id="area-form" onSubmit={handleSubmit} className="space-y-4 overflow-y-auto flex-1 p-4 sm:p-6 pt-4">
           <div className="space-y-2">
             <Label htmlFor="name">Area Name *</Label>
             <Input
@@ -83,14 +83,14 @@ export function AreaManager({ open, onOpenChange, onAreaAdded, editingArea }: Ar
               </SelectContent>
             </Select>
           </div>
-
-          <div className="flex flex-col-reverse sm:flex-row justify-end gap-2">
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)} className="h-11">
-              Cancel
-            </Button>
-            <Button type="submit" className="h-11">{editingArea ? "Update" : "Add"} Area</Button>
-          </div>
         </form>
+
+        <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 p-4 sm:p-6 pt-4 border-t bg-background">
+          <Button type="button" variant="outline" onClick={() => onOpenChange(false)} className="h-11">
+            Cancel
+          </Button>
+          <Button type="submit" form="area-form" className="h-11">{editingArea ? "Update" : "Add"} Area</Button>
+        </div>
       </DialogContent>
     </Dialog>
   )

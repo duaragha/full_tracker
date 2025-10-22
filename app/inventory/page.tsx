@@ -1,18 +1,21 @@
 "use client"
 
 import * as React from "react"
-import { Plus, Pencil, Trash2, ChevronRight, ChevronDown, Package as PackageIcon, AlertTriangle } from "lucide-react"
-import { Area, Container, InventoryItem } from "@/types/inventory"
+import { Plus, Pencil, Trash2, ChevronRight, ChevronDown, Package as PackageIcon, AlertTriangle, Layers } from "lucide-react"
+import { Area, Container, InventoryItem, Section } from "@/types/inventory"
 import {
   getAreasAction,
   getContainersAction,
+  getSectionsAction,
   getInventoryItemsAction,
   deleteAreaAction,
   deleteContainerAction,
+  deleteSectionAction,
   deleteInventoryItemAction,
 } from "@/app/actions/inventory"
 import { AreaManager } from "@/components/area-manager"
 import { ContainerManager } from "@/components/container-manager"
+import { SectionManager } from "@/components/section-manager"
 import { ItemForm } from "@/components/item-form"
 import { PinAuth } from "@/components/pin-auth"
 import { Button } from "@/components/ui/button"
@@ -27,19 +30,23 @@ export default function InventoryPage() {
   const [isUnlocked, setIsUnlocked] = React.useState(false)
   const [areas, setAreas] = React.useState<Area[]>([])
   const [containers, setContainers] = React.useState<Container[]>([])
+  const [sections, setSections] = React.useState<Section[]>([])
   const [items, setItems] = React.useState<InventoryItem[]>([])
 
   const [selectedArea, setSelectedArea] = React.useState<string | null>(null)
   const [selectedContainer, setSelectedContainer] = React.useState<string | null>(null)
   const [expandedAreas, setExpandedAreas] = React.useState<Set<string>>(new Set())
+  const [expandedContainers, setExpandedContainers] = React.useState<Set<string>>(new Set())
   const [expandedItems, setExpandedItems] = React.useState<Set<string>>(new Set())
 
   const [showAreaDialog, setShowAreaDialog] = React.useState(false)
   const [showContainerDialog, setShowContainerDialog] = React.useState(false)
+  const [showSectionDialog, setShowSectionDialog] = React.useState(false)
   const [showItemDialog, setShowItemDialog] = React.useState(false)
 
   const [editingArea, setEditingArea] = React.useState<Area | undefined>()
   const [editingContainer, setEditingContainer] = React.useState<Container | undefined>()
+  const [editingSection, setEditingSection] = React.useState<Section | undefined>()
   const [editingItem, setEditingItem] = React.useState<InventoryItem | undefined>()
 
   const [searchQuery, setSearchQuery] = React.useState("")
@@ -47,13 +54,15 @@ export default function InventoryPage() {
   const [sortOrder, setSortOrder] = React.useState<"asc" | "desc">("asc")
 
   const loadData = async () => {
-    const [areasData, containersData, itemsData] = await Promise.all([
+    const [areasData, containersData, sectionsData, itemsData] = await Promise.all([
       getAreasAction(),
       getContainersAction(),
+      getSectionsAction(),
       getInventoryItemsAction()
     ])
     setAreas(areasData)
     setContainers(containersData)
+    setSections(sectionsData)
     setItems(itemsData)
   }
 
@@ -106,7 +115,76 @@ export default function InventoryPage() {
   // Helper functions
   const getAreaName = (areaId: string) => areas.find(a => a.id === areaId)?.name || "Unknown"
   const getContainerName = (containerId: string) => containers.find(c => c.id === containerId)?.name || "Unknown"
+  const getSectionName = (sectionId: string) => sections.find(s => s.id === sectionId)?.name || "Unknown"
   const getContainersByArea = (areaId: string) => containers.filter(c => c.areaId === areaId)
+  const getSectionsByContainer = (containerId: string) => sections.filter(s => s.containerId === containerId)
+
+  // Get location display for an item
+  // Child with container: "container/parent", without container: "area/parent"
+  // Regular item with container: "area/container", without container: just "area"
+  const getItemLocation = (item: InventoryItem): string => {
+    if (item.parentItemId) {
+      // For child items
+      const parent = items.find(i => i.id === item.parentItemId)
+      if (parent) {
+        // Check if parent has a container
+        if (parent.location.containerId) {
+          const containerName = getContainerName(parent.location.containerId)
+          return `${containerName} / ${parent.name}`
+        } else {
+          // No container, just show area/parent
+          const areaName = getAreaName(parent.location.areaId)
+          return `${areaName} / ${parent.name}`
+        }
+      }
+    }
+
+    // For regular items
+    if (item.location.containerId) {
+      return `${getAreaName(item.location.areaId)} / ${getContainerName(item.location.containerId)}`
+    } else {
+      // No container, just show area
+      return getAreaName(item.location.areaId)
+    }
+  }
+
+  // Check if item should be considered "kept" - includes items sold/retired after keepUntil date
+  const isItemKept = (item: InventoryItem): boolean => {
+    if (item.kept) return true
+
+    // If item was sold/retired after the keepUntil date, consider it as kept
+    if (item.soldDate && item.keepUntil) {
+      const soldDate = new Date(item.soldDate)
+      const keepUntil = new Date(item.keepUntil)
+      return soldDate >= keepUntil
+    }
+
+    // If item was sold but no keepUntil date, consider it kept if it was used in last year
+    if (item.soldDate && !item.keepUntil && item.usedInLastYear) {
+      return true
+    }
+
+    return false
+  }
+
+  // Get all children of an item from the full items list
+  const getAllChildItems = (parentId: string): InventoryItem[] => {
+    return items.filter(item => item.parentItemId === parentId)
+  }
+
+  // Calculate the actual cost of an item - for parents, sum of children; for regular items, their own cost
+  const getItemCost = (item: InventoryItem): number => {
+    const children = getAllChildItems(item.id)
+    // Exclude replacement children - they don't count toward parent's cost
+    const nonReplacementChildren = children.filter(child => !child.isReplacement)
+
+    if (nonReplacementChildren.length > 0) {
+      // Parent has non-replacement children: return sum of their costs (recursive)
+      return nonReplacementChildren.reduce((total, child) => total + getItemCost(child), 0)
+    }
+    // No non-replacement children: use parent's own cost
+    return item.cost || 0
+  }
 
   // All hooks must be called before any conditional returns
   const displayedItems = React.useMemo(() => {
@@ -127,8 +205,24 @@ export default function InventoryPage() {
       )
     }
 
-    // Apply sorting
-    const sorted = [...filtered].sort((a, b) => {
+    // Separate parent items (items with children) from regular items
+    const parentItems: InventoryItem[] = []
+    const regularItems: InventoryItem[] = []
+
+    filtered.forEach(item => {
+      const hasChildren = items.some(i => i.parentItemId === item.id)
+      if (hasChildren) {
+        parentItems.push(item)
+      } else {
+        regularItems.push(item)
+      }
+    })
+
+    // Sort parents alphabetically
+    parentItems.sort((a, b) => a.name.localeCompare(b.name))
+
+    // Sort regular items according to selected criteria
+    regularItems.sort((a, b) => {
       let comparison = 0
       switch (sortBy) {
         case "name":
@@ -144,7 +238,8 @@ export default function InventoryPage() {
       return sortOrder === "asc" ? comparison : -comparison
     })
 
-    return sorted
+    // Return parents first, then regular items
+    return [...parentItems, ...regularItems]
   }, [items, selectedArea, selectedContainer, searchQuery, sortBy, sortOrder])
 
   // Group items by container for "All Items" view
@@ -184,11 +279,20 @@ export default function InventoryPage() {
     return grouped
   }, [displayedItems, containers, selectedContainer, selectedArea, areas])
 
-  const totalItems = items.length
-  const itemsUsedInLastYear = items.filter(i => i.usedInLastYear).length
-  const totalCost = items.filter(i => i.kept).reduce((total, item) => total + (item.cost || 0), 0)
-  const giftsReceived = items.filter(i => i.isGift).length
-  const itemsToDiscard = items.filter(i => !i.usedInLastYear && i.kept).length
+  // Filter stats to only include kept items
+  // Filter out replacement items from stats (they don't count toward totals)
+  const keptItems = items.filter(i => i.kept && !i.isReplacement)
+  const totalItems = keptItems.length
+  const itemsUsedInLastYear = keptItems.filter(i => i.usedInLastYear).length
+  const totalCost = keptItems.reduce((total, item) => {
+    // Only count top-level items (not children) to avoid double-counting
+    if (!item.parentItemId) {
+      return total + getItemCost(item)
+    }
+    return total
+  }, 0)
+  const giftsReceived = keptItems.filter(i => i.isGift).length
+  const itemsToDiscard = keptItems.filter(i => !i.usedInLastYear).length
 
   if (!mounted) {
     return null
@@ -207,6 +311,16 @@ export default function InventoryPage() {
       newExpanded.add(areaId)
     }
     setExpandedAreas(newExpanded)
+  }
+
+  const toggleContainer = (containerId: string) => {
+    const newExpanded = new Set(expandedContainers)
+    if (newExpanded.has(containerId)) {
+      newExpanded.delete(containerId)
+    } else {
+      newExpanded.add(containerId)
+    }
+    setExpandedContainers(newExpanded)
   }
 
   const toggleItem = (itemId: string) => {
@@ -256,10 +370,9 @@ export default function InventoryPage() {
           </TableCell>
           <TableCell>{item.usedInLastYear ? "✓" : "✗"}</TableCell>
           <TableCell className="text-sm">
-            {getAreaName(item.location.areaId)} /{" "}
-            {getContainerName(item.location.containerId)}
+            {getItemLocation(item)}
           </TableCell>
-          <TableCell>${item.cost.toFixed(2)}</TableCell>
+          <TableCell>${getItemCost(item).toFixed(2)}</TableCell>
           <TableCell>{item.isGift ? "✓" : "✗"}</TableCell>
           <TableCell>{item.giftFrom || "-"}</TableCell>
           <TableCell className="text-sm">{item.purchasedWhere}</TableCell>
@@ -271,7 +384,7 @@ export default function InventoryPage() {
               ? new Date(item.keepUntil).toLocaleDateString()
               : "-"}
           </TableCell>
-          <TableCell>{item.kept ? "✓" : "✗"}</TableCell>
+          <TableCell>{item.isGift ? "-" : (isItemKept(item) ? "✓" : "✗")}</TableCell>
           <TableCell className="text-sm">
             {item.soldDate
               ? new Date(item.soldDate).toLocaleDateString()
@@ -341,12 +454,30 @@ export default function InventoryPage() {
   }
 
   const handleDeleteContainer = async (id: string) => {
-    if (confirm("Delete this container and all its items?")) {
+    if (confirm("Delete this container and all its sections and items?")) {
       await deleteContainerAction(Number(id))
       await loadData()
       if (selectedContainer === id) {
         setSelectedContainer(null)
       }
+    }
+  }
+
+  const handleAddSection = (containerId: string) => {
+    setSelectedContainer(containerId)
+    setEditingSection(undefined)
+    setShowSectionDialog(true)
+  }
+
+  const handleEditSection = (section: Section) => {
+    setEditingSection(section)
+    setShowSectionDialog(true)
+  }
+
+  const handleDeleteSection = async (id: string) => {
+    if (confirm("Delete this section and all its items?")) {
+      await deleteSectionAction(Number(id))
+      await loadData()
     }
   }
 
@@ -509,44 +640,112 @@ export default function InventoryPage() {
                       <div className="ml-6 sm:ml-8 mt-1 space-y-1">
                         {areaContainers.map((container) => {
                           const isContainerSelected = selectedContainer === container.id
+                          const containerSections = getSectionsByContainer(container.id)
+                          const isContainerExpanded = expandedContainers.has(container.id)
 
                           return (
-                            <div
-                              key={container.id}
-                              className={`flex items-center gap-2 p-2 rounded cursor-pointer hover:bg-muted touch-manipulation min-h-[44px] ${
-                                isContainerSelected ? "bg-muted" : ""
-                              }`}
-                              onClick={() => {
-                                setSelectedArea(area.id)
-                                setSelectedContainer(container.id)
-                              }}
-                            >
-                              <PackageIcon className="h-5 w-5" />
-                              <span className="flex-1 text-sm sm:text-base">{container.name}</span>
-                              <div className="flex gap-1">
-                                <Button
-                                  size="icon"
-                                  variant="ghost"
-                                  className="h-9 w-9 sm:h-8 sm:w-8"
-                                  onClick={(e) => {
-                                    e.stopPropagation()
-                                    handleEditContainer(container)
+                            <div key={container.id}>
+                              <div
+                                className={`flex items-center gap-2 p-2 rounded cursor-pointer hover:bg-muted touch-manipulation min-h-[44px] ${
+                                  isContainerSelected ? "bg-muted" : ""
+                                }`}
+                              >
+                                {containerSections.length > 0 && (
+                                  <button
+                                    onClick={() => toggleContainer(container.id)}
+                                    className="p-1 hover:bg-transparent min-h-[44px] min-w-[44px] flex items-center justify-center"
+                                  >
+                                    {isContainerExpanded ? (
+                                      <ChevronDown className="h-4 w-4" />
+                                    ) : (
+                                      <ChevronRight className="h-4 w-4" />
+                                    )}
+                                  </button>
+                                )}
+                                <div
+                                  className="flex items-center gap-2 flex-1 min-h-[44px]"
+                                  onClick={() => {
+                                    setSelectedArea(area.id)
+                                    setSelectedContainer(container.id)
                                   }}
                                 >
-                                  <Pencil className="h-4 w-4" />
-                                </Button>
-                                <Button
-                                  size="icon"
-                                  variant="ghost"
-                                  className="h-9 w-9 sm:h-8 sm:w-8"
-                                  onClick={(e) => {
-                                    e.stopPropagation()
-                                    handleDeleteContainer(container.id)
-                                  }}
-                                >
-                                  <Trash2 className="h-4 w-4" />
-                                </Button>
+                                  <PackageIcon className={`h-5 w-5 ${containerSections.length === 0 ? "ml-7" : ""}`} />
+                                  <span className="flex-1 text-sm sm:text-base">{container.name}</span>
+                                </div>
+                                <div className="flex gap-1">
+                                  <Button
+                                    size="icon"
+                                    variant="ghost"
+                                    className="h-9 w-9 sm:h-8 sm:w-8"
+                                    onClick={(e) => {
+                                      e.stopPropagation()
+                                      handleAddSection(container.id)
+                                    }}
+                                  >
+                                    <Plus className="h-4 w-4" />
+                                  </Button>
+                                  <Button
+                                    size="icon"
+                                    variant="ghost"
+                                    className="h-9 w-9 sm:h-8 sm:w-8"
+                                    onClick={(e) => {
+                                      e.stopPropagation()
+                                      handleEditContainer(container)
+                                    }}
+                                  >
+                                    <Pencil className="h-4 w-4" />
+                                  </Button>
+                                  <Button
+                                    size="icon"
+                                    variant="ghost"
+                                    className="h-9 w-9 sm:h-8 sm:w-8"
+                                    onClick={(e) => {
+                                      e.stopPropagation()
+                                      handleDeleteContainer(container.id)
+                                    }}
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
+                                </div>
                               </div>
+
+                              {isContainerExpanded && containerSections.length > 0 && (
+                                <div className="ml-6 sm:ml-8 mt-1 space-y-1">
+                                  {containerSections.map((section) => (
+                                    <div
+                                      key={section.id}
+                                      className="flex items-center gap-2 p-2 rounded hover:bg-muted touch-manipulation min-h-[44px]"
+                                    >
+                                      <Layers className="h-4 w-4 ml-7" />
+                                      <span className="flex-1 text-sm">{section.name}</span>
+                                      <div className="flex gap-1">
+                                        <Button
+                                          size="icon"
+                                          variant="ghost"
+                                          className="h-9 w-9 sm:h-8 sm:w-8"
+                                          onClick={(e) => {
+                                            e.stopPropagation()
+                                            handleEditSection(section)
+                                          }}
+                                        >
+                                          <Pencil className="h-4 w-4" />
+                                        </Button>
+                                        <Button
+                                          size="icon"
+                                          variant="ghost"
+                                          className="h-9 w-9 sm:h-8 sm:w-8"
+                                          onClick={(e) => {
+                                            e.stopPropagation()
+                                            handleDeleteSection(section.id)
+                                          }}
+                                        >
+                                          <Trash2 className="h-4 w-4" />
+                                        </Button>
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
                             </div>
                           )
                         })}
@@ -728,6 +927,14 @@ export default function InventoryPage() {
         onContainerAdded={loadData}
         areaId={selectedArea || ""}
         editingContainer={editingContainer}
+      />
+
+      <SectionManager
+        open={showSectionDialog}
+        onOpenChange={setShowSectionDialog}
+        onSectionAdded={loadData}
+        containerId={selectedContainer || ""}
+        editingSection={editingSection}
       />
 
       <ItemForm
