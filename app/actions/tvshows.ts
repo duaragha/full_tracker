@@ -1,7 +1,7 @@
 'use server'
 
 import { TVShow } from '@/types/tvshow'
-import { getTVShows, addTVShow, updateTVShow, deleteTVShow, calculateTotalEpisodes, calculateTotalMinutes, calculateTotalDays } from '@/lib/db/tvshows-store'
+import { getTVShows, addTVShow, updateTVShow, deleteTVShow, calculateTotalEpisodes, calculateTotalMinutes, calculateTotalDays, markEpisodeWatched } from '@/lib/db/tvshows-store'
 
 export async function getTVShowsAction() {
   return await getTVShows()
@@ -26,4 +26,14 @@ export async function getTVShowsStatsAction() {
     totalMinutes: calculateTotalMinutes(shows),
     totalDays: calculateTotalDays(shows),
   }
+}
+
+export async function markEpisodeWatchedAction(
+  showId: number,
+  seasonNumber: number,
+  episodeNumber: number,
+  watched: boolean,
+  dateWatched?: string
+) {
+  return await markEpisodeWatched(showId, seasonNumber, episodeNumber, watched, dateWatched)
 }
