@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
 import { ChevronDown, ChevronRight } from "lucide-react"
 import { format } from "date-fns"
-import { markEpisodeWatched } from "@/lib/store/tvshows-store"
+import { markEpisodeWatchedAction } from "@/app/actions/tvshows"
 
 interface EpisodeListProps {
   showId: string
@@ -33,32 +33,32 @@ export function EpisodeList({ showId, seasons, onUpdate }: EpisodeListProps) {
     setOpenSeasons(newOpen)
   }
 
-  const handleEpisodeToggle = (
+  const handleEpisodeToggle = async (
     seasonNumber: number,
     episodeNumber: number,
     watched: boolean
   ) => {
-    markEpisodeWatched(showId, seasonNumber, episodeNumber, watched)
+    await markEpisodeWatchedAction(parseInt(showId, 10), seasonNumber, episodeNumber, watched)
     onUpdate()
   }
 
-  const handleDateChange = (
+  const handleDateChange = async (
     seasonNumber: number,
     episodeNumber: number,
     newDate: string
   ) => {
-    markEpisodeWatched(showId, seasonNumber, episodeNumber, true, newDate)
+    await markEpisodeWatchedAction(parseInt(showId, 10), seasonNumber, episodeNumber, true, newDate)
     setEditingDate(null)
     onUpdate()
   }
 
-  const handleSelectAllSeason = (seasonNumber: number, watched: boolean) => {
+  const handleSelectAllSeason = async (seasonNumber: number, watched: boolean) => {
     const season = seasons.find(s => s.seasonNumber === seasonNumber)
     if (!season) return
 
-    season.episodes.forEach(episode => {
-      markEpisodeWatched(showId, seasonNumber, episode.episodeNumber, watched)
-    })
+    for (const episode of season.episodes) {
+      await markEpisodeWatchedAction(parseInt(showId, 10), seasonNumber, episode.episodeNumber, watched)
+    }
     onUpdate()
   }
 
