@@ -138,3 +138,84 @@ export function calculateTotalDays(shows: TVShow[]): number {
 export function calculateTotalEpisodes(shows: TVShow[]): number {
   return shows.reduce((total, show) => total + (show.watchedEpisodes || 0), 0)
 }
+
+export async function markEpisodeWatched(
+  showId: number,
+  seasonNumber: number,
+  episodeNumber: number,
+  watched: boolean,
+  dateWatched?: string
+): Promise<void> {
+  // Get the show
+  const result = await pool.query<any>(
+    'SELECT * FROM tvshows WHERE id = $1',
+    [showId]
+  )
+
+  if (result.rows.length === 0) return
+
+  const show = normalizeTVShow(result.rows[0])
+
+  // Find and update the episode
+  const season = show.seasons.find((s) => s.seasonNumber === seasonNumber)
+  if (!season) return
+
+  const episode = season.episodes.find((e) => e.episodeNumber === episodeNumber)
+  if (!episode) return
+
+  episode.watched = watched
+  episode.dateWatched = watched ? (dateWatched || new Date().toISOString()) : null
+
+  // Recalculate totals
+  const watchedEpisodes = show.seasons.reduce(
+    (total, s) => total + s.episodes.filter((e) => e.watched).length,
+    0
+  )
+
+  const totalMinutes = show.seasons.reduce(
+    (total, s) =>
+      total +
+      s.episodes
+        .filter((e) => e.watched)
+        .reduce((sum, e) => sum + (e.runtime || 0), 0),
+    0
+  )
+
+  // Update days tracking if all episodes are watched
+  let dateIEnded = show.dateIEnded
+  if (watchedEpisodes === show.totalEpisodes && !dateIEnded) {
+    dateIEnded = new Date().toISOString().split('T')[0]
+  }
+
+  // Recalculate days tracking
+  let daysTracking = 0
+  if (show.dateIStarted && dateIEnded) {
+    const start = new Date(show.dateIStarted)
+    const end = new Date(dateIEnded)
+    daysTracking = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24))
+  } else if (show.dateIStarted) {
+    const start = new Date(show.dateIStarted)
+    const now = new Date()
+    daysTracking = Math.ceil((now.getTime() - start.getTime()) / (1000 * 60 * 60 * 24))
+  }
+
+  // Update the show in the database
+  await pool.query(
+    `UPDATE tvshows SET
+      seasons = $1,
+      watched_episodes = $2,
+      total_minutes = $3,
+      date_i_ended = $4,
+      days_tracking = $5,
+      updated_at = NOW()
+    WHERE id = $6`,
+    [
+      JSON.stringify(show.seasons),
+      watchedEpisodes,
+      totalMinutes,
+      dateIEnded,
+      daysTracking,
+      showId,
+    ]
+  )
+}

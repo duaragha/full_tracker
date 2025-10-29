@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
 import { ChevronDown, ChevronRight } from "lucide-react"
 import { format } from "date-fns"
+import { markEpisodeWatchedAction } from "@/app/actions/tvshows"
 
 interface EpisodeListProps {
   showId: string
@@ -32,32 +33,32 @@ export function EpisodeList({ showId, seasons, onUpdate }: EpisodeListProps) {
     setOpenSeasons(newOpen)
   }
 
-  const handleEpisodeToggle = (
+  const handleEpisodeToggle = async (
     seasonNumber: number,
     episodeNumber: number,
     watched: boolean
   ) => {
-    markEpisodeWatched(showId, seasonNumber, episodeNumber, watched)
+    await markEpisodeWatchedAction(parseInt(showId, 10), seasonNumber, episodeNumber, watched)
     onUpdate()
   }
 
-  const handleDateChange = (
+  const handleDateChange = async (
     seasonNumber: number,
     episodeNumber: number,
     newDate: string
   ) => {
-    markEpisodeWatched(showId, seasonNumber, episodeNumber, true, newDate)
+    await markEpisodeWatchedAction(parseInt(showId, 10), seasonNumber, episodeNumber, true, newDate)
     setEditingDate(null)
     onUpdate()
   }
 
-  const handleSelectAllSeason = (seasonNumber: number, watched: boolean) => {
+  const handleSelectAllSeason = async (seasonNumber: number, watched: boolean) => {
     const season = seasons.find(s => s.seasonNumber === seasonNumber)
     if (!season) return
 
-    season.episodes.forEach(episode => {
-      markEpisodeWatched(showId, seasonNumber, episode.episodeNumber, watched)
-    })
+    for (const episode of season.episodes) {
+      await markEpisodeWatchedAction(parseInt(showId, 10), seasonNumber, episode.episodeNumber, watched)
+    }
     onUpdate()
   }
 
@@ -115,7 +116,7 @@ export function EpisodeList({ showId, seasons, onUpdate }: EpisodeListProps) {
                 {season.episodes.map((episode) => (
                   <div
                     key={episode.episodeNumber}
-                    className="flex items-center gap-3 p-3 border-b last:border-b-0 hover:bg-muted/50"
+                    className="flex items-start gap-2 sm:gap-3 p-2 sm:p-3 border-b last:border-b-0 hover:bg-muted/50"
                   >
                     <Checkbox
                       checked={episode.watched}
@@ -126,20 +127,21 @@ export function EpisodeList({ showId, seasons, onUpdate }: EpisodeListProps) {
                           checked as boolean
                         )
                       }
+                      className="mt-0.5"
                     />
-                    <div className="flex-1 grid grid-cols-5 gap-2 items-center text-sm">
-                      <div className="font-medium">
+                    <div className="flex-1 flex flex-col sm:grid sm:grid-cols-4 gap-1 sm:gap-2 sm:items-center text-sm">
+                      <div className="font-medium sm:col-span-1">
                         {episode.episodeNumber}. {episode.name}
                       </div>
-                      <div className="text-muted-foreground">
+                      <div className="text-muted-foreground text-xs sm:text-sm">
                         {episode.runtime ? `${episode.runtime} min` : "N/A"}
-                      </div>
-                      <div className="text-muted-foreground">
+                        <span className="mx-2 hidden sm:inline">•</span>
+                        <span className="sm:hidden"> • </span>
                         Aired: {episode.airDate
                           ? format(new Date(episode.airDate), "MMM d, yyyy")
                           : "N/A"}
                       </div>
-                      <div>
+                      <div className="sm:col-span-2">
                         {episode.watched && episode.dateWatched ? (
                           editingDate?.season === season.seasonNumber &&
                           editingDate?.episode === episode.episodeNumber ? (
@@ -178,7 +180,7 @@ export function EpisodeList({ showId, seasons, onUpdate }: EpisodeListProps) {
                             />
                           ) : (
                             <button
-                              className="text-muted-foreground hover:text-foreground"
+                              className="text-muted-foreground hover:text-foreground text-xs sm:text-sm"
                               onClick={() =>
                                 setEditingDate({
                                   season: season.seasonNumber,
@@ -190,9 +192,9 @@ export function EpisodeList({ showId, seasons, onUpdate }: EpisodeListProps) {
                             </button>
                           )
                         ) : episode.watched ? (
-                          <span className="text-muted-foreground">Watched</span>
+                          <span className="text-muted-foreground text-xs sm:text-sm">Watched</span>
                         ) : (
-                          <span className="text-muted-foreground">Not watched</span>
+                          <span className="text-muted-foreground text-xs sm:text-sm">Not watched</span>
                         )}
                       </div>
                     </div>

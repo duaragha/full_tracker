@@ -11,7 +11,7 @@ import { TVShowEntryForm } from "@/components/tvshow-entry-form"
 import { EpisodeList } from "@/components/episode-list"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -748,6 +748,9 @@ export default function TVShowsPage() {
             <DialogTitle>
               {editingShow ? "Edit TV Show" : "Add New TV Show"}
             </DialogTitle>
+            <DialogDescription>
+              {editingShow ? "Update your TV show details and tracking information" : "Add a new TV show to your tracking list"}
+            </DialogDescription>
           </DialogHeader>
           <div className="overflow-y-auto flex-1 px-3 sm:px-4 md:px-6 pb-3 sm:pb-4 md:pb-6">
             <TVShowEntryForm
@@ -770,6 +773,9 @@ export default function TVShowsPage() {
             <DialogTitle>
               {viewingEpisodes?.title} - Episodes
             </DialogTitle>
+            <DialogDescription>
+              Mark episodes as watched and track your progress
+            </DialogDescription>
           </DialogHeader>
           <div className="overflow-y-auto flex-1 px-3 sm:px-4 md:px-6 pb-3 sm:pb-4">
             {viewingEpisodes && (

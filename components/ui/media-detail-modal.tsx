@@ -3,7 +3,7 @@
 import * as React from "react"
 import Image from "next/image"
 import { X, Pencil, Trash2, Star } from "lucide-react"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
@@ -101,6 +101,9 @@ export function MediaDetailModal({
         )}
         showCloseButton={false}
       >
+        <DialogDescription className="sr-only">
+          Detailed view of {title}
+        </DialogDescription>
         <ScrollArea className="max-h-[90vh]">
           <div className="relative">
             {/* Close Button */}
