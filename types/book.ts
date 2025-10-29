@@ -2,11 +2,10 @@ export interface Book {
   id: string
   title: string
   author: string
-  publisher: string
   releaseDate: string
   genre: string
   coverImage: string
-  type: 'Ebook' | 'Audiobook'
+  type: 'Ebook' | 'Audiobook' | 'Physical'
   pages: number | null
   minutes: number | null
   daysRead: number
@@ -25,5 +24,6 @@ export interface BookSearchResult {
   publisher?: string[]
   subject?: string[]
   cover_i?: number
+  cover_url?: string // Hardcover direct image URL
   isbn?: string[]
 }

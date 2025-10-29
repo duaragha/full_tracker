@@ -9,6 +9,41 @@ const pool = new Pool({
   connectionTimeoutMillis: 10000,
 })
 
+/**
+ * Normalizes various date formats from Google Books API to PostgreSQL DATE format (YYYY-MM-DD)
+ * Handles:
+ * - Just year: "2019" -> "2019-01-01"
+ * - Year-month: "2019-07" -> "2019-07-01"
+ * - Full date: "2019-07-15" -> "2019-07-15"
+ * - Empty/null: null -> null
+ */
+function normalizeDateForPostgres(dateStr: string | null | undefined): string | null {
+  if (!dateStr || dateStr.trim() === '') {
+    return null
+  }
+
+  const trimmed = dateStr.trim()
+
+  // Full date format (YYYY-MM-DD) - already valid
+  if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) {
+    return trimmed
+  }
+
+  // Year-month format (YYYY-MM) - add day
+  if (/^\d{4}-\d{2}$/.test(trimmed)) {
+    return `${trimmed}-01`
+  }
+
+  // Just year (YYYY) - add month and day
+  if (/^\d{4}$/.test(trimmed)) {
+    return `${trimmed}-01-01`
+  }
+
+  // Invalid format - return null to avoid database errors
+  console.warn(`Invalid date format received: ${dateStr}. Storing as null.`)
+  return null
+}
+
 function normalizeBook(book: any): Book {
   return {
     ...book,
@@ -33,16 +68,15 @@ export async function getBooks(): Promise<Book[]> {
 export async function addBook(book: Omit<Book, 'id' | 'createdAt' | 'updatedAt'>): Promise<Book> {
   const result = await pool.query<any>(
     `INSERT INTO books (
-      title, author, publisher, release_date, genre, cover_image, type,
+      title, author, release_date, genre, cover_image, type,
       pages, minutes, started_date, completed_date, notes, rating, days_read,
       created_at, updated_at
-    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, NOW(), NOW())
+    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, NOW(), NOW())
     RETURNING *`,
     [
       book.title,
       book.author,
-      book.publisher,
-      book.releaseDate,
+      normalizeDateForPostgres(book.releaseDate),
       book.genre,
       book.coverImage,
       book.type,
@@ -63,25 +97,23 @@ export async function updateBook(id: number, book: Partial<Book>): Promise<void>
     `UPDATE books SET
       title = COALESCE($1, title),
       author = COALESCE($2, author),
-      publisher = COALESCE($3, publisher),
-      release_date = COALESCE($4, release_date),
-      genre = COALESCE($5, genre),
-      cover_image = COALESCE($6, cover_image),
-      type = COALESCE($7, type),
-      pages = $8,
-      minutes = $9,
-      started_date = $10,
-      completed_date = $11,
-      notes = COALESCE($12, notes),
-      rating = $13,
-      days_read = $14,
+      release_date = COALESCE($3, release_date),
+      genre = COALESCE($4, genre),
+      cover_image = COALESCE($5, cover_image),
+      type = COALESCE($6, type),
+      pages = $7,
+      minutes = $8,
+      started_date = $9,
+      completed_date = $10,
+      notes = COALESCE($11, notes),
+      rating = $12,
+      days_read = $13,
       updated_at = NOW()
-    WHERE id = $15`,
+    WHERE id = $14`,
     [
       book.title,
       book.author,
-      book.publisher,
-      book.releaseDate,
+      book.releaseDate !== undefined ? normalizeDateForPostgres(book.releaseDate) : undefined,
       book.genre,
       book.coverImage,
       book.type,

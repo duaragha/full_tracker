@@ -66,9 +66,9 @@ export function BookSearch({ onSelectBook }: BookSearchProps) {
                   onClick={() => handleSelect(book)}
                   className="flex w-full items-center gap-3 rounded-lg p-2 hover:bg-accent"
                 >
-                  {book.cover_i && (
+                  {(book.cover_url || book.cover_i) && (
                     <img
-                      src={getBookCoverUrl(book.cover_i, 'S')}
+                      src={book.cover_url || getBookCoverUrl(book.cover_i!, 'S')}
                       alt={book.title}
                       className="h-16 w-12 rounded object-cover"
                     />
