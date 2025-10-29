@@ -2,13 +2,14 @@
 
 import * as React from "react"
 import Link from "next/link"
-import { Gamepad2, BookOpen, TrendingUp, Clock, Tv, Film, Car, DollarSign, Package } from "lucide-react"
+import { Gamepad2, BookOpen, TrendingUp, Clock, Tv, Film, Car, DollarSign, Package, Briefcase } from "lucide-react"
 import { getGamesAction } from "@/app/actions/games"
 import { getBooksAction } from "@/app/actions/books"
 import { getTVShowsAction } from "@/app/actions/tvshows"
 import { getMoviesAction } from "@/app/actions/movies"
 import { getPHEVStatsAction, getPHEVCarSummariesAction } from "@/app/actions/phev"
 import { getInventoryItemsAction } from "@/app/actions/inventory"
+import { getJobStatsAction } from "@/app/actions/jobs"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 
@@ -20,17 +21,19 @@ export default function Dashboard() {
   const [inventory, setInventory] = React.useState<any[]>([])
   const [phevStats, setPHEVStats] = React.useState<any>(null)
   const [phevCarSummaries, setPHEVCarSummaries] = React.useState<any[]>([])
+  const [jobStats, setJobStats] = React.useState<any>(null)
 
   React.useEffect(() => {
     const loadData = async () => {
-      const [gamesData, booksData, tvshowsData, moviesData, inventoryData, phevStatsData, phevCarData] = await Promise.all([
+      const [gamesData, booksData, tvshowsData, moviesData, inventoryData, phevStatsData, phevCarData, jobStatsData] = await Promise.all([
         getGamesAction(),
         getBooksAction(),
         getTVShowsAction(),
         getMoviesAction(),
         getInventoryItemsAction(),
         getPHEVStatsAction(),
-        getPHEVCarSummariesAction()
+        getPHEVCarSummariesAction(),
+        getJobStatsAction()
       ])
       setGames(gamesData)
       setBooks(booksData)
@@ -39,6 +42,7 @@ export default function Dashboard() {
       setInventory(inventoryData)
       setPHEVStats(phevStatsData)
       setPHEVCarSummaries(phevCarData)
+      setJobStats(jobStatsData)
     }
     loadData()
   }, [])
@@ -102,7 +106,7 @@ export default function Dashboard() {
         <p className="text-sm sm:text-base text-muted-foreground">Welcome to your tracking hub</p>
       </div>
 
-      <div className="grid gap-3 sm:gap-4 grid-cols-2 md:grid-cols-4 lg:grid-cols-8">
+      <div className="grid gap-3 sm:gap-4 grid-cols-2 md:grid-cols-4 lg:grid-cols-9">
         <Card>
           <CardHeader className="pb-3">
             <CardTitle>{gamesCount}</CardTitle>
@@ -158,6 +162,18 @@ export default function Dashboard() {
             <CardDescription>This Month Cost</CardDescription>
           </CardHeader>
         </Card>
+
+        <Link href="/jobs" className="block">
+          <Card className="cursor-pointer hover:bg-muted/50 transition-colors">
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2">
+                <Briefcase className="w-4 h-4" />
+                {jobStats?.totalJobs || 0}
+              </CardTitle>
+              <CardDescription>Job Applications</CardDescription>
+            </CardHeader>
+          </Card>
+        </Link>
       </div>
 
       <div className="grid gap-3 sm:gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
