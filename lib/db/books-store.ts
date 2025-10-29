@@ -68,14 +68,15 @@ export async function getBooks(): Promise<Book[]> {
 export async function addBook(book: Omit<Book, 'id' | 'createdAt' | 'updatedAt'>): Promise<Book> {
   const result = await pool.query<any>(
     `INSERT INTO books (
-      title, author, release_date, genre, cover_image, type,
+      title, author, status, release_date, genre, cover_image, type,
       pages, minutes, started_date, completed_date, notes, rating, days_read,
       created_at, updated_at
-    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, NOW(), NOW())
+    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, NOW(), NOW())
     RETURNING *`,
     [
       book.title,
       book.author,
+      book.status || 'Want to Read', // Default status if not provided
       normalizeDateForPostgres(book.releaseDate),
       book.genre,
       book.coverImage,
@@ -97,22 +98,24 @@ export async function updateBook(id: number, book: Partial<Book>): Promise<void>
     `UPDATE books SET
       title = COALESCE($1, title),
       author = COALESCE($2, author),
-      release_date = COALESCE($3, release_date),
-      genre = COALESCE($4, genre),
-      cover_image = COALESCE($5, cover_image),
-      type = COALESCE($6, type),
-      pages = $7,
-      minutes = $8,
-      started_date = $9,
-      completed_date = $10,
-      notes = COALESCE($11, notes),
-      rating = $12,
-      days_read = $13,
+      status = COALESCE($3, status),
+      release_date = COALESCE($4, release_date),
+      genre = COALESCE($5, genre),
+      cover_image = COALESCE($6, cover_image),
+      type = COALESCE($7, type),
+      pages = $8,
+      minutes = $9,
+      started_date = $10,
+      completed_date = $11,
+      notes = COALESCE($12, notes),
+      rating = $13,
+      days_read = $14,
       updated_at = NOW()
-    WHERE id = $14`,
+    WHERE id = $15`,
     [
       book.title,
       book.author,
+      book.status,
       book.releaseDate !== undefined ? normalizeDateForPostgres(book.releaseDate) : undefined,
       book.genre,
       book.coverImage,

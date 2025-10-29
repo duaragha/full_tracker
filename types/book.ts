@@ -2,6 +2,7 @@ export interface Book {
   id: string
   title: string
   author: string
+  status?: string // Optional - defaults to 'Want to Read' if not provided
   releaseDate: string
   genre: string
   coverImage: string
