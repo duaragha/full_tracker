@@ -43,15 +43,16 @@ export async function getTVShows(): Promise<TVShow[]> {
 export async function addTVShow(show: Omit<TVShow, 'id' | 'createdAt' | 'updatedAt'>): Promise<TVShow> {
   const result = await pool.query<any>(
     `INSERT INTO tvshows (
-      tmdb_id, title, creators, network, genres, poster_image, backdrop_image,
+      tmdb_id, title, status, creators, network, genres, poster_image, backdrop_image,
       show_start_date, show_end_date, date_i_started, date_i_ended,
       total_episodes, watched_episodes, seasons, total_minutes,
       days_tracking, rewatch_count, rewatch_history, notes, created_at, updated_at
-    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, NOW(), NOW())
+    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, NOW(), NOW())
     RETURNING *`,
     [
       show.tmdbId,
       show.title,
+      show.status || 'Plan to Watch',
       show.creators,
       show.network,
       show.genres,
@@ -63,11 +64,11 @@ export async function addTVShow(show: Omit<TVShow, 'id' | 'createdAt' | 'updated
       show.dateIEnded,
       show.totalEpisodes,
       show.watchedEpisodes,
-      show.seasons,
+      JSON.stringify(show.seasons),
       show.totalMinutes,
       show.daysTracking,
       show.rewatchCount,
-      show.rewatchHistory,
+      JSON.stringify(show.rewatchHistory),
       show.notes,
     ]
   )
@@ -79,28 +80,30 @@ export async function updateTVShow(id: number, show: Partial<TVShow>): Promise<v
     `UPDATE tvshows SET
       tmdb_id = COALESCE($1, tmdb_id),
       title = COALESCE($2, title),
-      creators = COALESCE($3, creators),
-      network = COALESCE($4, network),
-      genres = COALESCE($5, genres),
-      poster_image = COALESCE($6, poster_image),
-      backdrop_image = COALESCE($7, backdrop_image),
-      show_start_date = COALESCE($8, show_start_date),
-      show_end_date = $9,
-      date_i_started = $10,
-      date_i_ended = $11,
-      total_episodes = COALESCE($12, total_episodes),
-      watched_episodes = COALESCE($13, watched_episodes),
-      seasons = COALESCE($14, seasons),
-      total_minutes = COALESCE($15, total_minutes),
-      days_tracking = COALESCE($16, days_tracking),
-      rewatch_count = COALESCE($17, rewatch_count),
-      rewatch_history = COALESCE($18, rewatch_history),
-      notes = COALESCE($19, notes),
+      status = COALESCE($3, status),
+      creators = COALESCE($4, creators),
+      network = COALESCE($5, network),
+      genres = COALESCE($6, genres),
+      poster_image = COALESCE($7, poster_image),
+      backdrop_image = COALESCE($8, backdrop_image),
+      show_start_date = COALESCE($9, show_start_date),
+      show_end_date = $10,
+      date_i_started = $11,
+      date_i_ended = $12,
+      total_episodes = COALESCE($13, total_episodes),
+      watched_episodes = COALESCE($14, watched_episodes),
+      seasons = COALESCE($15, seasons),
+      total_minutes = COALESCE($16, total_minutes),
+      days_tracking = COALESCE($17, days_tracking),
+      rewatch_count = COALESCE($18, rewatch_count),
+      rewatch_history = COALESCE($19, rewatch_history),
+      notes = COALESCE($20, notes),
       updated_at = NOW()
-    WHERE id = $20`,
+    WHERE id = $21`,
     [
       show.tmdbId,
       show.title,
+      show.status,
       show.creators,
       show.network,
       show.genres,
@@ -112,11 +115,11 @@ export async function updateTVShow(id: number, show: Partial<TVShow>): Promise<v
       show.dateIEnded,
       show.totalEpisodes,
       show.watchedEpisodes,
-      show.seasons,
+      show.seasons ? JSON.stringify(show.seasons) : undefined,
       show.totalMinutes,
       show.daysTracking,
       show.rewatchCount,
-      show.rewatchHistory,
+      show.rewatchHistory ? JSON.stringify(show.rewatchHistory) : undefined,
       show.notes,
       id,
     ]
@@ -202,7 +205,7 @@ export async function markEpisodeWatched(
   // Update the show in the database
   await pool.query(
     `UPDATE tvshows SET
-      seasons = $1,
+      seasons = $1::jsonb,
       watched_episodes = $2,
       total_minutes = $3,
       date_i_ended = $4,

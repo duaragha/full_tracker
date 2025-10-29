@@ -17,6 +17,7 @@ export interface TVShow {
   id: string
   tmdbId: number
   title: string
+  status?: string // Optional - defaults to 'Plan to Watch' if not provided
   creators: string[] // show creators/directors
   network: string
   genres: string[]

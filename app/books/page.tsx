@@ -24,6 +24,15 @@ type BookSortField = "title" | "author" | "pages" | "minutes" | "days"
 type BookSortOrder = "asc" | "desc"
 type BookTypeFilter = "All" | Book["type"]
 
+const formatMinutes = (minutes: number | null): string => {
+  if (!minutes || minutes === 0) return '0m'
+  const hours = Math.floor(minutes / 60)
+  const mins = minutes % 60
+  if (hours === 0) return `${mins}m`
+  if (mins === 0) return `${hours}h`
+  return `${hours}h ${mins}m`
+}
+
 export default function BooksPage() {
   const [books, setBooks] = React.useState<Book[]>([])
   const [selectedBook, setSelectedBook] = React.useState<BookSearchResult | null>(null)
@@ -167,7 +176,7 @@ export default function BooksPage() {
   const buildGridItem = (book: Book): GridViewItem => {
     const readingInfo = book.type === 'Ebook'
       ? `${book.pages || 0} pages`
-      : `${book.minutes || 0} min`
+      : formatMinutes(book.minutes)
 
     // Determine reading status
     let statusText = 'Reading'
@@ -398,7 +407,7 @@ export default function BooksPage() {
                         <TableCell>
                           {book.type === 'Ebook'
                             ? `${book.pages || 0} pages`
-                            : `${book.minutes || 0} min`
+                            : formatMinutes(book.minutes)
                           }
                         </TableCell>
                         <TableCell>{book.daysRead}</TableCell>
@@ -471,12 +480,12 @@ export default function BooksPage() {
                         <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
                           <div>
                             <span className="text-muted-foreground">
-                              {book.type === 'Ebook' ? 'Pages:' : 'Minutes:'}
+                              {book.type === 'Ebook' ? 'Pages:' : 'Time:'}
                             </span>
                             <span className="ml-1 font-medium">
                               {book.type === 'Ebook'
                                 ? `${book.pages || 0}`
-                                : `${book.minutes || 0}`
+                                : formatMinutes(book.minutes)
                               }
                             </span>
                           </div>
@@ -549,7 +558,7 @@ export default function BooksPage() {
         primaryFields={detailBook ? [
           {
             label: detailBook.type === 'Ebook' ? 'Pages' : 'Listening Time',
-            value: detailBook.type === 'Ebook' ? `${detailBook.pages || 0} pages` : `${detailBook.minutes || 0} minutes`,
+            value: detailBook.type === 'Ebook' ? `${detailBook.pages || 0} pages` : formatMinutes(detailBook.minutes),
             icon: detailBook.type === 'Ebook' ? <BookOpen className="h-4 w-4" /> : <Clock className="h-4 w-4" />
           },
           {

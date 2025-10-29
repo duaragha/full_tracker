@@ -17,12 +17,18 @@ const pool = new Pool({
  * - Full date: "2019-07-15" -> "2019-07-15"
  * - Empty/null: null -> null
  */
-function normalizeDateForPostgres(dateStr: string | null | undefined): string | null {
-  if (!dateStr || dateStr.trim() === '') {
+function normalizeDateForPostgres(dateStr: any): string | null {
+  if (!dateStr) {
     return null
   }
 
-  const trimmed = dateStr.trim()
+  // Convert to string regardless of type
+  const strValue = String(dateStr)
+  const trimmed = strValue.trim()
+
+  if (trimmed === '' || trimmed === 'null' || trimmed === 'undefined') {
+    return null
+  }
 
   // Full date format (YYYY-MM-DD) - already valid
   if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) {

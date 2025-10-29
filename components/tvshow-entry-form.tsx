@@ -9,6 +9,13 @@ import { Textarea } from "@/components/ui/textarea"
 import { DatePicker } from "@/components/ui/date-picker"
 import { RewatchManager } from "@/components/rewatch-manager"
 import { Loader2 } from "lucide-react"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 
 interface TVShowEntryFormProps {
   selectedShow: TVShowSearchResult | null
@@ -20,6 +27,7 @@ interface TVShowEntryFormProps {
 export function TVShowEntryForm({ selectedShow, onSubmit, onCancel, initialData }: TVShowEntryFormProps) {
   const [loading, setLoading] = React.useState(false)
   const [formData, setFormData] = React.useState({
+    status: initialData?.status || "Plan to Watch",
     dateIStarted: initialData?.dateIStarted ? new Date(initialData.dateIStarted) : null,
     dateIEnded: initialData?.dateIEnded ? new Date(initialData.dateIEnded) : null,
     notes: initialData?.notes || "",
@@ -56,6 +64,7 @@ export function TVShowEntryForm({ selectedShow, onSubmit, onCancel, initialData 
       // Update existing show
       onSubmit({
         ...initialData,
+        status: formData.status,
         dateIStarted: formData.dateIStarted?.toISOString() || null,
         dateIEnded: formData.dateIEnded?.toISOString() || null,
         notes: formData.notes,
@@ -92,6 +101,7 @@ export function TVShowEntryForm({ selectedShow, onSubmit, onCancel, initialData 
       onSubmit({
         tmdbId: selectedShow.id,
         title: showDetails.name,
+        status: formData.status,
         creators: showDetails.created_by?.map((c: any) => c.name) || [],
         network: showDetails.networks[0]?.name || "Unknown",
         genres: showDetails.genres.map((g: any) => g.name),
@@ -165,6 +175,25 @@ export function TVShowEntryForm({ selectedShow, onSubmit, onCancel, initialData 
           </div>
         </div>
       )}
+
+      <div className="space-y-2">
+        <Label htmlFor="status">Status</Label>
+        <Select
+          value={formData.status}
+          onValueChange={(value) => setFormData({ ...formData, status: value })}
+        >
+          <SelectTrigger id="status">
+            <SelectValue placeholder="Select status" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="Plan to Watch">Plan to Watch</SelectItem>
+            <SelectItem value="Watching">Watching</SelectItem>
+            <SelectItem value="Completed">Completed</SelectItem>
+            <SelectItem value="On Hold">On Hold</SelectItem>
+            <SelectItem value="Dropped">Dropped</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
 
       <div className="grid gap-6 grid-cols-1 md:grid-cols-2">
         <div className="space-y-2">

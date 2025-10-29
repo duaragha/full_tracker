@@ -27,6 +27,11 @@ const nextConfig: NextConfig = {
         pathname: "**",
       },
       {
+        protocol: "http",
+        hostname: "books.google.com",
+        pathname: "**",
+      },
+      {
         protocol: "https",
         hostname: "books.google.com",
         pathname: "**",

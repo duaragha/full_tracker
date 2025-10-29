@@ -21,7 +21,7 @@ import { ViewToggle, useViewMode } from "@/components/ui/view-toggle"
 import { MediaDetailModal } from "@/components/ui/media-detail-modal"
 import { CollapsibleSection } from "@/components/ui/collapsible-section"
 
-type TVShowSortField = "title" | "hours" | "progress" | "days"
+type TVShowSortField = "activity" | "title" | "hours" | "progress" | "days"
 type SortDirection = "asc" | "desc"
 type TVShowStatus = "Watched" | "Watching" | "Watchlist"
 
@@ -55,8 +55,8 @@ export default function TVShowsPage() {
   const [viewingEpisodes, setViewingEpisodes] = React.useState<TVShow | null>(null)
   const [showForm, setShowForm] = React.useState(false)
   const [searchQuery, setSearchQuery] = React.useState("")
-  const [sortBy, setSortBy] = React.useState<TVShowSortField>("title")
-  const [sortOrder, setSortOrder] = React.useState<SortDirection>("asc")
+  const [sortBy, setSortBy] = React.useState<TVShowSortField>("activity")
+  const [sortOrder, setSortOrder] = React.useState<SortDirection>("desc")
 
   // Grid view state
   const [viewMode, setViewMode] = useViewMode("table", "tvshows-view-mode")
@@ -160,6 +160,11 @@ export default function TVShowsPage() {
     const sorted = [...filtered].sort((a, b) => {
       let comparison = 0
       switch (sortBy) {
+        case "activity":
+          const dateA = new Date(a.updatedAt).getTime()
+          const dateB = new Date(b.updatedAt).getTime()
+          comparison = dateA - dateB
+          break
         case "title":
           comparison = a.title.localeCompare(b.title)
           break
@@ -342,6 +347,7 @@ export default function TVShowsPage() {
                   <SelectValue placeholder="Sort by" />
                 </SelectTrigger>
                 <SelectContent>
+                  <SelectItem value="activity">Recent Activity</SelectItem>
                   <SelectItem value="title">Title</SelectItem>
                   <SelectItem value="hours">Hours Watched</SelectItem>
                   <SelectItem value="progress">Progress</SelectItem>

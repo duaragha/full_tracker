@@ -9,6 +9,13 @@ import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { DatePicker } from "@/components/ui/date-picker"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 
 interface BookEntryFormProps {
   selectedBook: BookSearchResult | null
@@ -21,18 +28,39 @@ export function BookEntryForm({ selectedBook, onSubmit, onCancel, initialData }:
   const [formData, setFormData] = React.useState({
     title: initialData?.title || selectedBook?.title || "",
     author: initialData?.author || selectedBook?.author_name?.[0] || "",
-    publisher: initialData?.publisher || selectedBook?.publisher?.[0] || "",
+    status: initialData?.status || "Want to Read",
     releaseDate: initialData?.releaseDate || selectedBook?.first_publish_year?.toString() || "",
     genre: initialData?.genre || selectedBook?.subject?.[0] || "",
-    coverImage: initialData?.coverImage || (selectedBook?.cover_i ? getBookCoverUrl(selectedBook.cover_i, 'M') : ""),
+    coverImage: initialData?.coverImage || (selectedBook?.cover_url || (selectedBook?.cover_i ? getBookCoverUrl(selectedBook.cover_i, 'M') : "")),
     type: initialData?.type || "Ebook" as const,
     pages: initialData?.pages || null,
     hours: initialData?.minutes ? Math.floor(initialData.minutes / 60) : 0,
     minutes: initialData?.minutes ? initialData.minutes % 60 : 0,
+    totalMinutes: initialData?.minutes || 0,
     dateStarted: initialData?.dateStarted ? new Date(initialData.dateStarted) : null,
     dateCompleted: initialData?.dateCompleted ? new Date(initialData.dateCompleted) : null,
     notes: initialData?.notes || "",
   })
+
+  // Sync hours/minutes with totalMinutes
+  const handleHoursChange = (value: number) => {
+    const newHours = value || 0
+    const totalMins = newHours * 60 + formData.minutes
+    setFormData({ ...formData, hours: newHours, totalMinutes: totalMins })
+  }
+
+  const handleMinutesChange = (value: number) => {
+    const newMins = value || 0
+    const totalMins = formData.hours * 60 + newMins
+    setFormData({ ...formData, minutes: newMins, totalMinutes: totalMins })
+  }
+
+  const handleTotalMinutesChange = (value: number) => {
+    const totalMins = value || 0
+    const hours = Math.floor(totalMins / 60)
+    const mins = totalMins % 60
+    setFormData({ ...formData, totalMinutes: totalMins, hours, minutes: mins })
+  }
 
   const calculateDays = () => {
     if (!formData.dateStarted) return 0
@@ -50,13 +78,13 @@ export function BookEntryForm({ selectedBook, onSubmit, onCancel, initialData }:
     onSubmit({
       title: formData.title,
       author: formData.author,
-      publisher: formData.publisher,
+      status: formData.status,
       releaseDate: formData.releaseDate,
       genre: formData.genre,
       coverImage: formData.coverImage,
       type: formData.type,
       pages: formData.type === 'Ebook' ? formData.pages : null,
-      minutes: formData.type === 'Audiobook' ? (formData.hours * 60 + formData.minutes) : null,
+      minutes: formData.type === 'Audiobook' ? formData.totalMinutes : null,
       daysRead,
       dateStarted: formData.dateStarted?.toISOString() || null,
       dateCompleted: formData.dateCompleted?.toISOString() || null,
@@ -86,12 +114,22 @@ export function BookEntryForm({ selectedBook, onSubmit, onCancel, initialData }:
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="publisher">Publisher</Label>
-          <Input
-            id="publisher"
-            value={formData.publisher}
-            onChange={(e) => setFormData({ ...formData, publisher: e.target.value })}
-          />
+          <Label htmlFor="status">Status</Label>
+          <Select
+            value={formData.status}
+            onValueChange={(value) => setFormData({ ...formData, status: value })}
+          >
+            <SelectTrigger id="status">
+              <SelectValue placeholder="Select status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="Want to Read">Want to Read</SelectItem>
+              <SelectItem value="Reading">Reading</SelectItem>
+              <SelectItem value="Listening">Listening</SelectItem>
+              <SelectItem value="Completed">Completed</SelectItem>
+              <SelectItem value="DNF">Did Not Finish</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
 
         <div className="space-y-2">
@@ -136,13 +174,24 @@ export function BookEntryForm({ selectedBook, onSubmit, onCancel, initialData }:
         {formData.type === 'Audiobook' && (
           <>
             <div className="space-y-2">
+              <Label htmlFor="totalMinutes">Total Minutes</Label>
+              <Input
+                id="totalMinutes"
+                type="number"
+                min="0"
+                value={formData.totalMinutes === 0 ? '' : formData.totalMinutes}
+                onChange={(e) => handleTotalMinutesChange(e.target.value === '' ? 0 : parseInt(e.target.value) || 0)}
+                placeholder="Enter total minutes"
+              />
+            </div>
+            <div className="space-y-2">
               <Label htmlFor="hours">Hours</Label>
               <Input
                 id="hours"
                 type="number"
                 min="0"
                 value={formData.hours === 0 ? '' : formData.hours}
-                onChange={(e) => setFormData({ ...formData, hours: e.target.value === '' ? 0 : parseInt(e.target.value) || 0 })}
+                onChange={(e) => handleHoursChange(e.target.value === '' ? 0 : parseInt(e.target.value) || 0)}
                 placeholder="0"
               />
             </div>
@@ -154,7 +203,7 @@ export function BookEntryForm({ selectedBook, onSubmit, onCancel, initialData }:
                 min="0"
                 max="59"
                 value={formData.minutes === 0 ? '' : formData.minutes}
-                onChange={(e) => setFormData({ ...formData, minutes: e.target.value === '' ? 0 : parseInt(e.target.value) || 0 })}
+                onChange={(e) => handleMinutesChange(e.target.value === '' ? 0 : parseInt(e.target.value) || 0)}
                 placeholder="0"
               />
             </div>
