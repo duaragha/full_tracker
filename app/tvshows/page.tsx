@@ -18,12 +18,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Input } from "@/components/ui/input"
 import { GridView, GridViewItem } from "@/components/ui/grid-view"
 import { ViewToggle, useViewMode } from "@/components/ui/view-toggle"
+import { formatTimeBreakdown } from "@/lib/utils/time-format"
 import { MediaDetailModal } from "@/components/ui/media-detail-modal"
 import { CollapsibleSection } from "@/components/ui/collapsible-section"
 
 type TVShowSortField = "activity" | "title" | "hours" | "progress" | "days"
 type SortDirection = "asc" | "desc"
-type TVShowStatus = "Watched" | "Watching" | "Watchlist"
+type TVShowStatus = "Watched" | "Watching" | "Watchlist" | "Stopped"
 
 const getShowProgressPercent = (show: TVShow): number => {
   if (show.totalEpisodes <= 0) return 0
@@ -31,6 +32,10 @@ const getShowProgressPercent = (show: TVShow): number => {
 }
 
 const getShowStatus = (show: TVShow): TVShowStatus => {
+  // Check for explicit status first
+  if (show.status === "Stopped") return "Stopped"
+
+  // Otherwise derive from progress
   const progress = getShowProgressPercent(show)
   if (progress >= 100) return "Watched"
   if (progress > 0) return "Watching"
@@ -43,6 +48,8 @@ const getBadgeVariant = (status: TVShowStatus): GridViewItem['badgeVariant'] => 
       return "secondary"
     case "Watchlist":
       return "outline"
+    case "Stopped":
+      return "destructive"
     default:
       return "default"
   }
@@ -187,10 +194,11 @@ export default function TVShowsPage() {
   }, [tvshows, searchQuery, sortBy, sortOrder])
 
   const groupedShows = React.useMemo(() => {
-    const groups: Record<"watching" | "watchlist" | "watched", TVShow[]> = {
+    const groups: Record<"watching" | "watchlist" | "watched" | "stopped", TVShow[]> = {
       watching: [],
       watchlist: [],
       watched: [],
+      stopped: [],
     }
 
     filteredAndSortedShows.forEach((show) => {
@@ -199,6 +207,8 @@ export default function TVShowsPage() {
         groups.watched.push(show)
       } else if (status === "Watchlist") {
         groups.watchlist.push(show)
+      } else if (status === "Stopped") {
+        groups.stopped.push(show)
       } else {
         groups.watching.push(show)
       }
@@ -208,9 +218,7 @@ export default function TVShowsPage() {
   }, [filteredAndSortedShows])
 
   const buildGridItem = (show: TVShow): GridViewItem => {
-    const hours = Math.floor(show.totalMinutes / 60)
-    const mins = show.totalMinutes % 60
-    const timeText = `${hours}h ${mins}m`
+    const timeText = formatTimeBreakdown(show.totalMinutes)
     const progress = getShowProgressPercent(show)
     const status = getShowStatus(show)
     const episodeProgress = show.totalEpisodes > 0
@@ -245,12 +253,14 @@ export default function TVShowsPage() {
     watching: groupedShows.watching.map(buildGridItem),
     watchlist: groupedShows.watchlist.map(buildGridItem),
     watched: groupedShows.watched.map(buildGridItem),
+    stopped: groupedShows.stopped.map(buildGridItem),
   }), [groupedShows])
 
   const statusSections = [
     { key: 'watching', title: 'Watching' },
     { key: 'watchlist', title: 'Watchlist' },
     { key: 'watched', title: 'Watched' },
+    { key: 'stopped', title: 'Stopped' },
   ] as const
 
   const detailBadges = React.useMemo(() => {
@@ -270,10 +280,14 @@ export default function TVShowsPage() {
 
   const totalShows = tvshows.length
   const totalEpisodesWatched = tvshows.reduce((total, show) => total + (show.watchedEpisodes || 0), 0)
-  const totalMinutesWatched = tvshows.reduce((total, show) => total + (show.totalMinutes || 0), 0)
+  const totalMinutesWatched = tvshows.reduce((total, show) => {
+    const showMinutes = show.totalMinutes || 0
+    const rewatchMultiplier = (show.rewatchCount || 0) + 1 // +1 for the original watch
+    return total + (showMinutes * rewatchMultiplier)
+  }, 0)
   const totalDaysTracking = tvshows.reduce((total, show) => total + (show.daysTracking || 0), 0)
-  const totalHours = Math.floor(totalMinutesWatched / 60)
-  const remainingMinutes = totalMinutesWatched % 60
+  const totalRewatches = tvshows.reduce((total, show) => total + (show.rewatchCount || 0), 0)
+  const totalTimeFormatted = formatTimeBreakdown(totalMinutesWatched)
 
   return (
     <div className="space-y-4 sm:space-y-6">
@@ -288,7 +302,7 @@ export default function TVShowsPage() {
         </Button>
       </div>
 
-      <div className="grid grid-cols-2 gap-3 md:gap-4 md:grid-cols-4">
+      <div className="grid grid-cols-2 gap-2 md:gap-3 md:grid-cols-5 lg:grid-cols-8 xl:grid-cols-10">
         <Card>
           <CardHeader>
             <CardTitle>{totalShows}</CardTitle>
@@ -303,8 +317,14 @@ export default function TVShowsPage() {
         </Card>
         <Card>
           <CardHeader>
-            <CardTitle>{totalHours}h {remainingMinutes}m</CardTitle>
-            <CardDescription>Total Hours Watched</CardDescription>
+            <CardTitle>{totalTimeFormatted}</CardTitle>
+            <CardDescription>Total Time Watched</CardDescription>
+          </CardHeader>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle>{totalRewatches}</CardTitle>
+            <CardDescription>Total Rewatches</CardDescription>
           </CardHeader>
         </Card>
         <Card>
@@ -431,8 +451,7 @@ export default function TVShowsPage() {
                           {shows.map((show) => {
                             const status = getShowStatus(show)
                             const progress = getShowProgressPercent(show)
-                            const hours = Math.floor(show.totalMinutes / 60)
-                            const mins = show.totalMinutes % 60
+                            const timeFormatted = formatTimeBreakdown(show.totalMinutes)
 
                             return (
                               <TableRow key={show.id}>
@@ -483,7 +502,7 @@ export default function TVShowsPage() {
                                     <span className="text-xs text-muted-foreground">{progress}%</span>
                                   </div>
                                 </TableCell>
-                                <TableCell>{hours}h {mins}m</TableCell>
+                                <TableCell>{timeFormatted}</TableCell>
                                 <TableCell className="text-sm">
                                   {show.showStartDate
                                     ? new Date(show.showStartDate).getFullYear()
@@ -540,8 +559,7 @@ export default function TVShowsPage() {
                       {shows.map((show) => {
                         const status = getShowStatus(show)
                         const progress = getShowProgressPercent(show)
-                        const hours = Math.floor(show.totalMinutes / 60)
-                        const mins = show.totalMinutes % 60
+                        const timeFormatted = formatTimeBreakdown(show.totalMinutes)
 
                         return (
                           <Card key={show.id} className="overflow-hidden">
@@ -596,8 +614,8 @@ export default function TVShowsPage() {
                                     </span>
                                   </div>
                                   <div className="flex justify-between">
-                                    <span className="text-muted-foreground">Hours:</span>
-                                    <span className="font-medium">{hours}h {mins}m</span>
+                                    <span className="text-muted-foreground">Time:</span>
+                                    <span className="font-medium">{timeFormatted}</span>
                                   </div>
                                   <div className="flex justify-between">
                                     <span className="text-muted-foreground">Days:</span>
@@ -665,7 +683,7 @@ export default function TVShowsPage() {
           },
           {
             label: "Time Watched",
-            value: `${Math.floor(detailShow.totalMinutes / 60)}h ${detailShow.totalMinutes % 60}m`,
+            value: formatTimeBreakdown(detailShow.totalMinutes),
             icon: <Clock className="h-4 w-4" />
           },
           {

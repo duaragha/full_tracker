@@ -40,8 +40,8 @@ export interface TVShow {
 }
 
 export interface RewatchEntry {
-  startDate: string
-  endDate: string | null
+  startDate?: string | null
+  endDate?: string | null
   notes?: string
 }
 

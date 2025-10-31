@@ -231,7 +231,7 @@ export default function BooksPage() {
         </Button>
       </div>
 
-      <div className="grid grid-cols-2 gap-3 md:gap-4 md:grid-cols-4">
+      <div className="grid grid-cols-2 gap-2 md:gap-3 md:grid-cols-5 lg:grid-cols-8 xl:grid-cols-10">
         <Card>
           <CardHeader>
             <CardTitle>{books.length}</CardTitle>

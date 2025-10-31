@@ -118,18 +118,18 @@ export function MediaDetailModal({
             </Button>
 
             {/* Header with Image */}
-            <div className="grid md:grid-cols-[250px_1fr] lg:grid-cols-[300px_1fr] gap-3 sm:gap-4 md:gap-6 lg:gap-8 p-3 sm:p-4 md:p-6 lg:p-8">
+            <div className="grid md:grid-cols-[180px_1fr] lg:grid-cols-[200px_1fr] gap-3 sm:gap-4 md:gap-5 lg:gap-6 p-3 sm:p-4 md:p-6 lg:p-8">
               {/* Poster Image */}
               <div className="flex justify-center md:justify-start">
                 <div className={cn(
-                  "relative overflow-hidden rounded-lg bg-muted w-full max-w-[200px] sm:max-w-[250px] md:max-w-[250px] lg:max-w-[300px]",
+                  "relative overflow-hidden rounded-lg bg-muted w-full max-w-[140px] sm:max-w-[160px] md:max-w-[180px] lg:max-w-[200px]",
                   getAspectRatioClass()
                 )}>
                   <Image
                     src={imageUrl}
                     alt={title}
                     fill
-                    sizes="(max-width: 640px) 200px, (max-width: 1024px) 250px, 300px"
+                    sizes="(max-width: 640px) 140px, (max-width: 1024px) 180px, 200px"
                     className="object-cover"
                     priority
                     onError={(e) => {

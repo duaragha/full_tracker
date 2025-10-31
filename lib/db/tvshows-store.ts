@@ -12,6 +12,7 @@ const pool = new Pool({
 function normalizeTVShow(show: any): TVShow {
   return {
     ...show,
+    id: String(show.id),
     tmdbId: Number(show.tmdb_id),
     creators: show.creators || [],
     posterImage: show.poster_image,

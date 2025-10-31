@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { TVShow, TVShowSearchResult, Season, Episode, RewatchEntry } from "@/types/tvshow"
+import { TVShow, TVShowSearchResult, Season, Episode } from "@/types/tvshow"
 import { getTVShowDetails, getAllSeasons, getPosterUrl, getBackdropUrl } from "@/lib/api/tvshows"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
@@ -31,7 +31,7 @@ export function TVShowEntryForm({ selectedShow, onSubmit, onCancel, initialData 
     dateIStarted: initialData?.dateIStarted ? new Date(initialData.dateIStarted) : null,
     dateIEnded: initialData?.dateIEnded ? new Date(initialData.dateIEnded) : null,
     notes: initialData?.notes || "",
-    rewatchHistory: initialData?.rewatchHistory || [] as RewatchEntry[]
+    rewatchCount: initialData?.rewatchCount || 0
   })
   const [showDetails, setShowDetails] = React.useState<any>(null)
 
@@ -68,8 +68,8 @@ export function TVShowEntryForm({ selectedShow, onSubmit, onCancel, initialData 
         dateIStarted: formData.dateIStarted?.toISOString() || null,
         dateIEnded: formData.dateIEnded?.toISOString() || null,
         notes: formData.notes,
-        rewatchCount: formData.rewatchHistory.length,
-        rewatchHistory: formData.rewatchHistory,
+        rewatchCount: formData.rewatchCount,
+        rewatchHistory: [],
       })
       return
     }
@@ -116,8 +116,8 @@ export function TVShowEntryForm({ selectedShow, onSubmit, onCancel, initialData 
         seasons,
         totalMinutes: 0,
         daysTracking: 0,
-        rewatchCount: formData.rewatchHistory.length,
-        rewatchHistory: formData.rewatchHistory,
+        rewatchCount: formData.rewatchCount,
+        rewatchHistory: [],
         notes: formData.notes,
       })
     } catch (error) {
@@ -190,7 +190,7 @@ export function TVShowEntryForm({ selectedShow, onSubmit, onCancel, initialData 
             <SelectItem value="Watching">Watching</SelectItem>
             <SelectItem value="Completed">Completed</SelectItem>
             <SelectItem value="On Hold">On Hold</SelectItem>
-            <SelectItem value="Dropped">Dropped</SelectItem>
+            <SelectItem value="Stopped">Stopped</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -228,8 +228,8 @@ export function TVShowEntryForm({ selectedShow, onSubmit, onCancel, initialData 
 
       {initialData && (
         <RewatchManager
-          rewatchHistory={formData.rewatchHistory}
-          onUpdate={(history) => setFormData({ ...formData, rewatchHistory: history })}
+          rewatchCount={formData.rewatchCount}
+          onUpdate={(count) => setFormData({ ...formData, rewatchCount: count })}
         />
       )}
 
