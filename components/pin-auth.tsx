@@ -10,9 +10,10 @@ import { Lock } from "lucide-react"
 
 interface PinAuthProps {
   onUnlock: () => void
+  title?: string
 }
 
-export function PinAuth({ onUnlock }: PinAuthProps) {
+export function PinAuth({ onUnlock, title = "Access" }: PinAuthProps) {
   const router = useRouter()
   const [pin, setPin] = React.useState("")
   const [error, setError] = React.useState("")
@@ -33,8 +34,6 @@ export function PinAuth({ onUnlock }: PinAuthProps) {
       const data = await response.json()
 
       if (data.success) {
-        // Store unlock status in sessionStorage
-        sessionStorage.setItem("inventory_unlocked", "true")
         onUnlock()
       } else {
         setError("Incorrect PIN. Please try again.")
@@ -57,7 +56,7 @@ export function PinAuth({ onUnlock }: PinAuthProps) {
         <DialogHeader>
           <div className="flex items-center gap-2">
             <Lock className="h-5 w-5 text-primary" />
-            <DialogTitle>Inventory Access</DialogTitle>
+            <DialogTitle>{title}</DialogTitle>
           </div>
           <DialogDescription>
             This section is protected. Please enter the PIN to continue.

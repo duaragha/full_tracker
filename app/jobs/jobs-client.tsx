@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
 import { Plus, ChevronDown, ChevronRight, Search, TrendingUp, Briefcase, CheckCircle, XCircle } from "lucide-react"
+import { PinAuth } from "@/components/pin-auth"
 import { addJobAction, updateJobAction, deleteJobAction } from "./actions"
 
 interface JobsClientProps {
@@ -27,37 +28,31 @@ export function JobsClient({
   initialMonthlyGroups,
   initialSuggestions
 }: JobsClientProps) {
+  // ALL HOOKS MUST BE CALLED BEFORE ANY CONDITIONAL RETURNS
+  // This ensures React Hooks are called in the same order on every render
+
+  const [isUnlocked, setIsUnlocked] = React.useState(false)
   const [jobs, setJobs] = React.useState(initialJobs)
   const [stats, setStats] = React.useState(initialStats)
   const [monthlyGroups, setMonthlyGroups] = React.useState(initialMonthlyGroups)
   const [suggestions, setSuggestions] = React.useState(initialSuggestions)
   const [searchQuery, setSearchQuery] = React.useState("")
   const [savingStatus, setSavingStatus] = React.useState<Record<number, string>>({})
-  const [expandedMonths, setExpandedMonths] = React.useState<Set<string>>(new Set())
+  // Expand all months by default
+  const [expandedMonths, setExpandedMonths] = React.useState<Set<string>>(
+    new Set(initialMonthlyGroups.map(g => g.month))
+  )
   const [globalSaveStatus, setGlobalSaveStatus] = React.useState<string>("")
 
   const saveTimeouts = React.useRef<Record<number, NodeJS.Timeout>>({})
 
-  const refreshData = () => {
-    window.location.reload()
-  }
-
-  const handleAddJob = async () => {
-    const today = new Date().toISOString().split('T')[0]
-    const newJob: Omit<Job, 'id' | 'created_at' | 'updated_at'> = {
-      company: null,
-      position: null,
-      location: null,
-      status: "Applied",
-      applied_date: today,
-      rejection_date: null,
-      job_site: null,
-      url: null,
+  // Check if already unlocked in session
+  React.useEffect(() => {
+    const unlocked = sessionStorage.getItem("jobs_unlocked")
+    if (unlocked === "true") {
+      setIsUnlocked(true)
     }
-
-    await addJobAction(newJob)
-    refreshData()
-  }
+  }, [])
 
   const handleUpdateField = React.useCallback((jobId: number, field: keyof Job, value: string | null) => {
     // Update UI immediately
@@ -120,18 +115,6 @@ export function JobsClient({
     refreshData()
   }, [])
 
-  const toggleMonth = (month: string) => {
-    setExpandedMonths(prev => {
-      const newSet = new Set(prev)
-      if (newSet.has(month)) {
-        newSet.delete(month)
-      } else {
-        newSet.add(month)
-      }
-      return newSet
-    })
-  }
-
   // Filter jobs based on search query - Optimized with early returns
   const filteredJobs = React.useMemo(() => {
     if (!searchQuery.trim()) return jobs
@@ -174,6 +157,50 @@ export function JobsClient({
         rejectedCount: group.jobs.filter(j => j.status === 'Rejected').length,
       }))
   }, [monthlyGroups, filteredJobs, searchQuery])
+
+  // NOW we can do conditional rendering - all hooks have been called
+  const handleUnlock = () => {
+    sessionStorage.setItem("jobs_unlocked", "true")
+    setIsUnlocked(true)
+  }
+
+  if (!isUnlocked) {
+    return <PinAuth onUnlock={handleUnlock} title="Job Tracker Access" />
+  }
+
+  // Helper functions that use hooks values (safe to define after hooks)
+  const refreshData = () => {
+    window.location.reload()
+  }
+
+  const handleAddJob = async () => {
+    const today = new Date().toISOString().split('T')[0]
+    const newJob: Omit<Job, 'id' | 'created_at' | 'updated_at'> = {
+      company: null,
+      position: null,
+      location: null,
+      status: "Applied",
+      applied_date: today,
+      rejection_date: null,
+      job_site: null,
+      url: null,
+    }
+
+    await addJobAction(newJob)
+    refreshData()
+  }
+
+  const toggleMonth = (month: string) => {
+    setExpandedMonths(prev => {
+      const newSet = new Set(prev)
+      if (newSet.has(month)) {
+        newSet.delete(month)
+      } else {
+        newSet.add(month)
+      }
+      return newSet
+    })
+  }
 
   return (
     <div className="container mx-auto p-6 space-y-6">

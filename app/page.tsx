@@ -151,7 +151,7 @@ export default function Dashboard() {
   // Get currently watching shows with next episode info
   const watchingShows = tvshows.filter(show => {
     const progress = show.totalEpisodes > 0 ? (show.watchedEpisodes / show.totalEpisodes) * 100 : 0
-    return progress > 0 && progress < 100
+    return show.status === 'Watching' && progress > 0 && progress < 100
   }).slice(0, 4)
 
   const recentGames = games

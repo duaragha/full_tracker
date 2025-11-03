@@ -2,21 +2,29 @@
 
 import { Game } from '@/types/game'
 import { getGames, addGame, updateGame, deleteGame, calculateTotalDays, calculateTotalHours, calculateAveragePercentage } from '@/lib/db/games-store'
+import { invalidateStatsCache } from '@/lib/cache/stats-cache'
 
 export async function getGamesAction() {
   return await getGames()
 }
 
 export async function addGameAction(game: Omit<Game, 'id' | 'createdAt' | 'updatedAt'>) {
-  return await addGame(game)
+  const result = await addGame(game)
+  // Invalidate stats cache after adding new game
+  invalidateStatsCache()
+  return result
 }
 
 export async function updateGameAction(id: number, game: Partial<Game>) {
-  return await updateGame(id, game)
+  await updateGame(id, game)
+  // Invalidate stats cache after updating game
+  invalidateStatsCache()
 }
 
 export async function deleteGameAction(id: number) {
-  return await deleteGame(id)
+  await deleteGame(id)
+  // Invalidate stats cache after deleting game
+  invalidateStatsCache()
 }
 
 export async function getGamesStatsAction() {
@@ -84,6 +92,11 @@ export async function enrichGamesWithRAWGDataAction() {
       results.failed++
       results.errors.push(`Failed to enrich "${game.title}": ${error instanceof Error ? error.message : 'Unknown error'}`)
     }
+  }
+
+  // Invalidate stats cache after bulk update
+  if (results.updated > 0) {
+    invalidateStatsCache()
   }
 
   return results

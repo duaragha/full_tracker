@@ -26,6 +26,9 @@ import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
 export default function InventoryPage() {
+  // ALL HOOKS MUST BE CALLED BEFORE ANY CONDITIONAL RETURNS
+  // This ensures React Hooks are called in the same order on every render
+
   const [mounted, setMounted] = React.useState(false)
   const [isUnlocked, setIsUnlocked] = React.useState(false)
   const [areas, setAreas] = React.useState<Area[]>([])
@@ -53,7 +56,7 @@ export default function InventoryPage() {
   const [sortBy, setSortBy] = React.useState<"name" | "cost" | "purchasedWhen">("name")
   const [sortOrder, setSortOrder] = React.useState<"asc" | "desc">("asc")
 
-  const loadData = async () => {
+  const loadData = React.useCallback(async () => {
     const [areasData, containersData, sectionsData, itemsData] = await Promise.all([
       getAreasAction(),
       getContainersAction(),
@@ -64,9 +67,9 @@ export default function InventoryPage() {
     setContainers(containersData)
     setSections(sectionsData)
     setItems(itemsData)
-  }
+  }, [])
 
-  const handleWipeInventory = async () => {
+  const handleWipeInventory = React.useCallback(async () => {
     const confirmation = window.confirm(
       `⚠️ WARNING: This will delete ALL inventory items, containers, and areas.\n\nThis includes:\n- ${items.length} items\n- ${containers.length} containers\n- ${areas.length} areas\n\nThis action CANNOT be undone!\n\nClick OK to continue, then type DELETE in the next prompt.`
     )
@@ -95,7 +98,7 @@ export default function InventoryPage() {
     } catch (error) {
       alert(`Failed to wipe inventory: ${error instanceof Error ? error.message : 'Unknown error'}`)
     }
-  }
+  }, [items, containers, areas, loadData])
 
   React.useEffect(() => {
     setMounted(true)
@@ -105,24 +108,23 @@ export default function InventoryPage() {
       setIsUnlocked(true)
       loadData()
     }
-  }, [])
+  }, [loadData])
 
-  const handleUnlock = () => {
+  const handleUnlock = React.useCallback(() => {
+    sessionStorage.setItem("inventory_unlocked", "true")
     setIsUnlocked(true)
     loadData()
-  }
+  }, [loadData])
 
-  // Helper functions
-  const getAreaName = (areaId: string) => areas.find(a => a.id === areaId)?.name || "Unknown"
-  const getContainerName = (containerId: string) => containers.find(c => c.id === containerId)?.name || "Unknown"
-  const getSectionName = (sectionId: string) => sections.find(s => s.id === sectionId)?.name || "Unknown"
-  const getContainersByArea = (areaId: string) => containers.filter(c => c.areaId === areaId)
-  const getSectionsByContainer = (containerId: string) => sections.filter(s => s.containerId === containerId)
+  // Helper functions - memoized with useCallback to prevent recreation
+  const getAreaName = React.useCallback((areaId: string) => areas.find(a => a.id === areaId)?.name || "Unknown", [areas])
+  const getContainerName = React.useCallback((containerId: string) => containers.find(c => c.id === containerId)?.name || "Unknown", [containers])
+  const getSectionName = React.useCallback((sectionId: string) => sections.find(s => s.id === sectionId)?.name || "Unknown", [sections])
+  const getContainersByArea = React.useCallback((areaId: string) => containers.filter(c => c.areaId === areaId), [containers])
+  const getSectionsByContainer = React.useCallback((containerId: string) => sections.filter(s => s.containerId === containerId), [sections])
 
   // Get location display for an item
-  // Child with container: "container/parent", without container: "area/parent"
-  // Regular item with container: "area/container", without container: just "area"
-  const getItemLocation = (item: InventoryItem): string => {
+  const getItemLocation = React.useCallback((item: InventoryItem): string => {
     if (item.parentItemId) {
       // For child items
       const parent = items.find(i => i.id === item.parentItemId)
@@ -146,10 +148,10 @@ export default function InventoryPage() {
       // No container, just show area
       return getAreaName(item.location.areaId)
     }
-  }
+  }, [items, getAreaName, getContainerName])
 
-  // Check if item should be considered "kept" - includes items sold/retired after keepUntil date
-  const isItemKept = (item: InventoryItem): boolean => {
+  // Check if item should be considered "kept"
+  const isItemKept = React.useCallback((item: InventoryItem): boolean => {
     if (item.kept) return true
 
     // If item was sold/retired after the keepUntil date, consider it as kept
@@ -165,15 +167,15 @@ export default function InventoryPage() {
     }
 
     return false
-  }
+  }, [])
 
-  // Get all children of an item from the full items list
-  const getAllChildItems = (parentId: string): InventoryItem[] => {
+  // Get all children of an item
+  const getAllChildItems = React.useCallback((parentId: string): InventoryItem[] => {
     return items.filter(item => item.parentItemId === parentId)
-  }
+  }, [items])
 
-  // Calculate the actual cost of an item - for parents, sum of children; for regular items, their own cost
-  const getItemCost = (item: InventoryItem): number => {
+  // Calculate the actual cost of an item
+  const getItemCost = React.useCallback((item: InventoryItem): number => {
     const children = getAllChildItems(item.id)
     // Exclude replacement children - they don't count toward parent's cost
     const nonReplacementChildren = children.filter(child => !child.isReplacement)
@@ -184,9 +186,9 @@ export default function InventoryPage() {
     }
     // No non-replacement children: use parent's own cost
     return item.cost || 0
-  }
+  }, [getAllChildItems])
 
-  // All hooks must be called before any conditional returns
+  // All computed values that depend on state
   const displayedItems = React.useMemo(() => {
     let filtered = items
 
@@ -205,7 +207,7 @@ export default function InventoryPage() {
       )
     }
 
-    // Separate parent items (items with children) from regular items
+    // Separate parent items from regular items
     const parentItems: InventoryItem[] = []
     const regularItems: InventoryItem[] = []
 
@@ -245,11 +247,9 @@ export default function InventoryPage() {
   // Group items by container for "All Items" view
   const groupedItems = React.useMemo(() => {
     if (selectedContainer || selectedArea) {
-      // Don't group if filtering by area or container
       return null
     }
 
-    // Group items by container
     const grouped: { container: Container | null; items: InventoryItem[] }[] = []
 
     // Sort containers by area and name
@@ -277,69 +277,141 @@ export default function InventoryPage() {
     }
 
     return grouped
-  }, [displayedItems, containers, selectedContainer, selectedArea, areas])
+  }, [displayedItems, containers, selectedContainer, selectedArea, getAreaName])
 
   // Filter stats to only include kept items
-  // Filter out replacement items from stats (they don't count toward totals)
-  const keptItems = items.filter(i => i.kept && !i.isReplacement)
+  const keptItems = React.useMemo(() => items.filter(i => i.kept && !i.isReplacement), [items])
   const totalItems = keptItems.length
-  const itemsUsedInLastYear = keptItems.filter(i => i.usedInLastYear).length
-  const totalCost = keptItems.reduce((total, item) => {
+  const itemsUsedInLastYear = React.useMemo(() => keptItems.filter(i => i.usedInLastYear).length, [keptItems])
+  const totalCost = React.useMemo(() => keptItems.reduce((total, item) => {
     // Only count top-level items (not children) to avoid double-counting
     if (!item.parentItemId) {
       return total + getItemCost(item)
     }
     return total
-  }, 0)
-  const giftsReceived = keptItems.filter(i => i.isGift).length
-  const itemsToDiscard = keptItems.filter(i => !i.usedInLastYear).length
+  }, 0), [keptItems, getItemCost])
+  const giftsReceived = React.useMemo(() => keptItems.filter(i => i.isGift).length, [keptItems])
+  const itemsToDiscard = React.useMemo(() => keptItems.filter(i => !i.usedInLastYear).length, [keptItems])
 
-  if (!mounted) {
-    return null
-  }
+  const toggleArea = React.useCallback((areaId: string) => {
+    setExpandedAreas(prev => {
+      const newExpanded = new Set(prev)
+      if (newExpanded.has(areaId)) {
+        newExpanded.delete(areaId)
+      } else {
+        newExpanded.add(areaId)
+      }
+      return newExpanded
+    })
+  }, [])
 
-  // Show PIN authentication if not unlocked
-  if (!isUnlocked) {
-    return <PinAuth onUnlock={handleUnlock} />
-  }
+  const toggleContainer = React.useCallback((containerId: string) => {
+    setExpandedContainers(prev => {
+      const newExpanded = new Set(prev)
+      if (newExpanded.has(containerId)) {
+        newExpanded.delete(containerId)
+      } else {
+        newExpanded.add(containerId)
+      }
+      return newExpanded
+    })
+  }, [])
 
-  const toggleArea = (areaId: string) => {
-    const newExpanded = new Set(expandedAreas)
-    if (newExpanded.has(areaId)) {
-      newExpanded.delete(areaId)
-    } else {
-      newExpanded.add(areaId)
-    }
-    setExpandedAreas(newExpanded)
-  }
+  const toggleItem = React.useCallback((itemId: string) => {
+    setExpandedItems(prev => {
+      const newExpanded = new Set(prev)
+      if (newExpanded.has(itemId)) {
+        newExpanded.delete(itemId)
+      } else {
+        newExpanded.add(itemId)
+      }
+      return newExpanded
+    })
+  }, [])
 
-  const toggleContainer = (containerId: string) => {
-    const newExpanded = new Set(expandedContainers)
-    if (newExpanded.has(containerId)) {
-      newExpanded.delete(containerId)
-    } else {
-      newExpanded.add(containerId)
-    }
-    setExpandedContainers(newExpanded)
-  }
-
-  const toggleItem = (itemId: string) => {
-    const newExpanded = new Set(expandedItems)
-    if (newExpanded.has(itemId)) {
-      newExpanded.delete(itemId)
-    } else {
-      newExpanded.add(itemId)
-    }
-    setExpandedItems(newExpanded)
-  }
-
-  // Helper to get children of an item
-  const getChildItems = (parentId: string) => {
+  const getChildItems = React.useCallback((parentId: string) => {
     return displayedItems.filter(item => item.parentItemId === parentId)
-  }
+  }, [displayedItems])
+
+  const handleAddArea = React.useCallback(() => {
+    setEditingArea(undefined)
+    setShowAreaDialog(true)
+  }, [])
+
+  const handleEditArea = React.useCallback((area: Area) => {
+    setEditingArea(area)
+    setShowAreaDialog(true)
+  }, [])
+
+  const handleDeleteArea = React.useCallback(async (id: string) => {
+    if (confirm("Delete this area and all its containers and items?")) {
+      await deleteAreaAction(Number(id))
+      await loadData()
+      if (selectedArea === id) {
+        setSelectedArea(null)
+        setSelectedContainer(null)
+      }
+    }
+  }, [loadData, selectedArea])
+
+  const handleAddContainer = React.useCallback((areaId: string) => {
+    setSelectedArea(areaId)
+    setEditingContainer(undefined)
+    setShowContainerDialog(true)
+  }, [])
+
+  const handleEditContainer = React.useCallback((container: Container) => {
+    setEditingContainer(container)
+    setShowContainerDialog(true)
+  }, [])
+
+  const handleDeleteContainer = React.useCallback(async (id: string) => {
+    if (confirm("Delete this container and all its sections and items?")) {
+      await deleteContainerAction(Number(id))
+      await loadData()
+      if (selectedContainer === id) {
+        setSelectedContainer(null)
+      }
+    }
+  }, [loadData, selectedContainer])
+
+  const handleAddSection = React.useCallback((containerId: string) => {
+    setSelectedContainer(containerId)
+    setEditingSection(undefined)
+    setShowSectionDialog(true)
+  }, [])
+
+  const handleEditSection = React.useCallback((section: Section) => {
+    setEditingSection(section)
+    setShowSectionDialog(true)
+  }, [])
+
+  const handleDeleteSection = React.useCallback(async (id: string) => {
+    if (confirm("Delete this section and all its items?")) {
+      await deleteSectionAction(Number(id))
+      await loadData()
+    }
+  }, [loadData])
+
+  const handleAddItem = React.useCallback(() => {
+    setEditingItem(undefined)
+    setShowItemDialog(true)
+  }, [])
+
+  const handleEditItem = React.useCallback((item: InventoryItem) => {
+    setEditingItem(item)
+    setShowItemDialog(true)
+  }, [])
+
+  const handleDeleteItem = React.useCallback(async (id: string) => {
+    if (confirm("Delete this item?")) {
+      await deleteInventoryItemAction(Number(id))
+      await loadData()
+    }
+  }, [loadData])
 
   // Recursive component for rendering item rows with nesting
-  const renderItemRow = (item: InventoryItem, depth: number = 0): React.ReactNode => {
+  const renderItemRow = React.useCallback((item: InventoryItem, depth: number = 0): React.ReactNode => {
     const children = getChildItems(item.id)
     const hasChildren = children.length > 0
     const isExpanded = expandedItems.has(item.id)
@@ -419,83 +491,15 @@ export default function InventoryPage() {
         {hasChildren && isExpanded && children.map(child => renderItemRow(child, depth + 1))}
       </React.Fragment>
     )
+  }, [getChildItems, expandedItems, toggleItem, getItemLocation, getItemCost, isItemKept, handleEditItem, handleDeleteItem])
+
+  // NOW we can do conditional rendering - all hooks have been called
+  if (!mounted) {
+    return null
   }
 
-  const handleAddArea = () => {
-    setEditingArea(undefined)
-    setShowAreaDialog(true)
-  }
-
-  const handleEditArea = (area: Area) => {
-    setEditingArea(area)
-    setShowAreaDialog(true)
-  }
-
-  const handleDeleteArea = async (id: string) => {
-    if (confirm("Delete this area and all its containers and items?")) {
-      await deleteAreaAction(Number(id))
-      await loadData()
-      if (selectedArea === id) {
-        setSelectedArea(null)
-        setSelectedContainer(null)
-      }
-    }
-  }
-
-  const handleAddContainer = (areaId: string) => {
-    setSelectedArea(areaId)
-    setEditingContainer(undefined)
-    setShowContainerDialog(true)
-  }
-
-  const handleEditContainer = (container: Container) => {
-    setEditingContainer(container)
-    setShowContainerDialog(true)
-  }
-
-  const handleDeleteContainer = async (id: string) => {
-    if (confirm("Delete this container and all its sections and items?")) {
-      await deleteContainerAction(Number(id))
-      await loadData()
-      if (selectedContainer === id) {
-        setSelectedContainer(null)
-      }
-    }
-  }
-
-  const handleAddSection = (containerId: string) => {
-    setSelectedContainer(containerId)
-    setEditingSection(undefined)
-    setShowSectionDialog(true)
-  }
-
-  const handleEditSection = (section: Section) => {
-    setEditingSection(section)
-    setShowSectionDialog(true)
-  }
-
-  const handleDeleteSection = async (id: string) => {
-    if (confirm("Delete this section and all its items?")) {
-      await deleteSectionAction(Number(id))
-      await loadData()
-    }
-  }
-
-  const handleAddItem = () => {
-    setEditingItem(undefined)
-    setShowItemDialog(true)
-  }
-
-  const handleEditItem = (item: InventoryItem) => {
-    setEditingItem(item)
-    setShowItemDialog(true)
-  }
-
-  const handleDeleteItem = async (id: string) => {
-    if (confirm("Delete this item?")) {
-      await deleteInventoryItemAction(Number(id))
-      await loadData()
-    }
+  if (!isUnlocked) {
+    return <PinAuth onUnlock={handleUnlock} title="Inventory Access" />
   }
 
   return (

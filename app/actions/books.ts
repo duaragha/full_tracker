@@ -2,21 +2,29 @@
 
 import { Book } from '@/types/book'
 import { getBooks, addBook, updateBook, deleteBook, calculateTotalPages, calculateTotalMinutes, calculateTotalDays } from '@/lib/db/books-store'
+import { invalidateStatsCache } from '@/lib/cache/stats-cache'
 
 export async function getBooksAction() {
   return await getBooks()
 }
 
 export async function addBookAction(book: Omit<Book, 'id' | 'createdAt' | 'updatedAt'>) {
-  return await addBook(book)
+  const result = await addBook(book)
+  // Invalidate stats cache after adding new book
+  invalidateStatsCache()
+  return result
 }
 
 export async function updateBookAction(id: number, book: Partial<Book>) {
-  return await updateBook(id, book)
+  await updateBook(id, book)
+  // Invalidate stats cache after updating book
+  invalidateStatsCache()
 }
 
 export async function deleteBookAction(id: number) {
-  return await deleteBook(id)
+  await deleteBook(id)
+  // Invalidate stats cache after deleting book
+  invalidateStatsCache()
 }
 
 export async function getBooksStatsAction() {
