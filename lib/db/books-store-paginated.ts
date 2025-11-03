@@ -226,12 +226,14 @@ export async function getBooksGrid(
 export async function getBookById(id: string): Promise<Book | null> {
   try {
     const result = await pool.query(
-      `SELECT *,
+      `SELECT
+        id, title, author, status, rating, pages, current_page, started_date, completed_date,
+        notes, genre, cover_image, isbn, created_at, updated_at, release_date, type, minutes,
         CASE
           WHEN started_date IS NOT NULL AND completed_date IS NOT NULL THEN
-            EXTRACT(DAY FROM (completed_date::date - started_date::date))::INTEGER + 1
+            (completed_date::date - started_date::date) + 1
           WHEN started_date IS NOT NULL THEN
-            EXTRACT(DAY FROM (CURRENT_DATE - started_date::date))::INTEGER + 1
+            (CURRENT_DATE - started_date::date) + 1
           ELSE 0
         END as days_read
       FROM books WHERE id = $1`,
