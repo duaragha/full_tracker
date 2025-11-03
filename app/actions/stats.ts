@@ -70,11 +70,6 @@ function setCachedStats(period: TimePeriod, data: any): void {
   })
 }
 
-// Invalidate cache when data changes (call this from your update actions)
-export function invalidateStatsCache(): void {
-  statsCache.clear()
-}
-
 /**
  * Optimized statistics query using database aggregation
  * All calculations done in SQL for maximum performance
@@ -121,7 +116,7 @@ export async function getStatsAction(period: TimePeriod = "month") {
           COUNT(*) FILTER (WHERE status = 'Completed') as completed,
           COUNT(*) FILTER (WHERE status = 'Reading') as reading,
           COALESCE(SUM(COALESCE(pages, 0)), 0) as total_pages,
-          COALESCE(SUM(COALESCE(hours, 0) + COALESCE(minutes, 0) / 60.0), 0) as total_hours
+          COALESCE(SUM(COALESCE(minutes, 0) / 60.0), 0) as total_hours
         FROM books
         WHERE ($1 = 'all' OR updated_at >= $2::timestamptz)
       `, [period === 'all' ? 'all' : 'period', startDate]),
@@ -153,13 +148,13 @@ export async function getStatsAction(period: TimePeriod = "month") {
       pool.query(`
         SELECT
           COALESCE(SUM(COALESCE(km_driven, 0)), 0) as total_km,
-          COALESCE(SUM(COALESCE(total_cost, 0)), 0) as total_cost,
+          COALESCE(SUM(COALESCE(cost, 0)), 0) as total_cost,
           COUNT(*) as entries,
           CASE
             WHEN COUNT(*) > 0 THEN COALESCE(SUM(COALESCE(km_driven, 0)), 0) / COUNT(*)
             ELSE 0
           END as avg_km_per_entry
-        FROM phev_entries
+        FROM phev_tracker
         WHERE ($1 = 'all' OR date >= $2::date AND date <= $3::date)
       `, [period === 'all' ? 'all' : 'period', start.toISOString().split('T')[0], end.toISOString().split('T')[0]]),
 
@@ -167,7 +162,7 @@ export async function getStatsAction(period: TimePeriod = "month") {
       pool.query(`
         SELECT
           COUNT(*) as total,
-          COALESCE(SUM(COALESCE(purchase_price, 0) * COALESCE(quantity, 1)), 0) as total_value,
+          COALESCE(SUM(COALESCE(cost, 0) * COALESCE(quantity, 1)), 0) as total_value,
           COALESCE(SUM(COALESCE(quantity, 1)), 0) as total_quantity
         FROM inventory_items
       `),
@@ -301,8 +296,8 @@ export async function getActivityTimelineAction(months: number = 6) {
         SELECT
           TO_CHAR(DATE_TRUNC('month', updated_at), 'Mon') as month,
           COUNT(*) as count,
-          EXTRACT(YEAR FROM updated_at) as year,
-          EXTRACT(MONTH FROM updated_at) as month_num
+          EXTRACT(YEAR FROM DATE_TRUNC('month', updated_at)) as year,
+          EXTRACT(MONTH FROM DATE_TRUNC('month', updated_at)) as month_num
         FROM games
         WHERE updated_at >= $1
         GROUP BY DATE_TRUNC('month', updated_at)
@@ -313,8 +308,8 @@ export async function getActivityTimelineAction(months: number = 6) {
         SELECT
           TO_CHAR(DATE_TRUNC('month', updated_at), 'Mon') as month,
           COUNT(*) as count,
-          EXTRACT(YEAR FROM updated_at) as year,
-          EXTRACT(MONTH FROM updated_at) as month_num
+          EXTRACT(YEAR FROM DATE_TRUNC('month', updated_at)) as year,
+          EXTRACT(MONTH FROM DATE_TRUNC('month', updated_at)) as month_num
         FROM books
         WHERE updated_at >= $1
         GROUP BY DATE_TRUNC('month', updated_at)
@@ -325,8 +320,8 @@ export async function getActivityTimelineAction(months: number = 6) {
         SELECT
           TO_CHAR(DATE_TRUNC('month', updated_at), 'Mon') as month,
           COUNT(*) as count,
-          EXTRACT(YEAR FROM updated_at) as year,
-          EXTRACT(MONTH FROM updated_at) as month_num
+          EXTRACT(YEAR FROM DATE_TRUNC('month', updated_at)) as year,
+          EXTRACT(MONTH FROM DATE_TRUNC('month', updated_at)) as month_num
         FROM tvshows
         WHERE updated_at >= $1
         GROUP BY DATE_TRUNC('month', updated_at)
@@ -337,8 +332,8 @@ export async function getActivityTimelineAction(months: number = 6) {
         SELECT
           TO_CHAR(DATE_TRUNC('month', updated_at), 'Mon') as month,
           COUNT(*) as count,
-          EXTRACT(YEAR FROM updated_at) as year,
-          EXTRACT(MONTH FROM updated_at) as month_num
+          EXTRACT(YEAR FROM DATE_TRUNC('month', updated_at)) as year,
+          EXTRACT(MONTH FROM DATE_TRUNC('month', updated_at)) as month_num
         FROM movies
         WHERE updated_at >= $1
         GROUP BY DATE_TRUNC('month', updated_at)
