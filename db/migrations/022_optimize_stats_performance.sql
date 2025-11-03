@@ -44,8 +44,8 @@ CREATE INDEX IF NOT EXISTS idx_books_updated_at_stats
 
 -- Index for reading time calculations
 CREATE INDEX IF NOT EXISTS idx_books_reading_time
-  ON books(hours, minutes)
-  WHERE hours IS NOT NULL OR minutes IS NOT NULL;
+  ON books(minutes)
+  WHERE minutes IS NOT NULL;
 
 -- Index for page count statistics
 CREATE INDEX IF NOT EXISTS idx_books_pages
@@ -107,23 +107,23 @@ CREATE INDEX IF NOT EXISTS idx_movies_rating_stats
 -- ============================================
 
 -- Index for date-range queries
-CREATE INDEX IF NOT EXISTS idx_phev_entries_date_stats
-  ON phev_entries(date DESC)
+CREATE INDEX IF NOT EXISTS idx_phev_tracker_date_stats
+  ON phev_tracker(date DESC)
   WHERE date IS NOT NULL;
 
 -- Index for distance calculations
-CREATE INDEX IF NOT EXISTS idx_phev_entries_km
-  ON phev_entries(km_driven)
+CREATE INDEX IF NOT EXISTS idx_phev_tracker_km
+  ON phev_tracker(km_driven)
   WHERE km_driven IS NOT NULL;
 
 -- Index for cost calculations
-CREATE INDEX IF NOT EXISTS idx_phev_entries_cost
-  ON phev_entries(total_cost)
-  WHERE total_cost IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_phev_tracker_cost
+  ON phev_tracker(cost)
+  WHERE cost IS NOT NULL;
 
 -- Composite index for period-based aggregations
-CREATE INDEX IF NOT EXISTS idx_phev_entries_date_stats_composite
-  ON phev_entries(date, km_driven, total_cost);
+CREATE INDEX IF NOT EXISTS idx_phev_tracker_date_stats_composite
+  ON phev_tracker(date, km_driven, cost);
 
 -- ============================================
 -- INVENTORY TABLE INDEXES FOR STATISTICS
@@ -131,8 +131,8 @@ CREATE INDEX IF NOT EXISTS idx_phev_entries_date_stats_composite
 
 -- Index for value calculations
 CREATE INDEX IF NOT EXISTS idx_inventory_items_value
-  ON inventory_items(purchase_price, quantity)
-  WHERE purchase_price IS NOT NULL;
+  ON inventory_items(cost, quantity)
+  WHERE cost IS NOT NULL;
 
 -- Index for quantity tracking
 CREATE INDEX IF NOT EXISTS idx_inventory_items_quantity
@@ -341,7 +341,7 @@ ANALYZE games;
 ANALYZE books;
 ANALYZE tvshows;
 ANALYZE movies;
-ANALYZE phev_entries;
+ANALYZE phev_tracker;
 ANALYZE inventory_items;
 ANALYZE jobs;
 
@@ -359,7 +359,7 @@ SELECT
   pg_size_pretty(pg_relation_size(indexrelid)) as index_size
 FROM pg_stat_user_indexes
 WHERE schemaname = 'public'
-  AND tablename IN ('games', 'books', 'tvshows', 'movies', 'phev_entries', 'inventory_items', 'jobs')
+  AND tablename IN ('games', 'books', 'tvshows', 'movies', 'phev_tracker', 'inventory_items', 'jobs')
 ORDER BY pg_relation_size(indexrelid) DESC;
 */
 
@@ -372,7 +372,7 @@ SELECT
   indexdef
 FROM pg_indexes
 WHERE schemaname = 'public'
-  AND tablename IN ('games', 'books', 'tvshows', 'movies', 'phev_entries', 'inventory_items', 'jobs')
+  AND tablename IN ('games', 'books', 'tvshows', 'movies', 'phev_tracker', 'inventory_items', 'jobs')
   AND indexname LIKE '%_stats%'
 ORDER BY tablename, indexname;
 */
