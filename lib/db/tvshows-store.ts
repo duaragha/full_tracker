@@ -36,7 +36,16 @@ function normalizeTVShow(show: any): TVShow {
 
 export async function getTVShows(): Promise<TVShow[]> {
   const result = await pool.query<any>(
-    'SELECT * FROM tvshows ORDER BY created_at DESC'
+    `SELECT *,
+      CASE
+        WHEN date_i_started IS NOT NULL AND date_i_ended IS NOT NULL THEN
+          EXTRACT(DAY FROM (date_i_ended::date - date_i_started::date))::INTEGER + 1
+        WHEN date_i_started IS NOT NULL THEN
+          EXTRACT(DAY FROM (CURRENT_DATE - date_i_started::date))::INTEGER + 1
+        ELSE 0
+      END as days_tracking
+    FROM tvshows
+    ORDER BY created_at DESC`
   )
   return result.rows.map(normalizeTVShow)
 }

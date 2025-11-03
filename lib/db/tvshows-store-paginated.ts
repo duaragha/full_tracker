@@ -209,7 +209,15 @@ export async function getTVShowsGrid(
 export async function getTVShowById(id: string): Promise<TVShow | null> {
   try {
     const result = await pool.query(
-      'SELECT * FROM tvshows WHERE id = $1',
+      `SELECT *,
+        CASE
+          WHEN date_i_started IS NOT NULL AND date_i_ended IS NOT NULL THEN
+            EXTRACT(DAY FROM (date_i_ended::date - date_i_started::date))::INTEGER + 1
+          WHEN date_i_started IS NOT NULL THEN
+            EXTRACT(DAY FROM (CURRENT_DATE - date_i_started::date))::INTEGER + 1
+          ELSE 0
+        END as days_tracking
+      FROM tvshows WHERE id = $1`,
       [id]
     )
 

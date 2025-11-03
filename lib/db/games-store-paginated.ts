@@ -221,7 +221,15 @@ export async function getGamesGrid(
 export async function getGameById(id: string): Promise<Game | null> {
   try {
     const result = await pool.query(
-      'SELECT * FROM games WHERE id = $1',
+      `SELECT *,
+        CASE
+          WHEN started_date IS NOT NULL AND completed_date IS NOT NULL THEN
+            EXTRACT(DAY FROM (completed_date::date - started_date::date))::INTEGER + 1
+          WHEN started_date IS NOT NULL THEN
+            EXTRACT(DAY FROM (CURRENT_DATE - started_date::date))::INTEGER + 1
+          ELSE 0
+        END as days_played
+      FROM games WHERE id = $1`,
       [id]
     )
 

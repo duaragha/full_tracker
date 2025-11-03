@@ -66,7 +66,16 @@ function normalizeBook(book: any): Book {
 
 export async function getBooks(): Promise<Book[]> {
   const result = await pool.query<any>(
-    'SELECT * FROM books ORDER BY created_at DESC'
+    `SELECT *,
+      CASE
+        WHEN started_date IS NOT NULL AND completed_date IS NOT NULL THEN
+          EXTRACT(DAY FROM (completed_date::date - started_date::date))::INTEGER + 1
+        WHEN started_date IS NOT NULL THEN
+          EXTRACT(DAY FROM (CURRENT_DATE - started_date::date))::INTEGER + 1
+        ELSE 0
+      END as days_read
+    FROM books
+    ORDER BY created_at DESC`
   )
   return result.rows.map(normalizeBook)
 }
