@@ -7,7 +7,9 @@
     "build": "next build",
     "start": "next start -p ${PORT:-3000}",
     "lint": "eslint",
-    "backfill-energy": "npx tsx scripts/backfill-energy-kwh.ts"
+    "backfill-energy": "npx tsx scripts/backfill-energy-kwh.ts",
+    "diagnose-tuya": "npx tsx scripts/diagnose-tuya.ts",
+    "test-tuya": "npx tsx scripts/test-tuya.ts"
   },
   "engines": {
     "node": ">=18.0.0"
