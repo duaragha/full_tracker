@@ -317,7 +317,7 @@ export default function GamesPage() {
         </div>
       </div>
 
-      <div className="w-full grid gap-2 sm:gap-3 grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-9">
+      <div className="w-full grid gap-2 sm:gap-3 grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-7">
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-lg">{games.length}</CardTitle>
