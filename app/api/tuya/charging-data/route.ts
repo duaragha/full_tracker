@@ -25,32 +25,38 @@ export async function POST(request: NextRequest) {
     // Create Tuya client
     const tuyaClient = createTuyaClient()
 
-    // Fetch energy data for the specified date
-    const energyKwh = await tuyaClient.getEnergyForDate(date)
+    // Set electricity rate if provided
+    if (electricityRate) {
+      tuyaClient.setElectricityRate(electricityRate)
+    }
 
-    // Calculate cost based on energy consumption (even if 0)
-    const rate = electricityRate || 0.20 // Default to $0.20/kWh if not provided
-    const cost = tuyaClient.calculateChargingCost(energyKwh, rate)
+    // Fetch comprehensive energy data for the specified date
+    const energyData = await tuyaClient.getEnergyDataForDate(date)
 
-    // Return data with a message if energy is 0
-    if (energyKwh === 0) {
+    // Return data with metadata about source and confidence
+    if (energyData.energy_kwh === 0) {
       return NextResponse.json({
         success: true,
-        message: 'No energy data available for this date. The device may not have been actively charging, or data may not be available yet.',
+        message: energyData.message,
         data: {
           energy_kwh: 0,
           cost: 0,
           date,
+          source: energyData.source,
+          confidence: energyData.confidence
         },
       })
     }
 
     return NextResponse.json({
       success: true,
+      message: energyData.message,
       data: {
-        energy_kwh: parseFloat(energyKwh.toFixed(3)),
-        cost: parseFloat(cost.toFixed(2)),
+        energy_kwh: parseFloat(energyData.energy_kwh.toFixed(3)),
+        cost: parseFloat(energyData.cost.toFixed(2)),
         date,
+        source: energyData.source,
+        confidence: energyData.confidence
       },
     })
   } catch (error) {

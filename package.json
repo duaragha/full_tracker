@@ -6,8 +6,12 @@
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start -p ${PORT:-3000}",
+    "monitor": "tsx scripts/monitor-charging.ts",
     "lint": "eslint",
-    "backfill-energy": "npx tsx scripts/backfill-energy-kwh.ts"
+    "backfill-energy": "npx tsx scripts/backfill-energy-kwh.ts",
+    "diagnose-tuya": "npx tsx scripts/diagnose-tuya.ts",
+    "test-tuya": "npx tsx scripts/test-tuya.ts",
+    "test-series": "npx tsx scripts/test-book-series-detection.ts"
   },
   "engines": {
     "node": ">=18.0.0"
@@ -42,6 +46,7 @@
     "react-dom": "^19.2.0",
     "recharts": "^2.15.4",
     "tailwind-merge": "^3.3.1",
+    "tsx": "^4.20.6",
     "xlsx": "^0.18.5"
   },
   "devDependencies": {

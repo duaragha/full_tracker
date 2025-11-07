@@ -3,7 +3,7 @@
 import * as React from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { BarChart3, Gamepad2, BookOpen, Home, Tv, Film, Package, Zap, Briefcase, TrendingUp } from "lucide-react"
+import { BarChart3, Gamepad2, BookOpen, Home, Tv, Film, Package, Zap, Briefcase, TrendingUp, Settings, ChevronDown, Radio, Headphones } from "lucide-react"
 
 import {
   Sidebar,
@@ -65,6 +65,19 @@ const navItems = [
   },
 ]
 
+const settingsItems = [
+  {
+    title: "Plex Integration",
+    url: "/settings/plex",
+    icon: Radio,
+  },
+  {
+    title: "Audible Integration",
+    url: "/settings/audible",
+    icon: Headphones,
+  },
+]
+
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const pathname = usePathname()
 
@@ -85,6 +98,25 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           <SidebarGroupContent>
             <SidebarMenu>
               {navItems.map((item) => (
+                <SidebarMenuItem key={item.title}>
+                  <SidebarMenuButton asChild isActive={pathname === item.url} className="px-3 h-11 sm:px-2 sm:h-9">
+                    <Link href={item.url} className="text-base sm:text-sm">
+                      <item.icon className="size-5 sm:size-4 mr-3 sm:mr-2" />
+                      <span>{item.title}</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        {/* Settings Section */}
+        <SidebarGroup>
+          <SidebarGroupLabel className="text-xs px-2 text-muted-foreground">Settings</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {settingsItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild isActive={pathname === item.url} className="px-3 h-11 sm:px-2 sm:h-9">
                     <Link href={item.url} className="text-base sm:text-sm">
