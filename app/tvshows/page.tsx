@@ -302,35 +302,35 @@ export default function TVShowsPage() {
         </Button>
       </div>
 
-      <div className="grid grid-cols-2 gap-2 md:gap-3 md:grid-cols-5 lg:grid-cols-8 xl:grid-cols-10">
+      <div className="grid gap-2 sm:gap-3 grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-9">
         <Card>
-          <CardHeader>
-            <CardTitle>{totalShows}</CardTitle>
-            <CardDescription>Total Shows</CardDescription>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-lg">{totalShows}</CardTitle>
+            <CardDescription className="text-xs">Total Shows</CardDescription>
           </CardHeader>
         </Card>
         <Card>
-          <CardHeader>
-            <CardTitle>{totalEpisodesWatched}</CardTitle>
-            <CardDescription>Episodes Watched</CardDescription>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-lg">{totalEpisodesWatched}</CardTitle>
+            <CardDescription className="text-xs">Episodes Watched</CardDescription>
           </CardHeader>
         </Card>
         <Card>
-          <CardHeader>
-            <CardTitle>{totalTimeFormatted}</CardTitle>
-            <CardDescription>Total Time Watched</CardDescription>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-lg">{totalTimeFormatted}</CardTitle>
+            <CardDescription className="text-xs">Total Time Watched</CardDescription>
           </CardHeader>
         </Card>
         <Card>
-          <CardHeader>
-            <CardTitle>{totalRewatches}</CardTitle>
-            <CardDescription>Total Rewatches</CardDescription>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-lg">{totalRewatches}</CardTitle>
+            <CardDescription className="text-xs">Total Rewatches</CardDescription>
           </CardHeader>
         </Card>
         <Card>
-          <CardHeader>
-            <CardTitle>{totalDaysTracking}</CardTitle>
-            <CardDescription>Days Tracking</CardDescription>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-lg">{totalDaysTracking}</CardTitle>
+            <CardDescription className="text-xs">Days Tracking</CardDescription>
           </CardHeader>
         </Card>
       </div>

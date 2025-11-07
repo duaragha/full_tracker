@@ -117,19 +117,22 @@ export default function Dashboard() {
   }
 
   const activeGames = games.filter(g => g.status !== 'Stopped')
-  const gamesCount = games.length
-  const booksCount = books.length
-  const tvshowsCount = tvshows.length
-  const moviesCount = movies.length
+  const activeBooks = books.filter(b => b.status !== 'Stopped')
+  const activeTVShows = tvshows.filter(s => s.status !== 'Stopped')
+  const activeMovies = movies.filter(m => m.status !== 'Stopped')
+  const gamesCount = activeGames.length
+  const booksCount = activeBooks.length
+  const tvshowsCount = activeTVShows.length
+  const moviesCount = activeMovies.length
   const totalGameHours = activeGames.reduce((sum, g) => sum + g.hoursPlayed + g.minutesPlayed / 60, 0)
   const totalGameDays = activeGames.reduce((sum, g) => sum + g.daysPlayed, 0)
-  const totalBookPages = books.reduce((total, book) => total + (book.pages || 0), 0)
-  const totalBookMinutes = books.reduce((total, book) => total + (book.hours * 60 + book.minutes || 0), 0)
-  const totalBookDays = books.reduce((sum, b) => sum + b.daysRead, 0)
-  const totalTVEpisodes = tvshows.reduce((total, show) => total + (show.watchedEpisodes || 0), 0)
-  const totalTVMinutes = tvshows.reduce((total, show) => total + (show.totalMinutes || 0), 0)
-  const totalTVDays = tvshows.reduce((total, show) => total + (show.daysTracking || 0), 0)
-  const totalMovieRuntime = movies.reduce((total, movie) => total + (movie.runtime || 0), 0)
+  const totalBookPages = activeBooks.reduce((total, book) => total + (book.pages || 0), 0)
+  const totalBookMinutes = activeBooks.reduce((total, book) => total + (book.hours * 60 + book.minutes || 0), 0)
+  const totalBookDays = activeBooks.reduce((sum, b) => sum + b.daysRead, 0)
+  const totalTVEpisodes = activeTVShows.reduce((total, show) => total + (show.watchedEpisodes || 0), 0)
+  const totalTVMinutes = activeTVShows.reduce((total, show) => total + (show.totalMinutes || 0), 0)
+  const totalTVDays = activeTVShows.reduce((total, show) => total + (show.daysTracking || 0), 0)
+  const totalMovieRuntime = activeMovies.reduce((total, movie) => total + (movie.runtime || 0), 0)
 
   // Calculate current month PHEV stats
   const currentMonth = new Date().toISOString().slice(0, 7) // YYYY-MM format
@@ -155,18 +158,22 @@ export default function Dashboard() {
   }).slice(0, 4)
 
   const recentGames = games
+    .filter(g => g.status !== 'Stopped')
     .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
     .slice(0, 5)
 
   const recentBooks = books
+    .filter(b => b.status !== 'Stopped')
     .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
     .slice(0, 5)
 
   const recentTVShows = tvshows
+    .filter(s => s.status !== 'Stopped')
     .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
     .slice(0, 5)
 
   const recentMovies = movies
+    .filter(m => m.status !== 'Stopped')
     .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
     .slice(0, 5)
 

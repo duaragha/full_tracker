@@ -232,29 +232,29 @@ export default function MoviesPage() {
         </Button>
       </div>
 
-      <div className="grid grid-cols-2 gap-2 md:gap-3 md:grid-cols-5 lg:grid-cols-8 xl:grid-cols-10">
+      <div className="grid gap-2 sm:gap-3 grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-9">
         <Card>
-          <CardHeader className="pb-3 sm:pb-6">
-            <CardTitle className="text-xl sm:text-2xl">{totalMovies}</CardTitle>
-            <CardDescription className="text-xs sm:text-sm">Total Movies</CardDescription>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-lg">{totalMovies}</CardTitle>
+            <CardDescription className="text-xs">Total Movies</CardDescription>
           </CardHeader>
         </Card>
         <Card>
-          <CardHeader className="pb-3 sm:pb-6">
-            <CardTitle className="text-xl sm:text-2xl">{totalHours}h {totalMinutes}m</CardTitle>
-            <CardDescription className="text-xs sm:text-sm">Total Runtime</CardDescription>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-lg">{totalHours}h {totalMinutes}m</CardTitle>
+            <CardDescription className="text-xs">Total Runtime</CardDescription>
           </CardHeader>
         </Card>
         <Card>
-          <CardHeader className="pb-3 sm:pb-6">
-            <CardTitle className="text-xl sm:text-2xl">{avgRating}/10</CardTitle>
-            <CardDescription className="text-xs sm:text-sm">Average Rating</CardDescription>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-lg">{avgRating}/10</CardTitle>
+            <CardDescription className="text-xs">Average Rating</CardDescription>
           </CardHeader>
         </Card>
         <Card>
-          <CardHeader className="pb-3 sm:pb-6">
-            <CardTitle className="text-xl sm:text-2xl">{moviesThisYear}</CardTitle>
-            <CardDescription className="text-xs sm:text-sm">Movies This Year</CardDescription>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-lg">{moviesThisYear}</CardTitle>
+            <CardDescription className="text-xs">Movies This Year</CardDescription>
           </CardHeader>
         </Card>
       </div>

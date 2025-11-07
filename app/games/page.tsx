@@ -317,53 +317,53 @@ export default function GamesPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-2 md:gap-3 md:grid-cols-5 lg:grid-cols-8 xl:grid-cols-10">
+      <div className="grid gap-2 sm:gap-3 grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-9">
         <Card>
-          <CardHeader className="pb-3 sm:pb-6">
-            <CardTitle className="text-xl sm:text-2xl">{games.length}</CardTitle>
-            <CardDescription className="text-xs sm:text-sm">Total Games</CardDescription>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-lg">{games.length}</CardTitle>
+            <CardDescription className="text-xs">Total Games</CardDescription>
           </CardHeader>
         </Card>
         <Card>
-          <CardHeader className="pb-3 sm:pb-6">
-            <CardTitle className="text-xl sm:text-2xl">{totalHours.toFixed(1)}h</CardTitle>
-            <CardDescription className="text-xs sm:text-sm">Total Hours Played</CardDescription>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-lg">{totalHours.toFixed(1)}h</CardTitle>
+            <CardDescription className="text-xs">Total Hours Played</CardDescription>
           </CardHeader>
         </Card>
         <Card>
-          <CardHeader className="pb-3 sm:pb-6">
-            <CardTitle className="text-xl sm:text-2xl">{avgPercentage}%</CardTitle>
-            <CardDescription className="text-xs sm:text-sm">Average Percentage</CardDescription>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-lg">{avgPercentage}%</CardTitle>
+            <CardDescription className="text-xs">Average Percentage</CardDescription>
           </CardHeader>
         </Card>
         <Card>
-          <CardHeader className="pb-3 sm:pb-6">
-            <CardTitle className="text-xl sm:text-2xl">{totalDays}</CardTitle>
-            <CardDescription className="text-xs sm:text-sm">Total Days</CardDescription>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-lg">{totalDays}</CardTitle>
+            <CardDescription className="text-xs">Total Days</CardDescription>
           </CardHeader>
         </Card>
         <Card>
-          <CardHeader className="pb-3 sm:pb-6">
-            <CardTitle className="text-xl sm:text-2xl">${totalCost.toFixed(2)}</CardTitle>
-            <CardDescription className="text-xs sm:text-sm">Total Cost</CardDescription>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-lg">${totalCost.toFixed(2)}</CardTitle>
+            <CardDescription className="text-xs">Total Cost</CardDescription>
           </CardHeader>
         </Card>
         <Card>
-          <CardHeader className="pb-3 sm:pb-6">
-            <CardTitle className="truncate">
+          <CardHeader className="pb-2">
+            <CardTitle className="truncate text-lg">
               {oldestGame ? oldestGame.title : 'N/A'}
             </CardTitle>
-            <CardDescription className="text-xs sm:text-sm">
+            <CardDescription className="text-xs">
               Oldest Game {oldestGame && `(${new Date(oldestGame.dateStarted).getFullYear()})`}
             </CardDescription>
           </CardHeader>
         </Card>
         <Card>
-          <CardHeader className="pb-3 sm:pb-6">
-            <CardTitle className="truncate">
+          <CardHeader className="pb-2">
+            <CardTitle className="truncate text-lg">
               {newestGame ? newestGame.title : 'N/A'}
             </CardTitle>
-            <CardDescription className="text-xs sm:text-sm">
+            <CardDescription className="text-xs">
               Newest Game {newestGame && `(${new Date(newestGame.dateStarted).getFullYear()})`}
             </CardDescription>
           </CardHeader>

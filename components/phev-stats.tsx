@@ -7,46 +7,46 @@ interface PhevStatsProps {
 
 export function PhevStatsCards({ stats }: PhevStatsProps) {
   return (
-    <div className="grid grid-cols-3 gap-3 md:gap-4 lg:grid-cols-6">
+    <div className="grid gap-2 sm:gap-3 grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-9">
       <Card>
-        <CardHeader className="p-3 md:p-6">
-          <CardTitle className="text-lg md:text-2xl">{stats.totalKm.toFixed(2)}</CardTitle>
-          <CardDescription className="text-xs md:text-sm">Total KM</CardDescription>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-lg">{stats.totalKm.toFixed(2)}</CardTitle>
+          <CardDescription className="text-xs">Total KM</CardDescription>
         </CardHeader>
       </Card>
 
       <Card>
-        <CardHeader className="p-3 md:p-6">
-          <CardTitle className="text-lg md:text-2xl">${stats.totalCost.toFixed(2)}</CardTitle>
-          <CardDescription className="text-xs md:text-sm">Total Cost</CardDescription>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-lg">${stats.totalCost.toFixed(2)}</CardTitle>
+          <CardDescription className="text-xs">Total Cost</CardDescription>
         </CardHeader>
       </Card>
 
       <Card>
-        <CardHeader className="p-3 md:p-6">
-          <CardTitle className="text-lg md:text-2xl">{stats.totalEnergyKwh.toFixed(2)} kWh</CardTitle>
-          <CardDescription className="text-xs md:text-sm">Total Energy</CardDescription>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-lg">{stats.totalEnergyKwh.toFixed(2)} kWh</CardTitle>
+          <CardDescription className="text-xs">Total Energy</CardDescription>
         </CardHeader>
       </Card>
 
       <Card>
-        <CardHeader className="p-3 md:p-6">
-          <CardTitle className="text-lg md:text-2xl">${stats.costPerKm.toFixed(4)}</CardTitle>
-          <CardDescription className="text-xs md:text-sm">Cost per KM</CardDescription>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-lg">${stats.costPerKm.toFixed(4)}</CardTitle>
+          <CardDescription className="text-xs">Cost per KM</CardDescription>
         </CardHeader>
       </Card>
 
       <Card>
-        <CardHeader className="p-3 md:p-6">
-          <CardTitle className="text-lg md:text-2xl">${stats.costPerKwh > 0 ? stats.costPerKwh.toFixed(3) : 'N/A'}</CardTitle>
-          <CardDescription className="text-xs md:text-sm">Cost per kWh</CardDescription>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-lg">${stats.costPerKwh > 0 ? stats.costPerKwh.toFixed(3) : 'N/A'}</CardTitle>
+          <CardDescription className="text-xs">Cost per kWh</CardDescription>
         </CardHeader>
       </Card>
 
       <Card>
-        <CardHeader className="p-3 md:p-6">
-          <CardTitle className="text-lg md:text-2xl">{stats.kwhPerKm > 0 ? (stats.kwhPerKm * 100).toFixed(2) : 'N/A'}</CardTitle>
-          <CardDescription className="text-xs md:text-sm">kWh/100km</CardDescription>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-lg">{stats.kwhPerKm > 0 ? (stats.kwhPerKm * 100).toFixed(2) : 'N/A'}</CardTitle>
+          <CardDescription className="text-xs">kWh/100km</CardDescription>
         </CardHeader>
       </Card>
     </div>
