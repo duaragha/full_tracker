@@ -34,10 +34,12 @@ const ONTARIO_HOLIDAYS_2025 = [
  * Get the TOU rate for a specific date and time in Ontario
  */
 export function getOntarioTOURate(date: Date = new Date()): TOURate {
-  const dateStr = date.toISOString().split('T')[0]
-  const hour = date.getHours()
-  const dayOfWeek = date.getDay() // 0 = Sunday, 6 = Saturday
-  const month = date.getMonth() + 1 // 1-12
+  // Convert to Ontario timezone (America/Toronto)
+  const ontarioDate = new Date(date.toLocaleString('en-US', { timeZone: 'America/Toronto' }))
+  const dateStr = ontarioDate.toISOString().split('T')[0]
+  const hour = ontarioDate.getHours()
+  const dayOfWeek = ontarioDate.getDay() // 0 = Sunday, 6 = Saturday
+  const month = ontarioDate.getMonth() + 1 // 1-12
 
   // Check if it's a holiday (off-peak all day)
   if (ONTARIO_HOLIDAYS_2025.includes(dateStr)) {

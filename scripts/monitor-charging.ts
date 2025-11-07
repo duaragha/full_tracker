@@ -53,7 +53,7 @@ async function checkAndUpdate() {
   const isChargingNow = power > CHARGING_THRESHOLD
   const touStatus = getCurrentTOUStatus()
 
-  console.log(`[${new Date().toLocaleTimeString()}] Power: ${power}W | Cumulative: ${cumulativeKwh.toFixed(2)} kWh | ${isChargingNow ? '⚡ CHARGING' : '💤 IDLE'} | ${touStatus}`)
+  console.log(`[${new Date().toLocaleTimeString('en-US', { timeZone: 'America/Toronto' })}] Power: ${power}W | Cumulative: ${cumulativeKwh.toFixed(2)} kWh | ${isChargingNow ? '⚡ CHARGING' : '💤 IDLE'} | ${touStatus}`)
 
   if (!wasCharging && isChargingNow) {
     // Started charging
