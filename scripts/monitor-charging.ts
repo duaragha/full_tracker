@@ -51,9 +51,11 @@ async function checkAndUpdate() {
 
   const wasCharging = state.isCharging
   const isChargingNow = power > CHARGING_THRESHOLD
+  const currentRate = getOntarioTOURate()
+  const cumulativeCost = cumulativeKwh * currentRate.rate
   const touStatus = getCurrentTOUStatus()
 
-  console.log(`[${new Date().toLocaleTimeString('en-US', { timeZone: 'America/Toronto' })}] Power: ${power}W | Cumulative: ${cumulativeKwh.toFixed(2)} kWh | ${isChargingNow ? '⚡ CHARGING' : '💤 IDLE'} | ${touStatus}`)
+  console.log(`[${new Date().toLocaleTimeString('en-US', { timeZone: 'America/Toronto' })}] Power: ${power}W | Energy: ${cumulativeKwh.toFixed(2)} kWh ($${cumulativeCost.toFixed(2)}) | ${isChargingNow ? '⚡ CHARGING' : '💤 IDLE'} | ${touStatus}`)
 
   if (!wasCharging && isChargingNow) {
     // Started charging
