@@ -7,7 +7,7 @@ interface PhevStatsProps {
 
 export function PhevStatsCards({ stats }: PhevStatsProps) {
   return (
-    <div className="grid gap-2 sm:gap-3 grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-9">
+    <div className="w-full grid gap-2 sm:gap-3 grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-9">
       <Card>
         <CardHeader className="pb-2">
           <CardTitle className="text-lg">{stats.totalKm.toFixed(2)}</CardTitle>
