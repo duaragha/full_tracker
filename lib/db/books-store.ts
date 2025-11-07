@@ -61,23 +61,33 @@ function normalizeBook(book: any): Book {
     daysRead: book.days_read ? Number(book.days_read) : null,
     releaseDate: book.release_date,
     coverImage: book.cover_image,
+    seriesId: book.series_id || null,
+    seriesName: book.series_name || null,
+    positionInSeries: book.position_in_series ? Number(book.position_in_series) : null,
+    detectionMethod: book.detection_method || null,
   }
 }
 
 export async function getBooks(): Promise<Book[]> {
   const result = await pool.query<any>(
     `SELECT
-      id, title, author, status, rating, pages, current_page, started_date, completed_date,
-      notes, genre, cover_image, isbn, created_at, updated_at, release_date, type, minutes,
+      b.id, b.title, b.author, b.status, b.rating, b.pages, b.current_page, b.started_date, b.completed_date,
+      b.notes, b.genre, b.cover_image, b.isbn, b.created_at, b.updated_at, b.release_date, b.type, b.minutes,
+      bs.id as series_id,
+      bs.name as series_name,
+      bsm.position_in_series,
+      bsm.detection_method,
       CASE
-        WHEN started_date IS NOT NULL AND completed_date IS NOT NULL THEN
-          (completed_date::date - started_date::date) + 1
-        WHEN started_date IS NOT NULL THEN
-          (CURRENT_DATE - started_date::date) + 1
+        WHEN b.started_date IS NOT NULL AND b.completed_date IS NOT NULL THEN
+          (b.completed_date::date - b.started_date::date) + 1
+        WHEN b.started_date IS NOT NULL THEN
+          (CURRENT_DATE - b.started_date::date) + 1
         ELSE 0
       END as days_read
-    FROM books
-    ORDER BY created_at DESC`
+    FROM books b
+    LEFT JOIN book_series_memberships bsm ON b.id = bsm.book_id
+    LEFT JOIN book_series bs ON bsm.series_id = bs.id
+    ORDER BY b.created_at DESC`
   )
   return result.rows.map(normalizeBook)
 }

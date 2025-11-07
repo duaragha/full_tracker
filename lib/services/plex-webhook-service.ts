@@ -1,6 +1,8 @@
 import { Pool } from 'pg';
 import { PlexMatchingService } from './plex-matching-service';
 import { PlexEpisodeService } from './plex-episode-service';
+import { PlexMovieMatchingService } from './plex-movie-matching-service';
+import { PlexMovieService } from './plex-movie-service';
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL || process.env.POSTGRES_URL,
@@ -73,7 +75,7 @@ export class PlexWebhookService {
         };
       }
 
-      // 2. Only process scrobble events for TV episodes
+      // 2. Only process scrobble events for TV episodes and movies
       if (payload.event !== 'media.scrobble') {
         await this.logWebhook(payload, 'ignored', 'event_not_scrobble', null);
         return {
@@ -83,16 +85,49 @@ export class PlexWebhookService {
         };
       }
 
-      if (payload.Metadata.type !== 'episode') {
-        await this.logWebhook(payload, 'ignored', 'not_episode', null);
+      if (payload.Metadata.type !== 'episode' && payload.Metadata.type !== 'movie') {
+        await this.logWebhook(payload, 'ignored', 'not_supported_type', null);
         return {
           status: 'ignored',
-          action: 'not_episode',
+          action: 'not_supported_type',
           duration: Date.now() - startTime,
         };
       }
 
-      // 3. Check for duplicate (within last 5 minutes)
+      // Route to appropriate handler
+      if (payload.Metadata.type === 'episode') {
+        return await this.processEpisodeScrobble(payload, startTime);
+      } else {
+        return await this.processMovieScrobble(payload, startTime);
+      }
+    } catch (error) {
+      console.error('[PlexWebhookService] Error processing webhook:', error);
+      await this.logWebhook(
+        payload,
+        'failed',
+        'processing_error',
+        error instanceof Error ? error.message : 'Unknown error'
+      );
+
+      return {
+        status: 'failed',
+        action: 'processing_error',
+        error: error instanceof Error ? error.message : 'Unknown error',
+        duration: Date.now() - startTime,
+      };
+    }
+  }
+
+  /**
+   * Process episode scrobble
+   */
+  private static async processEpisodeScrobble(
+    payload: PlexWebhookPayload,
+    startTime: number
+  ): Promise<ProcessResult> {
+    try {
+
+      // Check for duplicate (within last 5 minutes)
       const isDuplicate = await this.checkDuplicate(
         payload.Metadata.grandparentRatingKey || payload.Metadata.ratingKey,
         payload.Metadata.parentIndex,
@@ -108,7 +143,7 @@ export class PlexWebhookService {
         };
       }
 
-      // 4. Check if auto-mark-watched is enabled
+      // Check if auto-mark-watched is enabled
       const config = await this.getConfig();
       if (!config.auto_mark_watched) {
         await this.logWebhook(payload, 'ignored', 'auto_mark_disabled', null);
@@ -119,7 +154,7 @@ export class PlexWebhookService {
         };
       }
 
-      // 5. Find or create show mapping
+      // Find or create show mapping
       const plexShow = {
         ratingKey: payload.Metadata.grandparentRatingKey!,
         guid: payload.Metadata.guid,
@@ -139,7 +174,7 @@ export class PlexWebhookService {
         };
       }
 
-      // 6. Mark episode as watched
+      // Mark episode as watched
       const episodeResult = await PlexEpisodeService.markEpisodeWatched(
         matchResult.tvshowId,
         payload.Metadata.parentIndex!,
@@ -167,7 +202,7 @@ export class PlexWebhookService {
 
       await this.logWebhook(payload, 'success', action, null);
 
-      // 7. Update last webhook received time
+      // Update last webhook received time
       await pool.query(
         'UPDATE plex_config SET last_webhook_received = NOW() WHERE user_id = 1'
       );
@@ -179,14 +214,107 @@ export class PlexWebhookService {
         duration: Date.now() - startTime,
       };
     } catch (error) {
-      console.error('[PlexWebhookService] Error processing webhook:', error);
-      await this.logWebhook(
-        payload,
-        'failed',
-        'processing_error',
-        error instanceof Error ? error.message : 'Unknown error'
+      console.error('[PlexWebhookService] Error processing episode:', error);
+      return {
+        status: 'failed',
+        action: 'processing_error',
+        error: error instanceof Error ? error.message : 'Unknown error',
+        duration: Date.now() - startTime,
+      };
+    }
+  }
+
+  /**
+   * Process movie scrobble
+   */
+  private static async processMovieScrobble(
+    payload: PlexWebhookPayload,
+    startTime: number
+  ): Promise<ProcessResult> {
+    try {
+      // Check for duplicate (within last 5 minutes)
+      const isDuplicate = await this.checkDuplicate(
+        payload.Metadata.ratingKey,
+        undefined,
+        undefined
       );
 
+      if (isDuplicate) {
+        await this.logWebhook(payload, 'duplicate', 'ignored_duplicate', null);
+        return {
+          status: 'duplicate',
+          action: 'ignored_duplicate',
+          duration: Date.now() - startTime,
+        };
+      }
+
+      // Check if auto-mark-watched is enabled
+      const config = await this.getConfig();
+      if (!config.auto_mark_watched) {
+        await this.logWebhook(payload, 'ignored', 'auto_mark_disabled', null);
+        return {
+          status: 'ignored',
+          action: 'auto_mark_disabled',
+          duration: Date.now() - startTime,
+        };
+      }
+
+      // Find or create movie mapping
+      const plexMovie = {
+        ratingKey: payload.Metadata.ratingKey,
+        guid: payload.Metadata.guid,
+        title: payload.Metadata.title,
+        year: payload.Metadata.year,
+      };
+
+      const matchResult = await PlexMovieMatchingService.findOrCreateMapping(plexMovie);
+
+      if (matchResult.needsConflict || !matchResult.movieId) {
+        // Conflict created, needs manual resolution
+        await this.logWebhook(payload, 'success', 'conflict_created', null);
+        return {
+          status: 'success',
+          action: 'conflict_created',
+          duration: Date.now() - startTime,
+        };
+      }
+
+      // Mark movie as watched
+      const movieResult = await PlexMovieService.markMovieWatched(matchResult.movieId);
+
+      if (!movieResult.success) {
+        await this.logWebhook(
+          payload,
+          'failed',
+          'movie_mark_failed',
+          movieResult.error
+        );
+        return {
+          status: 'failed',
+          action: 'movie_mark_failed',
+          error: movieResult.error,
+          duration: Date.now() - startTime,
+        };
+      }
+
+      const action = movieResult.alreadyWatched
+        ? 'already_watched'
+        : 'marked_watched';
+
+      await this.logWebhook(payload, 'success', action, null);
+
+      // Update last webhook received time
+      await pool.query(
+        'UPDATE plex_config SET last_webhook_received = NOW() WHERE user_id = 1'
+      );
+
+      return {
+        status: 'success',
+        action,
+        duration: Date.now() - startTime,
+      };
+    } catch (error) {
+      console.error('[PlexWebhookService] Error processing movie:', error);
       return {
         status: 'failed',
         action: 'processing_error',
@@ -217,6 +345,15 @@ export class PlexWebhookService {
           payload.Metadata.grandparentTitle &&
           payload.Metadata.parentIndex !== undefined &&
           payload.Metadata.index !== undefined &&
+          payload.Metadata.guid
+        );
+      }
+
+      // For movie scrobbles, require movie metadata
+      if (payload.event === 'media.scrobble' && payload.Metadata.type === 'movie') {
+        return !!(
+          payload.Metadata.ratingKey &&
+          payload.Metadata.title &&
           payload.Metadata.guid
         );
       }

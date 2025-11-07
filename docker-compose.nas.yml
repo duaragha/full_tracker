@@ -1,0 +1,127 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:16-alpine
+    container_name: fulltracker-db
+    restart: always
+    environment:
+      POSTGRES_USER: tracker
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-changeme}
+      POSTGRES_DB: fulltracker
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./db/migrations:/docker-entrypoint-initdb.d
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U tracker"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Next.js Application
+  fulltracker:
+    build: .
+    container_name: fulltracker-app
+    restart: always
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      # Database
+      DATABASE_URL: postgresql://tracker:${DB_PASSWORD:-changeme}@postgres:5432/fulltracker
+
+      # NextAuth
+      NEXTAUTH_URL: http://${NAS_IP:-192.168.1.100}:3000
+      NEXTAUTH_SECRET: ${NEXTAUTH_SECRET}
+
+      # APIs
+      TUYA_CLIENT_ID: ${TUYA_CLIENT_ID}
+      TUYA_CLIENT_SECRET: ${TUYA_CLIENT_SECRET}
+      TUYA_DEVICE_ID: ${TUYA_DEVICE_ID}
+      TUYA_DATA_CENTER: ${TUYA_DATA_CENTER:-us}
+
+      # Optional APIs
+      GOOGLE_BOOKS_API_KEY: ${GOOGLE_BOOKS_API_KEY}
+      RAWG_API_KEY: ${RAWG_API_KEY}
+      TMDB_API_KEY: ${TMDB_API_KEY}
+
+      # Plex (update webhook URL to NAS IP)
+      PLEX_WEBHOOK_URL: http://${NAS_IP:-192.168.1.100}:3000/api/plex/webhook
+
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./uploads:/app/uploads
+      - ./public:/app/public
+    command: >
+      sh -c "
+        npx prisma migrate deploy &&
+        npm run build &&
+        npm start
+      "
+
+  # Tuya Monitor (runs separately)
+  tuya-monitor:
+    image: node:20-alpine
+    container_name: tuya-monitor
+    restart: always
+    depends_on:
+      postgres:
+        condition: service_healthy
+    working_dir: /app
+    volumes:
+      - ./scripts:/app/scripts
+      - ./lib:/app/lib
+    environment:
+      DATABASE_URL: postgresql://tracker:${DB_PASSWORD:-changeme}@postgres:5432/fulltracker
+      TUYA_CLIENT_ID: ${TUYA_CLIENT_ID}
+      TUYA_CLIENT_SECRET: ${TUYA_CLIENT_SECRET}
+      TUYA_DEVICE_ID: ${TUYA_DEVICE_ID}
+    command: sh -c "npm install && npx tsx scripts/monitor-charging.ts"
+
+  # Optional: Nginx Reverse Proxy
+  nginx:
+    image: nginx:alpine
+    container_name: fulltracker-nginx
+    restart: always
+    depends_on:
+      - fulltracker
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
+      - ./ssl:/etc/nginx/ssl
+    profiles: ["with-ssl"]
+
+  # Optional: Backup service
+  backup:
+    image: postgres:16-alpine
+    container_name: fulltracker-backup
+    restart: always
+    depends_on:
+      - postgres
+    environment:
+      PGPASSWORD: ${DB_PASSWORD:-changeme}
+    volumes:
+      - ./backups:/backups
+    entrypoint: >
+      sh -c "
+        while true; do
+          pg_dump -h postgres -U tracker fulltracker > /backups/backup-$$(date +%Y%m%d-%H%M%S).sql
+          find /backups -name 'backup-*.sql' -mtime +7 -delete
+          sleep 86400
+        done
+      "
+    profiles: ["with-backup"]
+
+volumes:
+  postgres-data:
+    driver: local
+
+networks:
+  default:
+    name: fulltracker-network

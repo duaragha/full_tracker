@@ -8,6 +8,7 @@ import dotenv from 'dotenv'
 dotenv.config({ path: '.env.local' })
 import { TuyaAPI } from '../lib/tuya-api'
 import { Pool } from 'pg'
+import { getOntarioTOURate, calculateChargingCost, getCurrentTOUStatus } from '../lib/ontario-tou-rates'
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL || process.env.POSTGRES_URL,
@@ -48,11 +49,14 @@ async function getCurrentReading() {
 
 async function startSession() {
   const reading = await getCurrentReading()
+  const touStatus = getCurrentTOUStatus()
+
   console.log('🔋 Starting charging session tracking')
   console.log(`  Initial reading: ${reading.kwh.toFixed(2)} kWh (raw: ${reading.raw})`)
   console.log(`  Power: ${reading.power_w}W`)
   console.log(`  Voltage: ${reading.voltage_v.toFixed(1)}V`)
   console.log(`  Current: ${reading.current_ma}mA`)
+  console.log(`  Electricity Rate: ${touStatus}`)
 
   // Save to a temp file or database
   const fs = await import('fs')
@@ -80,16 +84,23 @@ async function endSession() {
   console.log('🔋 Ending charging session')
   console.log(`  Final reading: ${endReading.kwh.toFixed(2)} kWh (raw: ${endReading.raw})`)
 
-  // Calculate energy used
+  // Calculate energy used and cost with TOU rates
   const energyUsed = endReading.kwh - session.start.kwh
-  const cost = energyUsed * 0.20 // Default $0.20/kWh
+  const startTime = new Date(session.start.timestamp)
+  const endTime = endReading.timestamp
+  const { cost, averageRate, breakdown } = calculateChargingCost(
+    energyUsed,
+    startTime,
+    endTime
+  )
 
   console.log('\n📊 Session Summary:')
   console.log(`  Start: ${session.start.kwh.toFixed(2)} kWh`)
   console.log(`  End: ${endReading.kwh.toFixed(2)} kWh`)
   console.log(`  Energy Used: ${energyUsed.toFixed(2)} kWh`)
   console.log(`  Cost: $${cost.toFixed(2)}`)
-  console.log(`  Duration: ${calculateDuration(session.start.timestamp, endReading.timestamp)}`)
+  console.log(`  Rate: ${breakdown}`)
+  console.log(`  Duration: ${calculateDuration(session.start.timestamp, endTime)}`)
 
   // Save to database
   const date = new Date().toISOString().split('T')[0]
@@ -115,19 +126,23 @@ async function endSession() {
 async function checkStatus() {
   const reading = await getCurrentReading()
   const fs = await import('fs')
+  const touStatus = getCurrentTOUStatus()
 
   console.log('📊 Current Status:')
   console.log(`  Cumulative Energy: ${reading.kwh.toFixed(2)} kWh`)
   console.log(`  Power: ${reading.power_w}W ${reading.power_w > 100 ? '⚡ CHARGING' : '💤 IDLE'}`)
   console.log(`  Voltage: ${reading.voltage_v.toFixed(1)}V`)
   console.log(`  Current: ${(reading.current_ma / 1000).toFixed(1)}A`)
+  console.log(`  Current Rate: ${touStatus}`)
 
   if (fs.existsSync('.charging-session.json')) {
     const session = JSON.parse(fs.readFileSync('.charging-session.json', 'utf-8'))
     const energyUsed = reading.kwh - session.start.kwh
+    const startTime = new Date(session.start.timestamp)
+    const { cost, breakdown } = calculateChargingCost(energyUsed, startTime, new Date())
     console.log(`\n  Active Session:`)
     console.log(`    Energy used so far: ${energyUsed.toFixed(2)} kWh`)
-    console.log(`    Cost so far: $${(energyUsed * 0.20).toFixed(2)}`)
+    console.log(`    Cost so far: $${cost.toFixed(2)} (${breakdown})`)
   }
 }
 

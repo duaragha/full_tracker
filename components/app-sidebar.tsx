@@ -3,7 +3,7 @@
 import * as React from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { BarChart3, Gamepad2, BookOpen, Home, Tv, Film, Package, Zap, Briefcase, TrendingUp, Settings, ChevronDown, Radio, Headphones } from "lucide-react"
+import { BarChart3, Gamepad2, BookOpen, Home, Tv, Film, Package, Zap, Briefcase, TrendingUp, Settings, ChevronDown, Radio } from "lucide-react"
 
 import {
   Sidebar,
@@ -70,11 +70,6 @@ const settingsItems = [
     title: "Plex Integration",
     url: "/settings/plex",
     icon: Radio,
-  },
-  {
-    title: "Audible Integration",
-    url: "/settings/audible",
-    icon: Headphones,
   },
 ]
 

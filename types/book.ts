@@ -13,8 +13,33 @@ export interface Book {
   dateStarted: string | null
   dateCompleted: string | null
   notes: string
+  isbn?: string
+  publisher?: string
   createdAt: string
   updatedAt: string
+  seriesId?: number | null
+  seriesName?: string | null
+  positionInSeries?: number | null
+  detectionMethod?: string | null
+}
+
+export interface BookSeries {
+  id: number
+  name: string
+  description?: string
+  totalBooks?: number
+  createdAt: string
+  updatedAt: string
+}
+
+export interface BookSeriesMembership {
+  id: number
+  bookId: number
+  seriesId: number
+  positionInSeries?: number
+  detectionMethod: 'manual' | 'google_books' | 'title_pattern'
+  confidenceScore: number
+  createdAt: string
 }
 
 export interface BookSearchResult {

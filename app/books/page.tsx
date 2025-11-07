@@ -2,12 +2,13 @@
 
 import * as React from "react"
 import Image from "next/image"
-import { Plus, Pencil, Trash2, Calendar, Clock, BookOpen } from "lucide-react"
+import { Plus, Pencil, Trash2, Calendar, Clock, BookOpen, Sparkles, Library } from "lucide-react"
 import { Book, BookSearchResult } from "@/types/book"
-import { getBooksAction, addBookAction, updateBookAction, deleteBookAction } from "@/app/actions/books"
+import { getBooksAction, addBookAction, updateBookAction, deleteBookAction, scanAllBooksForSeriesAction } from "@/app/actions/books"
 import { getBookDetailAction } from "@/app/actions/books-paginated"
 import { BookSearch } from "@/components/book-search"
 import { BookEntryForm } from "@/components/book-entry-form"
+import { BookSeriesAssignment } from "@/components/book-series-assignment"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
@@ -23,6 +24,7 @@ import { CollapsibleSection } from "@/components/ui/collapsible-section"
 type BookSortField = "title" | "author" | "pages" | "minutes" | "days"
 type BookSortOrder = "asc" | "desc"
 type BookTypeFilter = "All" | Book["type"]
+type OrganizeMode = "status" | "series"
 
 const formatMinutes = (minutes: number | null): string => {
   if (!minutes || minutes === 0) return '0m'
@@ -42,11 +44,17 @@ export default function BooksPage() {
   const [searchQuery, setSearchQuery] = React.useState("")
   const [sortBy, setSortBy] = React.useState<BookSortField>("title")
   const [sortOrder, setSortOrder] = React.useState<BookSortOrder>("asc")
+  const [isScanning, setIsScanning] = React.useState(false)
+  const [organizeMode, setOrganizeMode] = React.useState<OrganizeMode>("status")
 
   // Grid view state
   const [viewMode, setViewMode] = useViewMode("table", "books-view-mode")
   const [detailModalOpen, setDetailModalOpen] = React.useState(false)
   const [detailBook, setDetailBook] = React.useState<Book | null>(null)
+
+  // Series assignment state
+  const [seriesAssignmentOpen, setSeriesAssignmentOpen] = React.useState(false)
+  const [seriesAssignmentBook, setSeriesAssignmentBook] = React.useState<Book | null>(null)
 
   React.useEffect(() => {
     const loadBooks = async () => {
@@ -87,6 +95,31 @@ export default function BooksPage() {
       const data = await getBooksAction()
       setBooks(data)
     }
+  }
+
+  const handleScanForSeries = async () => {
+    setIsScanning(true)
+    try {
+      const result = await scanAllBooksForSeriesAction()
+      alert(`Scanned ${result.scanned} books. Linked ${result.linked} to series.`)
+      const data = await getBooksAction()
+      setBooks(data)
+    } catch (error) {
+      alert('Failed to scan books for series')
+      console.error(error)
+    } finally {
+      setIsScanning(false)
+    }
+  }
+
+  const handleManageSeries = (book: Book) => {
+    setSeriesAssignmentBook(book)
+    setSeriesAssignmentOpen(true)
+  }
+
+  const handleSeriesAssignmentSuccess = async () => {
+    const data = await getBooksAction()
+    setBooks(data)
   }
 
   // Handle grid item click - load full details and show modal
@@ -172,6 +205,34 @@ export default function BooksPage() {
     return groups
   }, [filteredAndSortedBooks])
 
+  // Group books by series
+  const groupedBySeries = React.useMemo(() => {
+    const seriesMap: Record<string, Book[]> = {}
+    const noSeriesBooks: Book[] = []
+
+    filteredAndSortedBooks.forEach((book) => {
+      if (book.seriesName) {
+        if (!seriesMap[book.seriesName]) {
+          seriesMap[book.seriesName] = []
+        }
+        seriesMap[book.seriesName].push(book)
+      } else {
+        noSeriesBooks.push(book)
+      }
+    })
+
+    // Sort books within each series by position
+    Object.keys(seriesMap).forEach((seriesName) => {
+      seriesMap[seriesName].sort((a, b) => {
+        const posA = a.positionInSeries || 999
+        const posB = b.positionInSeries || 999
+        return posA - posB
+      })
+    })
+
+    return { seriesMap, noSeriesBooks }
+  }, [filteredAndSortedBooks])
+
   // Convert books to grid items
   const buildGridItem = (book: Book): GridViewItem => {
     const readingInfo = book.type === 'Ebook'
@@ -218,6 +279,220 @@ export default function BooksPage() {
   const totalHours = Math.floor(totalMinutes / 60)
   const remainingMinutes = totalMinutes % 60
 
+  // Helper function to render book list (table + mobile cards)
+  const renderBooksList = (booksList: Book[]) => (
+    <>
+      {/* Desktop Table View */}
+      <div className="hidden md:block overflow-x-auto">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Cover</TableHead>
+              <TableHead>Title</TableHead>
+              <TableHead>Author</TableHead>
+              <TableHead>Series</TableHead>
+              <TableHead>Type</TableHead>
+              <TableHead>Pages/Minutes</TableHead>
+              <TableHead>Days</TableHead>
+              <TableHead>Started</TableHead>
+              <TableHead>Completed</TableHead>
+              <TableHead>Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {booksList.map((book) => (
+              <TableRow key={book.id}>
+                <TableCell>
+                  {book.coverImage && (
+                    <Image
+                      src={book.coverImage}
+                      alt={book.title}
+                      width={48}
+                      height={64}
+                      className="h-16 w-12 rounded object-cover"
+                    />
+                  )}
+                </TableCell>
+                <TableCell className="font-medium">{book.title}</TableCell>
+                <TableCell>{book.author}</TableCell>
+                <TableCell>
+                  {book.seriesName ? (
+                    <div className="text-sm">
+                      <span className="font-medium">{book.seriesName}</span>
+                      {book.positionInSeries && (
+                        <span className="text-muted-foreground ml-1">#{book.positionInSeries}</span>
+                      )}
+                    </div>
+                  ) : (
+                    <span className="text-muted-foreground">-</span>
+                  )}
+                </TableCell>
+                <TableCell>
+                  <Badge variant={book.type === 'Ebook' ? 'default' : 'secondary'}>
+                    {book.type}
+                  </Badge>
+                </TableCell>
+                <TableCell>
+                  {book.type === 'Ebook'
+                    ? `${book.pages || 0} pages`
+                    : formatMinutes(book.minutes)
+                  }
+                </TableCell>
+                <TableCell>{book.daysRead}</TableCell>
+                <TableCell>
+                  {book.dateStarted
+                    ? new Date(book.dateStarted).toLocaleDateString()
+                    : '-'
+                  }
+                </TableCell>
+                <TableCell>
+                  {book.dateCompleted
+                    ? new Date(book.dateCompleted).toLocaleDateString()
+                    : '-'
+                  }
+                </TableCell>
+                <TableCell>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleManageSeries(book)}
+                      title="Manage series"
+                    >
+                      <Library className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleEdit(book)}
+                      title="Edit book"
+                    >
+                      <Pencil className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleDelete(book.id)}
+                      title="Delete book"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+
+      {/* Mobile Card View */}
+      <div className="grid md:hidden grid-cols-1 gap-4">
+        {booksList.map((book) => (
+          <Card key={book.id} className="overflow-hidden">
+            <div className="flex gap-4 p-4">
+              {book.coverImage && (
+                <Image
+                  src={book.coverImage}
+                  alt={book.title}
+                  width={96}
+                  height={128}
+                  className="h-32 w-24 rounded object-cover flex-shrink-0"
+                />
+              )}
+              <div className="flex-1 min-w-0 space-y-2">
+                <div>
+                  <h3 className="font-semibold text-base leading-tight line-clamp-2">
+                    {book.title}
+                  </h3>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    {book.author}
+                  </p>
+                </div>
+
+                <div className="flex flex-wrap gap-2">
+                  <Badge variant={book.type === 'Ebook' ? 'default' : 'secondary'}>
+                    {book.type}
+                  </Badge>
+                  {book.seriesName && (
+                    <Badge variant="outline">
+                      {book.seriesName} {book.positionInSeries && `#${book.positionInSeries}`}
+                    </Badge>
+                  )}
+                </div>
+
+                <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
+                  <div>
+                    <span className="text-muted-foreground">
+                      {book.type === 'Ebook' ? 'Pages:' : 'Time:'}
+                    </span>
+                    <span className="ml-1 font-medium">
+                      {book.type === 'Ebook'
+                        ? `${book.pages || 0}`
+                        : formatMinutes(book.minutes)
+                      }
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground">Days:</span>
+                    <span className="ml-1 font-medium">{book.daysRead}</span>
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground">Started:</span>
+                    <span className="ml-1 font-medium">
+                      {book.dateStarted
+                        ? new Date(book.dateStarted).toLocaleDateString()
+                        : '-'
+                      }
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground">Completed:</span>
+                    <span className="ml-1 font-medium">
+                      {book.dateCompleted
+                        ? new Date(book.dateCompleted).toLocaleDateString()
+                        : '-'
+                      }
+                    </span>
+                  </div>
+                </div>
+
+                <div className="flex gap-2 pt-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleManageSeries(book)}
+                    className="flex-1"
+                  >
+                    <Library className="h-4 w-4 mr-2" />
+                    Series
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleEdit(book)}
+                    className="flex-1"
+                  >
+                    <Pencil className="h-4 w-4 mr-2" />
+                    Edit
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleDelete(book.id)}
+                    className="flex-1"
+                  >
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Delete
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </Card>
+        ))}
+      </div>
+    </>
+  )
+
   return (
     <div className="space-y-4 sm:space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -225,10 +500,16 @@ export default function BooksPage() {
           <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Books Tracker</h1>
           <p className="text-sm sm:text-base text-muted-foreground">Track your reading journey</p>
         </div>
-        <Button onClick={() => setShowForm(true)} className="w-full sm:w-auto">
-          <Plus className="mr-2 h-4 w-4" />
-          Add Book Manually
-        </Button>
+        <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+          <Button onClick={handleScanForSeries} disabled={isScanning} variant="outline" className="w-full sm:w-auto">
+            <Sparkles className="mr-2 h-4 w-4" />
+            {isScanning ? 'Scanning...' : 'Scan for Series'}
+          </Button>
+          <Button onClick={() => setShowForm(true)} className="w-full sm:w-auto">
+            <Plus className="mr-2 h-4 w-4" />
+            Add Book Manually
+          </Button>
+        </div>
       </div>
 
       <div className="grid grid-cols-2 gap-2 md:gap-3 md:grid-cols-5 lg:grid-cols-8 xl:grid-cols-10">
@@ -279,6 +560,15 @@ export default function BooksPage() {
                   onValueChange={setViewMode}
                   storageKey="books-view-mode"
                 />
+                <Select value={organizeMode} onValueChange={(value) => setOrganizeMode(value as OrganizeMode)}>
+                  <SelectTrigger className="w-full sm:w-[180px]">
+                    <SelectValue placeholder="Organize by" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="status">By Reading Status</SelectItem>
+                    <SelectItem value="series">By Series</SelectItem>
+                  </SelectContent>
+                </Select>
                 <Select value={typeFilter} onValueChange={(value) => setTypeFilter(value as BookTypeFilter)}>
                   <SelectTrigger className="w-full sm:w-[180px]">
                     <SelectValue placeholder="Filter by type" />
@@ -327,6 +617,79 @@ export default function BooksPage() {
             <div className="text-center py-8 text-muted-foreground">
               No books found. Start adding books to track your reading!
             </div>
+          ) : organizeMode === "series" ? (
+            // Series view rendering
+            <div className="space-y-8">
+              {/* Render series groups */}
+              {Object.entries(groupedBySeries.seriesMap)
+                .sort(([a], [b]) => a.localeCompare(b))
+                .map(([seriesName, seriesBooks]) => {
+                  if (viewMode === "grid") {
+                    const items = seriesBooks.map(buildGridItem)
+                    return (
+                      <CollapsibleSection
+                        key={seriesName}
+                        title={seriesName}
+                        count={seriesBooks.length}
+                        defaultOpen={true}
+                        storageKey={`books-series-${seriesName}`}
+                      >
+                        <GridView
+                          items={items}
+                          onItemClick={handleGridItemClick}
+                          aspectRatio="portrait"
+                          emptyMessage={`No books in ${seriesName}`}
+                          emptyActionLabel="Add Book"
+                          onEmptyAction={() => setShowForm(true)}
+                        />
+                      </CollapsibleSection>
+                    )
+                  } else {
+                    return (
+                      <CollapsibleSection
+                        key={seriesName}
+                        title={seriesName}
+                        count={seriesBooks.length}
+                        defaultOpen={true}
+                        storageKey={`books-series-${seriesName}`}
+                      >
+                        {/* Render table and mobile card views for series */}
+                        {renderBooksList(seriesBooks)}
+                      </CollapsibleSection>
+                    )
+                  }
+                })}
+
+              {/* Render standalone books */}
+              {groupedBySeries.noSeriesBooks.length > 0 && (
+                viewMode === "grid" ? (
+                  <CollapsibleSection
+                    title="Standalone Books"
+                    count={groupedBySeries.noSeriesBooks.length}
+                    defaultOpen={true}
+                    storageKey="books-series-standalone"
+                  >
+                    <GridView
+                      items={groupedBySeries.noSeriesBooks.map(buildGridItem)}
+                      onItemClick={handleGridItemClick}
+                      aspectRatio="portrait"
+                      emptyMessage="No standalone books"
+                      emptyActionLabel="Add Book"
+                      onEmptyAction={() => setShowForm(true)}
+                    />
+                  </CollapsibleSection>
+                ) : (
+                  <CollapsibleSection
+                    title="Standalone Books"
+                    count={groupedBySeries.noSeriesBooks.length}
+                    defaultOpen={true}
+                    storageKey="books-series-standalone"
+                  >
+                    {renderBooksList(groupedBySeries.noSeriesBooks)}
+                  </CollapsibleSection>
+                )
+              )}
+            </div>
           ) : viewMode === "grid" ? (
             <div className="space-y-8">
               {statusSections.map(({ key, title }) => {
@@ -367,177 +730,7 @@ export default function BooksPage() {
                     defaultOpen={true}
                     storageKey={`books-section-${key}`}
                   >
-                    {/* Desktop Table View */}
-                    <div className="hidden md:block overflow-x-auto">
-                      <Table>
-                        <TableHeader>
-                          <TableRow>
-                            <TableHead>Cover</TableHead>
-                            <TableHead>Title</TableHead>
-                            <TableHead>Author</TableHead>
-                            <TableHead>Type</TableHead>
-                            <TableHead>Pages/Minutes</TableHead>
-                            <TableHead>Days</TableHead>
-                            <TableHead>Started</TableHead>
-                            <TableHead>Completed</TableHead>
-                            <TableHead>Actions</TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {books.map((book) => (
-                      <TableRow key={book.id}>
-                        <TableCell>
-                          {book.coverImage && (
-                            <Image
-                              src={book.coverImage}
-                              alt={book.title}
-                              width={48}
-                              height={64}
-                              className="h-16 w-12 rounded object-cover"
-                            />
-                          )}
-                        </TableCell>
-                        <TableCell className="font-medium">{book.title}</TableCell>
-                        <TableCell>{book.author}</TableCell>
-                        <TableCell>
-                          <Badge variant={book.type === 'Ebook' ? 'default' : 'secondary'}>
-                            {book.type}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          {book.type === 'Ebook'
-                            ? `${book.pages || 0} pages`
-                            : formatMinutes(book.minutes)
-                          }
-                        </TableCell>
-                        <TableCell>{book.daysRead}</TableCell>
-                        <TableCell>
-                          {book.dateStarted
-                            ? new Date(book.dateStarted).toLocaleDateString()
-                            : '-'
-                          }
-                        </TableCell>
-                        <TableCell>
-                          {book.dateCompleted
-                            ? new Date(book.dateCompleted).toLocaleDateString()
-                            : '-'
-                          }
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex gap-2">
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => handleEdit(book)}
-                            >
-                              <Pencil className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => handleDelete(book.id)}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </TableCell>
-                            </TableRow>
-                          ))}
-                        </TableBody>
-                      </Table>
-                    </div>
-
-                    {/* Mobile Card View */}
-                    <div className="grid md:hidden grid-cols-1 gap-4">
-                      {books.map((book) => (
-                  <Card key={book.id} className="overflow-hidden">
-                    <div className="flex gap-4 p-4">
-                      {book.coverImage && (
-                        <Image
-                          src={book.coverImage}
-                          alt={book.title}
-                          width={96}
-                          height={128}
-                          className="h-32 w-24 rounded object-cover flex-shrink-0"
-                        />
-                      )}
-                      <div className="flex-1 min-w-0 space-y-2">
-                        <div>
-                          <h3 className="font-semibold text-base leading-tight line-clamp-2">
-                            {book.title}
-                          </h3>
-                          <p className="text-sm text-muted-foreground mt-1">
-                            {book.author}
-                          </p>
-                        </div>
-
-                        <div>
-                          <Badge variant={book.type === 'Ebook' ? 'default' : 'secondary'}>
-                            {book.type}
-                          </Badge>
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
-                          <div>
-                            <span className="text-muted-foreground">
-                              {book.type === 'Ebook' ? 'Pages:' : 'Time:'}
-                            </span>
-                            <span className="ml-1 font-medium">
-                              {book.type === 'Ebook'
-                                ? `${book.pages || 0}`
-                                : formatMinutes(book.minutes)
-                              }
-                            </span>
-                          </div>
-                          <div>
-                            <span className="text-muted-foreground">Days:</span>
-                            <span className="ml-1 font-medium">{book.daysRead}</span>
-                          </div>
-                          <div>
-                            <span className="text-muted-foreground">Started:</span>
-                            <span className="ml-1 font-medium">
-                              {book.dateStarted
-                                ? new Date(book.dateStarted).toLocaleDateString()
-                                : '-'
-                              }
-                            </span>
-                          </div>
-                          <div>
-                            <span className="text-muted-foreground">Completed:</span>
-                            <span className="ml-1 font-medium">
-                              {book.dateCompleted
-                                ? new Date(book.dateCompleted).toLocaleDateString()
-                                : '-'
-                              }
-                            </span>
-                          </div>
-                        </div>
-
-                        <div className="flex gap-2 pt-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleEdit(book)}
-                            className="flex-1"
-                          >
-                            <Pencil className="h-4 w-4 mr-2" />
-                            Edit
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleDelete(book.id)}
-                            className="flex-1"
-                          >
-                            <Trash2 className="h-4 w-4 mr-2" />
-                            Delete
-                          </Button>
-                        </div>
-                      </div>
-                        </div>
-                      </Card>
-                      ))}
-                    </div>
+                    {renderBooksList(books)}
                   </CollapsibleSection>
                 )
               })}
@@ -577,6 +770,10 @@ export default function BooksPage() {
           },
         ] : []}
         secondaryFields={detailBook ? [
+          ...(detailBook.seriesName ? [{
+            label: "Series",
+            value: `${detailBook.seriesName}${detailBook.positionInSeries ? ` #${detailBook.positionInSeries}` : ''}`,
+          }] : []),
           {
             label: "Genre",
             value: detailBook.genre || "N/A",
@@ -643,6 +840,14 @@ export default function BooksPage() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Series Assignment Dialog */}
+      <BookSeriesAssignment
+        book={seriesAssignmentBook}
+        open={seriesAssignmentOpen}
+        onOpenChange={setSeriesAssignmentOpen}
+        onSuccess={handleSeriesAssignmentSuccess}
+      />
     </div>
   )
 }
