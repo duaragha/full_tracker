@@ -1,3 +1,4 @@
+# Nixpacks v2 - npm is now bundled with nodejs
 [phases.setup]
 nixPkgs = ["nodejs"]
 

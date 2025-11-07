@@ -11,9 +11,15 @@ Or in Linux path:
 /home/ragha/dev/projects/scripts/full-tracker/
 ```
 
+## Active Scripts (Required for Railway)
+
+The following scripts must remain in this directory for Railway deployments:
+
+- `monitor-charging.ts` - Used by the tuya-monitor service on Railway
+
 ## Organization
 
-Scripts are organized by category:
+All other scripts are organized by category in the external scripts folder:
 - `books/` - Book series detection and management
 - `energy/` - Tuya/PHEV energy monitoring
 - `games/` - Game utilities
