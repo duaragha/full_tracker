@@ -1,45 +1,26 @@
-# Inventory Scripts
+# Scripts Directory
 
-## Update Keep Until Dates
+All scripts have been organized and moved to:
 
-This script updates the `keep_until` date for all existing inventory items based on their cost and purchase date.
-
-### Formula
-
-The script applies the following formula based on price ranges:
-
-- **$0-250**: multiply by 4
-- **$251-500**: multiply by 3
-- **$501-1000**: multiply by 2
-- **$1001-1500**: multiply by 1.5
-- **$1501-2000**: multiply by 1
-- **$2001+**: multiply by 0.75
-
-**Example**: If you bought something for $120 on April 19, 2021:
-- Price: $120 (falls in $0-250 range)
-- Multiplier: 4
-- Days to add: 120 × 4 = 480 days
-- Keep Until: July 12, 2022
-
-### Running the Script
-
-```bash
-# Make sure you have the DATABASE_URL or POSTGRES_URL environment variable set
-export DATABASE_URL="your_database_connection_string"
-
-# Run the script
-npx tsx scripts/update-inventory-keep-until.ts
+```
+\\wsl.localhost\Ubuntu\home\ragha\dev\projects\scripts\full-tracker\
 ```
 
-### What it does
+Or in Linux path:
+```
+/home/ragha/dev/projects/scripts/full-tracker/
+```
 
-1. Fetches all inventory items that have both a `cost` and `purchased_when` date
-2. Calculates the `keep_until` date based on the formula above
-3. Updates each item in the database
-4. Shows a summary of items updated, skipped, and any errors
+## Organization
 
-### Safety
+Scripts are organized by category:
+- `books/` - Book series detection and management
+- `energy/` - Tuya/PHEV energy monitoring
+- `games/` - Game utilities
+- `imports/` - Data imports
+- `migrations/` - Database migrations
+- `setup/` - Setup and configuration
+- `testing/` - Performance tests
+- `tvshows/` - TV show imports
 
-- Only updates items that have both cost and purchase date
-- Shows detailed output for each item updated
-- Includes error handling for individual items
+See the README.md in the scripts folder for full documentation.
