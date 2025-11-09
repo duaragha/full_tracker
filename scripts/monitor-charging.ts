@@ -79,10 +79,18 @@ async function checkAndUpdate() {
   const wasCharging = state.isCharging
   const isChargingNow = power > CHARGING_THRESHOLD
   const currentRate = getOntarioTOURate()
-  const cumulativeCost = cumulativeKwh * currentRate.rate
   const touStatus = getCurrentTOUStatus()
 
-  console.log(`[${new Date().toLocaleTimeString('en-US', { timeZone: 'America/Toronto' })}] Power: ${power}W | Energy: ${cumulativeKwh.toFixed(2)} kWh ($${cumulativeCost.toFixed(2)}) | ${isChargingNow ? '⚡ CHARGING' : '💤 IDLE'} | ${touStatus}`)
+  // Calculate session energy and cost if charging
+  let sessionInfo = ''
+  if (state.isCharging && state.startReading !== undefined && state.startTime) {
+    const sessionEnergy = (cumulativeRaw - state.startReading) / 100
+    const startTime = new Date(state.startTime)
+    const { cost: sessionCost } = calculateChargingCost(sessionEnergy, startTime, new Date())
+    sessionInfo = ` | Session: ${sessionEnergy.toFixed(2)} kWh ($${sessionCost.toFixed(2)})`
+  }
+
+  console.log(`[${new Date().toLocaleTimeString('en-US', { timeZone: 'America/Toronto' })}] Power: ${power}W${sessionInfo} | ${isChargingNow ? '⚡ CHARGING' : '💤 IDLE'} | ${touStatus}`)
 
   if (!wasCharging && isChargingNow) {
     // Started charging
