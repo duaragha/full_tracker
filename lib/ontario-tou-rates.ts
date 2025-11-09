@@ -125,28 +125,55 @@ export function getOntarioTOURate(date: Date = new Date()): TOURate {
 /**
  * Calculate cost for energy usage during a charging session
  * Takes into account the different TOU rates during the charging period
+ * Uses proper time-weighted calculation for accurate costs across rate periods
  */
 export function calculateChargingCost(
   energyKwh: number,
   startTime: Date,
   endTime: Date
 ): { cost: number; averageRate: number; breakdown: string } {
-  // For simplicity, use the rate at the start of charging
-  // For more accuracy, we could calculate hourly rates throughout the session
-  const startRate = getOntarioTOURate(startTime)
-  const endRate = getOntarioTOURate(endTime)
+  const durationMs = endTime.getTime() - startTime.getTime()
+  const durationHours = durationMs / (1000 * 60 * 60)
 
-  // If charging spans multiple rate periods, use weighted average
-  // Simple approach: average of start and end rates
-  const averageRate = (startRate.rate + endRate.rate) / 2
-  const cost = energyKwh * averageRate
+  // For very short sessions (< 5 minutes), just use start rate
+  if (durationHours < 0.083) { // 5 minutes
+    const rate = getOntarioTOURate(startTime)
+    return {
+      cost: energyKwh * rate.rate,
+      averageRate: rate.rate,
+      breakdown: `${rate.period} (${rate.rateInCents}¢/kWh)`
+    }
+  }
 
-  const breakdown = startRate.period === endRate.period
-    ? `${startRate.period} (${startRate.rateInCents}¢/kWh)`
-    : `${startRate.period} → ${endRate.period} (avg ${(averageRate * 100).toFixed(1)}¢/kWh)`
+  // Calculate time-weighted cost by checking rate every hour
+  const energyPerHour = energyKwh / durationHours
+  let totalCost = 0
+  let currentTime = new Date(startTime)
+  const ratesUsed = new Set<string>()
+
+  while (currentTime < endTime) {
+    const nextHour = new Date(Math.min(
+      currentTime.getTime() + (60 * 60 * 1000), // Add 1 hour
+      endTime.getTime()
+    ))
+
+    const segmentHours = (nextHour.getTime() - currentTime.getTime()) / (1000 * 60 * 60)
+    const segmentEnergy = energyPerHour * segmentHours
+    const segmentRate = getOntarioTOURate(currentTime)
+
+    totalCost += segmentEnergy * segmentRate.rate
+    ratesUsed.add(segmentRate.period)
+
+    currentTime = nextHour
+  }
+
+  const averageRate = totalCost / energyKwh
+  const breakdown = ratesUsed.size === 1
+    ? `${Array.from(ratesUsed)[0]} (${(averageRate * 100).toFixed(1)}¢/kWh)`
+    : `mixed rates (avg ${(averageRate * 100).toFixed(1)}¢/kWh)`
 
   return {
-    cost,
+    cost: totalCost,
     averageRate,
     breakdown
   }

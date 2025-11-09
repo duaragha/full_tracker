@@ -9,6 +9,8 @@ dotenv.config({ path: '.env.local' })
 import { TuyaAPI } from '../lib/tuya-api'
 import { Pool } from 'pg'
 import { getOntarioTOURate, calculateChargingCost, getCurrentTOUStatus } from '../lib/ontario-tou-rates'
+import { writeFile, readFile } from 'fs/promises'
+import { existsSync } from 'fs'
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL || process.env.POSTGRES_URL,
@@ -18,16 +20,41 @@ const pool = new Pool({
 const POLL_INTERVAL = 30000 // Check every 30 seconds (better granularity)
 const CHARGING_THRESHOLD = 100 // Power > 100W means charging
 const MAX_RETRIES = 3 // Number of retries on API failure
+const STATE_FILE = '/tmp/tuya-monitor-state.json' // Persist state across restarts
 
 interface ChargingState {
   isCharging: boolean
   startReading?: number
-  startTime?: Date
+  startTime?: string // Store as ISO string for JSON serialization
   lastPower?: number
 }
 
 let state: ChargingState = {
   isCharging: false
+}
+
+// Load state from disk
+async function loadState(): Promise<ChargingState> {
+  try {
+    if (existsSync(STATE_FILE)) {
+      const data = await readFile(STATE_FILE, 'utf-8')
+      const loaded = JSON.parse(data)
+      console.log('✅ Loaded previous state:', loaded)
+      return loaded
+    }
+  } catch (error) {
+    console.warn('⚠️  Failed to load state file:', error)
+  }
+  return { isCharging: false }
+}
+
+// Save state to disk
+async function saveState(newState: ChargingState): Promise<void> {
+  try {
+    await writeFile(STATE_FILE, JSON.stringify(newState, null, 2), 'utf-8')
+  } catch (error) {
+    console.error('❌ Failed to save state:', error)
+  }
 }
 
 async function checkAndUpdate() {
@@ -67,9 +94,10 @@ async function checkAndUpdate() {
     state = {
       isCharging: true,
       startReading: cumulativeRaw,
-      startTime: new Date(),
+      startTime: new Date().toISOString(),
       lastPower: power
     }
+    await saveState(state)
 
   } else if (wasCharging && !isChargingNow) {
     // Stopped charging
@@ -77,13 +105,14 @@ async function checkAndUpdate() {
 
     if (state.startReading !== undefined && state.startTime) {
       const energyUsedKwh = (cumulativeRaw - state.startReading) / 100
+      const startTime = new Date(state.startTime)
       const endTime = new Date()
       const { cost, averageRate, breakdown } = calculateChargingCost(
         energyUsedKwh,
-        state.startTime,
+        startTime,
         endTime
       )
-      const duration = endTime.getTime() - state.startTime.getTime()
+      const duration = endTime.getTime() - startTime.getTime()
       const hours = duration / (1000 * 60 * 60)
 
       console.log(`  Duration: ${hours.toFixed(1)} hours`)
@@ -93,21 +122,23 @@ async function checkAndUpdate() {
       console.log(`  Average power: ${(energyUsedKwh / hours * 1000).toFixed(0)}W`)
 
       // Save to database
-      await saveToDatabase(energyUsedKwh, cost, state.startTime)
+      await saveToDatabase(energyUsedKwh, cost, startTime)
     }
 
     state = {
       isCharging: false,
       lastPower: power
     }
+    await saveState(state)
 
   } else if (wasCharging && isChargingNow) {
     // Still charging - show progress
     if (state.startReading !== undefined && state.startTime) {
       const energyUsedSoFar = (cumulativeRaw - state.startReading) / 100
+      const startTime = new Date(state.startTime)
       const { cost: costSoFar, breakdown } = calculateChargingCost(
         energyUsedSoFar,
-        state.startTime,
+        startTime,
         new Date()
       )
       if (energyUsedSoFar > 0.1) { // Only show if significant
@@ -174,6 +205,42 @@ async function main() {
   console.log('🔌 Tuya Charging Monitor')
   console.log('Monitoring your smart plug for charging sessions...')
   console.log('Press Ctrl+C to stop\n')
+
+  // Load previous state (crash recovery)
+  state = await loadState()
+
+  // Verify state by checking current device status
+  if (state.isCharging) {
+    console.log('⚠️  Detected previous charging session in progress')
+    console.log('⚠️  Attempting crash recovery...')
+
+    try {
+      const client = new TuyaAPI({
+        clientId: process.env.TUYA_CLIENT_ID!,
+        clientSecret: process.env.TUYA_CLIENT_SECRET!,
+        deviceId: process.env.TUYA_DEVICE_ID!,
+        dataCenter: process.env.TUYA_DATA_CENTER || 'us',
+      })
+      const status = await client.getDeviceStatus()
+      const isCurrentlyCharging = (status.cur_power || 0) > CHARGING_THRESHOLD
+
+      if (!isCurrentlyCharging) {
+        console.log('⚠️  Car is no longer charging - previous session ended during crash')
+        console.log('⚠️  Session data lost - resetting state')
+        state = { isCharging: false }
+        await saveState(state)
+      } else {
+        console.log('✅ Car still charging - continuing from saved state')
+        console.log(`   Started at: ${state.startTime}`)
+        console.log(`   Starting reading: ${((state.startReading || 0) / 100).toFixed(2)} kWh`)
+      }
+    } catch (error) {
+      console.error('❌ Failed to verify state:', error)
+      console.log('⚠️  Resetting to safe state')
+      state = { isCharging: false }
+      await saveState(state)
+    }
+  }
 
   // Initial check
   await checkAndUpdate()
