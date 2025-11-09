@@ -27,6 +27,8 @@ interface ChargingState {
   startReading?: number
   startTime?: string // Store as ISO string for JSON serialization
   lastPower?: number
+  accumulatedEnergy?: number // Track energy ourselves (kWh) since device counter doesn't update in real-time
+  lastUpdateTime?: string // For calculating energy from power over time
 }
 
 let state: ChargingState = {
@@ -81,10 +83,27 @@ async function checkAndUpdate() {
   const currentRate = getOntarioTOURate()
   const touStatus = getCurrentTOUStatus()
 
+  // Update accumulated energy if charging (calculate from power over time)
+  if (state.isCharging && state.lastUpdateTime && state.lastPower !== undefined) {
+    const now = new Date()
+    const lastUpdate = new Date(state.lastUpdateTime)
+    const timeDeltaHours = (now.getTime() - lastUpdate.getTime()) / (1000 * 60 * 60)
+
+    // Average power between last reading and current
+    const avgPower = (state.lastPower + power) / 2
+
+    // Energy used in this interval (kWh)
+    const energyDelta = (avgPower * timeDeltaHours) / 1000
+
+    state.accumulatedEnergy = (state.accumulatedEnergy || 0) + energyDelta
+    state.lastPower = power
+    state.lastUpdateTime = now.toISOString()
+  }
+
   // Calculate session energy and cost if charging
   let sessionInfo = ''
-  if (state.isCharging && state.startReading !== undefined && state.startTime) {
-    const sessionEnergy = (cumulativeRaw - state.startReading) / 100
+  if (state.isCharging && state.startTime && state.accumulatedEnergy !== undefined) {
+    const sessionEnergy = state.accumulatedEnergy
     const startTime = new Date(state.startTime)
     const { cost: sessionCost } = calculateChargingCost(sessionEnergy, startTime, new Date())
     sessionInfo = ` | Session: ${sessionEnergy.toFixed(2)} kWh ($${sessionCost.toFixed(2)})`
@@ -99,11 +118,14 @@ async function checkAndUpdate() {
     console.log(`  Power: ${power}W`)
     console.log(`  Current: ${current.toFixed(1)}A @ ${voltage.toFixed(0)}V`)
 
+    const now = new Date().toISOString()
     state = {
       isCharging: true,
       startReading: cumulativeRaw,
-      startTime: new Date().toISOString(),
-      lastPower: power
+      startTime: now,
+      lastPower: power,
+      accumulatedEnergy: 0, // Start tracking energy from power readings
+      lastUpdateTime: now
     }
     await saveState(state)
 
@@ -111,8 +133,8 @@ async function checkAndUpdate() {
     // Stopped charging
     console.log('✅ Charging completed!')
 
-    if (state.startReading !== undefined && state.startTime) {
-      const energyUsedKwh = (cumulativeRaw - state.startReading) / 100
+    if (state.accumulatedEnergy !== undefined && state.startTime) {
+      const energyUsedKwh = state.accumulatedEnergy
       const startTime = new Date(state.startTime)
       const endTime = new Date()
       const { cost, averageRate, breakdown } = calculateChargingCost(
@@ -140,20 +162,8 @@ async function checkAndUpdate() {
     await saveState(state)
 
   } else if (wasCharging && isChargingNow) {
-    // Still charging - show progress
-    if (state.startReading !== undefined && state.startTime) {
-      const energyUsedSoFar = (cumulativeRaw - state.startReading) / 100
-      const startTime = new Date(state.startTime)
-      const { cost: costSoFar, breakdown } = calculateChargingCost(
-        energyUsedSoFar,
-        startTime,
-        new Date()
-      )
-      if (energyUsedSoFar > 0.1) { // Only show if significant
-        console.log(`  Progress: ${energyUsedSoFar.toFixed(2)} kWh ($${costSoFar.toFixed(2)}) - ${breakdown}`)
-      }
-    }
-    state.lastPower = power
+    // Still charging - save state periodically
+    await saveState(state)
   }
 
       // Success - exit retry loop
