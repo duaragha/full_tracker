@@ -11,8 +11,12 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { PhevEntryForm } from "@/components/phev-entry-form"
 import { CarManager } from "@/components/car-manager"
 import { PhevStatsCards } from "@/components/phev-stats"
-import { ChevronDown, ChevronRight, Plus } from "lucide-react"
-import { addCarAction, addEntryAction, updateCarDatesAction, assignEntryAction, bulkAssignAction } from "./actions"
+import { ChevronDown, ChevronRight, Plus, Pencil, Trash2 } from "lucide-react"
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Input } from "@/components/ui/input"
+import { Textarea } from "@/components/ui/textarea"
+import { Label } from "@/components/ui/label"
+import { addCarAction, addEntryAction, updateCarDatesAction, assignEntryAction, bulkAssignAction, updateEntryAction, deleteEntryAction } from "./actions"
 
 interface PhevClientProps {
   initialCars: Car[]
@@ -38,6 +42,14 @@ export function PhevClient({ initialCars, initialCarSummaries, initialUnassigned
   const [expandedMonths, setExpandedMonths] = React.useState<Set<string>>(new Set())
   const [expandedYears, setExpandedYears] = React.useState<Set<string>>(new Set())
   const [bulkAssignCarId, setBulkAssignCarId] = React.useState<number | null>(activeCarId)
+  const [editingEntry, setEditingEntry] = React.useState<PhevEntry | null>(null)
+  const [editForm, setEditForm] = React.useState({
+    date: '',
+    cost: 0,
+    km_driven: 0,
+    energy_kwh: 0,
+    notes: ''
+  })
 
   React.useEffect(() => {
     if (activeCarId && typeof window !== "undefined") {
@@ -57,7 +69,7 @@ export function PhevClient({ initialCars, initialCarSummaries, initialUnassigned
     refreshData()
   }
 
-  const handleAddEntry = async (entry: { date: string; cost: number; km_driven: number; notes: string }) => {
+  const handleAddEntry = async (entry: { date: string; cost: number; km_driven: number; energy_kwh: number | null; notes: string }) => {
     if (!activeCarId) {
       alert("Please select a car first")
       return
@@ -87,6 +99,36 @@ export function PhevClient({ initialCars, initialCarSummaries, initialUnassigned
       unassigned.map(e => e.id),
       bulkAssignCarId
     )
+    refreshData()
+  }
+
+  const handleEditEntry = (entry: PhevEntry) => {
+    setEditingEntry(entry)
+    setEditForm({
+      date: entry.date,
+      cost: entry.cost,
+      km_driven: entry.km_driven,
+      energy_kwh: entry.energy_kwh || 0,
+      notes: entry.notes || ''
+    })
+  }
+
+  const handleUpdateEntry = async () => {
+    if (!editingEntry) return
+
+    await updateEntryAction(editingEntry.id, {
+      ...editForm,
+      energy_kwh: editForm.energy_kwh || null,
+      car_id: editingEntry.car_id!
+    })
+    setEditingEntry(null)
+    refreshData()
+  }
+
+  const handleDeleteEntry = async (id: number) => {
+    if (!confirm("Are you sure you want to delete this entry?")) return
+
+    await deleteEntryAction(id)
     refreshData()
   }
 
@@ -276,9 +318,29 @@ export function PhevClient({ initialCars, initialCarSummaries, initialUnassigned
                           <CollapsibleContent className="pl-6 pt-2">
                             <ul className="space-y-1">
                               {group.entries.map((entry) => (
-                                <li key={entry.id} className="text-sm">
-                                  {entry.date}: {entry.km_driven.toFixed(1)} km | {entry.energy_kwh ? `${entry.energy_kwh.toFixed(2)} kWh` : 'N/A'} | ${entry.cost.toFixed(2)}
-                                  {entry.notes && ` (${entry.notes})`}
+                                <li key={entry.id} className="flex items-center justify-between text-sm group/entry">
+                                  <span>
+                                    {entry.date}: {entry.km_driven.toFixed(1)} km | {entry.energy_kwh ? `${entry.energy_kwh.toFixed(2)} kWh` : 'N/A'} | ${entry.cost.toFixed(2)}
+                                    {entry.notes && ` (${entry.notes})`}
+                                  </span>
+                                  <div className="flex gap-1 opacity-0 group-hover/entry:opacity-100 transition-opacity">
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      className="h-6 w-6 p-0"
+                                      onClick={() => handleEditEntry(entry)}
+                                    >
+                                      <Pencil className="h-3 w-3" />
+                                    </Button>
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      className="h-6 w-6 p-0 text-destructive hover:text-destructive"
+                                      onClick={() => handleDeleteEntry(entry.id)}
+                                    >
+                                      <Trash2 className="h-3 w-3" />
+                                    </Button>
+                                  </div>
                                 </li>
                               ))}
                             </ul>
@@ -339,9 +401,29 @@ export function PhevClient({ initialCars, initialCarSummaries, initialUnassigned
                                 </div>
                                 <ul className="pl-4 space-y-1">
                                   {monthGroup.entries.map((entry) => (
-                                    <li key={entry.id} className="text-sm">
-                                      {entry.date}: {entry.km_driven.toFixed(1)} km | {entry.energy_kwh ? `${entry.energy_kwh.toFixed(2)} kWh` : 'N/A'} | ${entry.cost.toFixed(2)}
-                                      {entry.notes && ` (${entry.notes})`}
+                                    <li key={entry.id} className="flex items-center justify-between text-sm group/entry">
+                                      <span>
+                                        {entry.date}: {entry.km_driven.toFixed(1)} km | {entry.energy_kwh ? `${entry.energy_kwh.toFixed(2)} kWh` : 'N/A'} | ${entry.cost.toFixed(2)}
+                                        {entry.notes && ` (${entry.notes})`}
+                                      </span>
+                                      <div className="flex gap-1 opacity-0 group-hover/entry:opacity-100 transition-opacity">
+                                        <Button
+                                          variant="ghost"
+                                          size="sm"
+                                          className="h-6 w-6 p-0"
+                                          onClick={() => handleEditEntry(entry)}
+                                        >
+                                          <Pencil className="h-3 w-3" />
+                                        </Button>
+                                        <Button
+                                          variant="ghost"
+                                          size="sm"
+                                          className="h-6 w-6 p-0 text-destructive hover:text-destructive"
+                                          onClick={() => handleDeleteEntry(entry.id)}
+                                        >
+                                          <Trash2 className="h-3 w-3" />
+                                        </Button>
+                                      </div>
                                     </li>
                                   ))}
                                 </ul>
@@ -404,6 +486,74 @@ export function PhevClient({ initialCars, initialCarSummaries, initialUnassigned
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Edit Entry Dialog */}
+      <Dialog open={!!editingEntry} onOpenChange={(open) => !open && setEditingEntry(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Entry</DialogTitle>
+            <DialogDescription>Update the details of this charging session</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 pt-4">
+            <div className="space-y-2">
+              <Label htmlFor="edit-date">Date</Label>
+              <Input
+                id="edit-date"
+                type="date"
+                value={editForm.date}
+                onChange={(e) => setEditForm({ ...editForm, date: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit-km">KM Driven</Label>
+              <Input
+                id="edit-km"
+                type="number"
+                step="0.1"
+                value={editForm.km_driven}
+                onChange={(e) => setEditForm({ ...editForm, km_driven: parseFloat(e.target.value) || 0 })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit-kwh">Energy (kWh)</Label>
+              <Input
+                id="edit-kwh"
+                type="number"
+                step="0.01"
+                value={editForm.energy_kwh}
+                onChange={(e) => setEditForm({ ...editForm, energy_kwh: parseFloat(e.target.value) || 0 })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit-cost">Cost ($)</Label>
+              <Input
+                id="edit-cost"
+                type="number"
+                step="0.01"
+                value={editForm.cost}
+                onChange={(e) => setEditForm({ ...editForm, cost: parseFloat(e.target.value) || 0 })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit-notes">Notes</Label>
+              <Textarea
+                id="edit-notes"
+                value={editForm.notes}
+                onChange={(e) => setEditForm({ ...editForm, notes: e.target.value })}
+                placeholder="Optional notes..."
+              />
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setEditingEntry(null)}>
+                Cancel
+              </Button>
+              <Button onClick={handleUpdateEntry}>
+                Save Changes
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

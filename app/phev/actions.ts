@@ -41,3 +41,25 @@ export async function bulkAssignAction(entryIds: number[], carId: number) {
   await bulkAssignEntries(entryIds, carId)
   revalidatePath("/phev")
 }
+
+export async function updateEntryAction(
+  id: number,
+  entry: {
+    date: string
+    cost: number
+    km_driven: number
+    energy_kwh: number | null
+    notes: string
+    car_id: number
+  }
+) {
+  const { updateEntry } = await import("@/lib/db/phev-store")
+  await updateEntry(id, entry)
+  revalidatePath("/phev")
+}
+
+export async function deleteEntryAction(id: number) {
+  const { deleteEntry } = await import("@/lib/db/phev-store")
+  await deleteEntry(id)
+  revalidatePath("/phev")
+}
