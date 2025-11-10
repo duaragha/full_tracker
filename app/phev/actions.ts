@@ -50,7 +50,7 @@ export async function updateEntryAction(
     km_driven: number
     energy_kwh: number | null
     notes: string
-    car_id: number
+    car_id: number | null
   }
 ) {
   const { updateEntry } = await import("@/lib/db/phev-store")

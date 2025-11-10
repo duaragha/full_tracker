@@ -116,10 +116,14 @@ export function PhevClient({ initialCars, initialCarSummaries, initialUnassigned
   const handleUpdateEntry = async () => {
     if (!editingEntry) return
 
+    // For unassigned entries, keep car_id as null
+    // For assigned entries, preserve the existing car_id
+    const carId = editingEntry.car_id || activeCarId || null
+
     await updateEntryAction(editingEntry.id, {
       ...editForm,
       energy_kwh: editForm.energy_kwh || null,
-      car_id: editingEntry.car_id!
+      car_id: carId
     })
     setEditingEntry(null)
     refreshData()
@@ -243,10 +247,28 @@ export function PhevClient({ initialCars, initialCarSummaries, initialUnassigned
           <CardContent>
             <div className="space-y-2">
               {unassigned.slice(0, 5).map((entry) => (
-                <div key={entry.id} className="flex items-center justify-between rounded border p-2">
+                <div key={entry.id} className="flex items-center justify-between rounded border p-2 group/entry">
                   <div>
                     <span className="font-medium">{entry.date}</span>: {entry.km_driven.toFixed(1)} km | {entry.energy_kwh ? `${entry.energy_kwh.toFixed(2)} kWh` : 'N/A'} | ${entry.cost.toFixed(2)}
                     {entry.notes && <span className="ml-2 text-sm text-muted-foreground">({entry.notes})</span>}
+                  </div>
+                  <div className="flex gap-1 opacity-0 group-hover/entry:opacity-100 transition-opacity">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-6 w-6 p-0"
+                      onClick={() => handleEditEntry(entry)}
+                    >
+                      <Pencil className="h-3 w-3" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-6 w-6 p-0 text-destructive hover:text-destructive"
+                      onClick={() => handleDeleteEntry(entry.id)}
+                    >
+                      <Trash2 className="h-3 w-3" />
+                    </Button>
                   </div>
                 </div>
               ))}
