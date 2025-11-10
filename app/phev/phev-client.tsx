@@ -252,7 +252,7 @@ export function PhevClient({ initialCars, initialCarSummaries, initialUnassigned
                     <span className="font-medium">{entry.date}</span>: {entry.km_driven.toFixed(1)} km | {entry.energy_kwh ? `${entry.energy_kwh.toFixed(2)} kWh` : 'N/A'} | ${entry.cost.toFixed(2)}
                     {entry.notes && <span className="ml-2 text-sm text-muted-foreground">({entry.notes})</span>}
                   </div>
-                  <div className="flex gap-1 opacity-0 group-hover/entry:opacity-100 transition-opacity">
+                  <div className="flex gap-1">
                     <Button
                       variant="ghost"
                       size="sm"
@@ -345,7 +345,7 @@ export function PhevClient({ initialCars, initialCarSummaries, initialUnassigned
                                     {entry.date}: {entry.km_driven.toFixed(1)} km | {entry.energy_kwh ? `${entry.energy_kwh.toFixed(2)} kWh` : 'N/A'} | ${entry.cost.toFixed(2)}
                                     {entry.notes && ` (${entry.notes})`}
                                   </span>
-                                  <div className="flex gap-1 opacity-0 group-hover/entry:opacity-100 transition-opacity">
+                                  <div className="flex gap-1">
                                     <Button
                                       variant="ghost"
                                       size="sm"
