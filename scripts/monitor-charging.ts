@@ -133,8 +133,9 @@ async function checkAndUpdate() {
     // Stopped charging
     console.log('✅ Charging completed!')
 
-    if (state.accumulatedEnergy !== undefined && state.startTime) {
-      const energyUsedKwh = state.accumulatedEnergy
+    if (state.startReading !== undefined && state.startTime) {
+      // Use the device's ACTUAL measured energy (not our calculated estimate)
+      const energyUsedKwh = (cumulativeRaw - state.startReading) / 100
       const startTime = new Date(state.startTime)
       const endTime = new Date()
       const { cost, averageRate, breakdown } = calculateChargingCost(
@@ -146,12 +147,13 @@ async function checkAndUpdate() {
       const hours = duration / (1000 * 60 * 60)
 
       console.log(`  Duration: ${hours.toFixed(1)} hours`)
-      console.log(`  Energy used: ${energyUsedKwh.toFixed(2)} kWh`)
+      console.log(`  Energy used (device): ${energyUsedKwh.toFixed(2)} kWh`)
+      console.log(`  Energy used (calculated): ${(state.accumulatedEnergy || 0).toFixed(2)} kWh`)
       console.log(`  Cost: $${cost.toFixed(2)}`)
       console.log(`  Rate: ${breakdown}`)
       console.log(`  Average power: ${(energyUsedKwh / hours * 1000).toFixed(0)}W`)
 
-      // Save to database
+      // Save to database using device's actual measurement
       await saveToDatabase(energyUsedKwh, cost, startTime)
     }
 
