@@ -43,8 +43,8 @@ export function PhevEntryForm({ activeCarId, onSubmit }: PhevEntryFormProps) {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            date: format(formData.date, 'yyyy-MM-dd'),
-            electricityRate: 0.20 // Default rate, can be made configurable
+            date: format(formData.date, 'yyyy-MM-dd')
+            // API will use Ontario TOU off-peak rate as default
           })
         })
 

@@ -1,0 +1,160 @@
+RSS Feed Management Interface - File Structure
+==============================================
+
+Created Files (5 total):
+------------------------
+
+1. Feed List Page (Server Component)
+   Path: app/highlights/reader/feeds/page.tsx
+   Route: /highlights/reader/feeds
+   Purpose: Display all subscribed feeds with stats
+
+2. Feed Items Page (Server Component)  
+   Path: app/highlights/reader/feeds/[feedId]/page.tsx
+   Route: /highlights/reader/feeds/[id]
+   Purpose: Show items from specific feed
+
+3. Feed Items Client (Client Component)
+   Path: app/highlights/reader/feeds/[feedId]/feed-items-client.tsx
+   Purpose: Interactive item list with search/filter/import
+
+4. RSS Feed Card (Client Component)
+   Path: components/reader/rss-feed-card.tsx
+   Purpose: Display feed info with refresh/delete actions
+
+5. RSS Subscribe Dialog (Client Component)
+   Path: components/reader/rss-subscribe-dialog.tsx
+   Purpose: Modal to add new RSS feeds
+
+Directory Structure:
+-------------------
+
+app/highlights/reader/
+├── feeds/
+│   ├── page.tsx ..................... Feed list page
+│   └── [feedId]/
+│       ├── page.tsx ................. Feed items page
+│       └── feed-items-client.tsx .... Items UI logic
+
+components/reader/
+├── rss-feed-card.tsx ................ Feed card component
+└── rss-subscribe-dialog.tsx ......... Subscribe modal
+
+Documentation:
+--------------
+
+RSS_FEED_MANAGEMENT_COMPLETE.md ...... Full implementation guide
+RSS_QUICK_START.md ................... Quick reference
+RSS_FILE_STRUCTURE.txt ............... This file
+
+Integration Points:
+------------------
+
+Server Actions (app/actions/rss.ts):
+- getRSSFeedsAction()
+- getRSSFeedByIdAction()
+- getRSSFeedItemsAction()
+- subscribeToRSSFeedAction()
+- refreshRSSFeedAction()
+- deleteRSSFeedAction()
+- importRSSFeedItemAction()
+- importRSSFeedItemsBatchAction()
+- deleteRSSFeedItemAction()
+
+Database Store (lib/db/rss-feeds-store.ts):
+- RSSFeed type
+- RSSFeedItem type
+- All CRUD operations
+
+UI Components (components/ui/*):
+- Card, CardContent, CardHeader, CardTitle, CardDescription
+- Button (variants: default, outline, ghost, destructive)
+- Badge (variants: default, secondary, outline)
+- Dialog, DialogContent, DialogHeader, DialogFooter
+- Input
+- Label
+- Alert, AlertTitle, AlertDescription
+
+Features Summary:
+----------------
+
+Feed List Page:
+✓ Grid display of all feeds
+✓ Statistics dashboard (feeds, items, unread, health)
+✓ Add new feed button
+✓ Feed cards with actions
+✓ Empty state
+
+Feed Items Page:
+✓ All items from selected feed
+✓ Statistics (total, unread, imported)
+✓ Back navigation
+✓ Feed information display
+✓ Empty state
+
+Feed Card:
+✓ Feed title and description
+✓ Unread count badge
+✓ Total items count
+✓ Last updated timestamp
+✓ Refresh button with loading
+✓ Delete button with confirm
+✓ Error status display
+✓ Health indicator
+✓ Click to view items
+
+Subscribe Dialog:
+✓ URL input with validation
+✓ Preview feed details
+✓ Success/error messages
+✓ Loading states
+✓ Auto-refresh after subscribe
+
+Items Client:
+✓ Search across title/description/author
+✓ Filter: All/Unread/Imported
+✓ Import single item
+✓ Bulk import all unread
+✓ Delete items
+✓ View imported articles
+✓ Loading states for all actions
+
+Technology Stack:
+----------------
+
+- Next.js 14+ (App Router)
+- React Server Components
+- TypeScript
+- Tailwind CSS
+- shadcn/ui components
+- Radix UI primitives
+- Lucide React icons
+
+Performance:
+-----------
+
+✓ Server-side rendering
+✓ Client-side interactivity
+✓ Optimistic UI updates
+✓ Efficient search/filtering
+✓ Minimal re-renders
+✓ Proper loading states
+
+Accessibility:
+-------------
+
+✓ Semantic HTML
+✓ ARIA labels
+✓ Keyboard navigation
+✓ Screen reader friendly
+✓ Focus management
+
+Responsive Design:
+-----------------
+
+✓ Mobile-first approach
+✓ Adaptive grid layouts
+✓ Touch-friendly buttons
+✓ Optimized for all devices
+
+All files created successfully and ready to use!

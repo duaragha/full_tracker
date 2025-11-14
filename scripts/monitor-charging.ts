@@ -72,7 +72,7 @@ async function checkAndUpdate() {
 
   const power = status.cur_power || 0
   const cumulativeRaw = status.add_ele || 0
-  const cumulativeKwh = cumulativeRaw / 100
+  const cumulativeKwh = cumulativeRaw / 20  // Device reports in 0.05 kWh increments
   const current = (status.cur_current || 0) / 1000 // Convert mA to A
   const voltage = (status.cur_voltage || 0) / 10 // Convert to V
 
@@ -84,7 +84,7 @@ async function checkAndUpdate() {
   // Calculate session energy and cost if charging using device's actual readings
   let sessionInfo = ''
   if (state.isCharging && state.startTime && state.startReading !== undefined) {
-    const sessionEnergy = (cumulativeRaw - state.startReading) / 100
+    const sessionEnergy = (cumulativeRaw - state.startReading) / 20  // Device reports in 0.05 kWh increments
     const startTime = new Date(state.startTime)
     const { cost: sessionCost } = calculateChargingCost(sessionEnergy, startTime, new Date())
     sessionInfo = ` | Session: ${sessionEnergy.toFixed(2)} kWh ($${sessionCost.toFixed(2)})`
@@ -113,7 +113,7 @@ async function checkAndUpdate() {
 
     if (state.startReading !== undefined && state.startTime) {
       // Use the device's ACTUAL measured energy (not our calculated estimate)
-      const energyUsedKwh = (cumulativeRaw - state.startReading) / 100
+      const energyUsedKwh = (cumulativeRaw - state.startReading) / 20  // Device reports in 0.05 kWh increments
       const startTime = new Date(state.startTime)
       const endTime = new Date()
       const { cost, averageRate, breakdown } = calculateChargingCost(
@@ -229,7 +229,7 @@ async function main() {
       } else {
         console.log('✅ Car still charging - continuing from saved state')
         console.log(`   Started at: ${state.startTime}`)
-        console.log(`   Starting reading: ${((state.startReading || 0) / 100).toFixed(2)} kWh`)
+        console.log(`   Starting reading: ${((state.startReading || 0) / 20).toFixed(2)} kWh`)
       }
     } catch (error) {
       console.error('❌ Failed to verify state:', error)

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createTuyaClient } from '@/lib/tuya-api'
+import { TOU_RATES } from '@/lib/ontario-tou-rates'
 
 export async function POST(request: NextRequest) {
   try {
@@ -25,10 +26,10 @@ export async function POST(request: NextRequest) {
     // Create Tuya client
     const tuyaClient = createTuyaClient()
 
-    // Set electricity rate if provided
-    if (electricityRate) {
-      tuyaClient.setElectricityRate(electricityRate)
-    }
+    // Use Ontario off-peak rate as default (most charging happens overnight)
+    // Historical data doesn't have exact timing, so we assume overnight charging
+    const rate = electricityRate || TOU_RATES.OFF_PEAK
+    tuyaClient.setElectricityRate(rate)
 
     // Fetch comprehensive energy data for the specified date
     const energyData = await tuyaClient.getEnergyDataForDate(date)

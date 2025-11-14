@@ -39,3 +39,7 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Reader uploads (PDFs, EPUBs)
+/uploads/reader/*
+!/uploads/reader/.gitkeep

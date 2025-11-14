@@ -3,7 +3,7 @@
 import * as React from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { BarChart3, Gamepad2, BookOpen, Home, Tv, Film, Package, Zap, Briefcase, TrendingUp, Settings, ChevronDown, Radio } from "lucide-react"
+import { BarChart3, Gamepad2, BookOpen, Home, Tv, Film, Package, Zap, Briefcase, TrendingUp, Settings, ChevronDown, Radio, Sparkles, BookOpenText } from "lucide-react"
 
 import {
   Sidebar,
@@ -47,6 +47,16 @@ const navItems = [
     title: "Books",
     url: "/books",
     icon: BookOpen,
+  },
+  {
+    title: "Highlights",
+    url: "/highlights",
+    icon: Sparkles,
+  },
+  {
+    title: "Reader",
+    url: "/highlights/reader",
+    icon: BookOpenText,
   },
   {
     title: "TV Shows",

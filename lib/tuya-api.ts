@@ -265,8 +265,8 @@ export class TuyaAPI {
         `/v1.0/iot-03/energy/electricity/device/nodes/statistics-sum?${params.toString()}`
       )
 
-      // The result is already in kWh
-      return response.result || 0
+      // Device reports in 0.05 kWh increments (divide by 20 to get kWh)
+      return (response.result || 0) / 20
     } catch (error) {
       console.error('Failed to get energy statistics:', error)
       return 0

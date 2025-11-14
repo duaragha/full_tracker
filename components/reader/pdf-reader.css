@@ -1,0 +1,273 @@
+/**
+ * react-pdf custom styles for PDF Reader component
+ * Import this in your app/globals.css or layout file
+ */
+
+/* PDF Document Container */
+.react-pdf__Document {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: transparent;
+}
+
+/* PDF Page Container */
+.react-pdf__Page {
+  position: relative;
+  background: white;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  margin: 0 auto;
+}
+
+/* PDF Canvas - The actual rendered page */
+.react-pdf__Page__canvas {
+  display: block;
+  user-select: none;
+  max-width: 100%;
+  height: auto !important;
+}
+
+/* Text Layer - Enables text selection */
+.react-pdf__Page__textContent {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  overflow: hidden;
+  opacity: 0.2; /* Visible for debugging, set to 0 for production */
+  line-height: 1;
+  pointer-events: all;
+}
+
+.react-pdf__Page__textContent span {
+  position: absolute;
+  white-space: pre;
+  cursor: text;
+  transform-origin: 0% 0%;
+  color: transparent;
+  user-select: text;
+}
+
+/* Make text layer fully invisible in production */
+.react-pdf__Page__textContent.text-layer-invisible {
+  opacity: 0;
+}
+
+/* Text selection highlight */
+.react-pdf__Page__textContent ::selection {
+  background: rgba(59, 130, 246, 0.3); /* Blue selection */
+}
+
+.react-pdf__Page__textContent ::-moz-selection {
+  background: rgba(59, 130, 246, 0.3);
+}
+
+/* Annotation Layer - For PDF annotations */
+.react-pdf__Page__annotations {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+}
+
+.react-pdf__Page__annotations > * {
+  pointer-events: auto;
+}
+
+/* PDF Links */
+.react-pdf__Page__annotations a {
+  position: absolute;
+  font-size: 1em;
+  line-height: 1em;
+  border: 1px solid transparent;
+  background: rgba(255, 255, 0, 0.1);
+  box-shadow: 0px 2px 10px rgba(0, 0, 0, 0.1);
+  cursor: pointer;
+  text-decoration: none;
+  color: transparent;
+}
+
+.react-pdf__Page__annotations a:hover {
+  background: rgba(255, 255, 0, 0.2);
+  box-shadow: 0px 2px 15px rgba(0, 0, 0, 0.15);
+}
+
+/* Loading State */
+.react-pdf__message {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  color: #999;
+  font-size: 14px;
+}
+
+/* Error State */
+.react-pdf__message--error {
+  color: #dc2626;
+  font-weight: 500;
+}
+
+/* Loading Animation */
+.react-pdf__Page__loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 600px;
+  background: white;
+}
+
+/* Dark Mode Adjustments */
+@media (prefers-color-scheme: dark) {
+  .react-pdf__Page {
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+  }
+
+  .react-pdf__Page__annotations a {
+    background: rgba(255, 255, 0, 0.15);
+  }
+
+  .react-pdf__Page__annotations a:hover {
+    background: rgba(255, 255, 0, 0.25);
+  }
+}
+
+/* Zoom Wrapper Styles */
+.react-transform-wrapper {
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+}
+
+.react-transform-component {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Custom Highlight Overlays */
+.pdf-highlight-overlay {
+  position: absolute;
+  pointer-events: none;
+  border-radius: 2px;
+  transition: opacity 0.2s ease;
+  mix-blend-mode: multiply;
+}
+
+.pdf-highlight-overlay:hover {
+  opacity: 0.8;
+}
+
+/* Dark mode highlight adjustments */
+.dark .pdf-highlight-overlay {
+  mix-blend-mode: screen;
+}
+
+/* Page Number Input */
+input[type='number']::-webkit-inner-spin-button,
+input[type='number']::-webkit-outer-spin-button {
+  opacity: 1;
+  height: 20px;
+}
+
+/* Keyboard Shortcuts Display */
+kbd {
+  font-family: ui-monospace, SFMono-Regular, Monaco, 'Cascadia Mono', 'Segoe UI Mono', 'Roboto Mono',
+    'Oxygen Mono', 'Ubuntu Monospace', 'Source Code Pro', 'Fira Mono', 'Droid Sans Mono',
+    'Courier New', monospace;
+  font-size: 0.875em;
+  font-weight: 600;
+  line-height: 1;
+}
+
+/* Print Styles */
+@media print {
+  .react-pdf__Page {
+    box-shadow: none;
+    margin: 0;
+    page-break-after: always;
+  }
+
+  .pdf-toolbar {
+    display: none !important;
+  }
+
+  .pdf-highlight-overlay {
+    opacity: 0.3 !important;
+  }
+}
+
+/* Smooth Scrolling for Page Navigation */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Focus Styles for Accessibility */
+.react-pdf__Page:focus {
+  outline: 2px solid #3b82f6;
+  outline-offset: 4px;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+  .react-pdf__Page {
+    margin: 0 auto 20px;
+  }
+
+  .pdf-toolbar {
+    padding: 12px 8px;
+  }
+
+  .pdf-toolbar button {
+    padding: 8px 12px;
+  }
+}
+
+/* High DPI / Retina Display Support */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  .react-pdf__Page__canvas {
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: crisp-edges;
+  }
+}
+
+/* Prevent text selection on UI elements */
+.pdf-controls,
+.pdf-toolbar,
+.pdf-zoom-controls {
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+}
+
+/* Loading Skeleton */
+.pdf-loading-skeleton {
+  width: 100%;
+  max-width: 800px;
+  height: 1000px;
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: loading 1.5s infinite;
+  border-radius: 4px;
+}
+
+@keyframes loading {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* Dark mode loading skeleton */
+.dark .pdf-loading-skeleton {
+  background: linear-gradient(90deg, #2a2a2a 25%, #3a3a3a 50%, #2a2a2a 75%);
+  background-size: 200% 100%;
+}

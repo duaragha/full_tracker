@@ -1,0 +1,785 @@
+openapi: 3.1.0
+info:
+  title: Highlights & Sources REST API
+  version: 1.0.0
+  description: |
+    A comprehensive REST API for managing highlights and sources (books, articles, PDFs, etc.).
+
+    Features:
+    - Full CRUD operations for highlights and sources
+    - Advanced filtering and full-text search
+    - Pagination support
+    - Tag management
+    - Rate limiting
+    - Bearer token authentication
+
+  contact:
+    name: API Support
+    url: https://github.com/yourusername/full_tracker
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: https://api.example.com/api/v1
+    description: Production server
+  - url: http://localhost:3000/api/v1
+    description: Development server
+
+security:
+  - bearerAuth: []
+
+tags:
+  - name: Highlights
+    description: Operations for managing highlights
+  - name: Sources
+    description: Operations for managing sources (books, articles, PDFs)
+
+paths:
+  /highlights:
+    get:
+      tags:
+        - Highlights
+      summary: List highlights
+      description: Retrieve a paginated list of highlights with optional filtering
+      operationId: listHighlights
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Limit'
+        - name: sourceId
+          in: query
+          description: Filter by source ID
+          schema:
+            type: integer
+        - name: sourceType
+          in: query
+          description: Filter by source type
+          schema:
+            $ref: '#/components/schemas/SourceType'
+        - name: search
+          in: query
+          description: Full-text search in highlight text and notes
+          schema:
+            type: string
+        - name: tags
+          in: query
+          description: Comma-separated tag names to filter by
+          schema:
+            type: string
+            example: "career,motivation"
+        - name: tagIds
+          in: query
+          description: Comma-separated tag IDs to filter by
+          schema:
+            type: string
+            example: "1,2,3"
+        - name: hasNotes
+          in: query
+          description: Filter highlights with/without notes
+          schema:
+            type: boolean
+        - name: startDate
+          in: query
+          description: Filter highlights after this date
+          schema:
+            type: string
+            format: date-time
+        - name: endDate
+          in: query
+          description: Filter highlights before this date
+          schema:
+            type: string
+            format: date-time
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HighlightListResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
+
+    post:
+      tags:
+        - Highlights
+      summary: Create highlight
+      description: Create a new highlight
+      operationId: createHighlight
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateHighlight'
+      responses:
+        '201':
+          description: Highlight created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HighlightResponse'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
+
+  /highlights/{id}:
+    get:
+      tags:
+        - Highlights
+      summary: Get highlight
+      description: Retrieve a single highlight by ID
+      operationId: getHighlight
+      parameters:
+        - $ref: '#/components/parameters/HighlightId'
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HighlightResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
+
+    patch:
+      tags:
+        - Highlights
+      summary: Update highlight
+      description: Update a highlight's text, note, color, or tags
+      operationId: updateHighlight
+      parameters:
+        - $ref: '#/components/parameters/HighlightId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateHighlight'
+      responses:
+        '200':
+          description: Highlight updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
+
+    delete:
+      tags:
+        - Highlights
+      summary: Delete highlight
+      description: Permanently delete a highlight
+      operationId: deleteHighlight
+      parameters:
+        - $ref: '#/components/parameters/HighlightId'
+      responses:
+        '204':
+          description: Highlight deleted successfully
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
+
+  /sources:
+    get:
+      tags:
+        - Sources
+      summary: List sources
+      description: Retrieve a paginated list of sources with optional filtering
+      operationId: listSources
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Limit'
+        - name: type
+          in: query
+          description: Filter by source type
+          schema:
+            $ref: '#/components/schemas/SourceType'
+        - name: search
+          in: query
+          description: Search in title and author
+          schema:
+            type: string
+        - name: bookId
+          in: query
+          description: Filter by book ID
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SourceListResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
+
+    post:
+      tags:
+        - Sources
+      summary: Create source
+      description: Create a new source (book, article, PDF, etc.)
+      operationId: createSource
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateSource'
+      responses:
+        '201':
+          description: Source created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SourceResponse'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
+
+  /sources/{id}:
+    get:
+      tags:
+        - Sources
+      summary: Get source
+      description: Retrieve a single source by ID with optional highlights
+      operationId: getSource
+      parameters:
+        - $ref: '#/components/parameters/SourceId'
+        - name: includeHighlights
+          in: query
+          description: Include all highlights for this source
+          schema:
+            type: boolean
+            default: false
+        - name: highlightsLimit
+          in: query
+          description: Limit number of highlights returned
+          schema:
+            type: integer
+            default: 50
+            minimum: 1
+            maximum: 100
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SourceResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
+
+    patch:
+      tags:
+        - Sources
+      summary: Update source
+      description: Update a source's metadata
+      operationId: updateSource
+      parameters:
+        - $ref: '#/components/parameters/SourceId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateSource'
+      responses:
+        '200':
+          description: Source updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
+
+    delete:
+      tags:
+        - Sources
+      summary: Delete source
+      description: Permanently delete a source and all its highlights
+      operationId: deleteSource
+      parameters:
+        - $ref: '#/components/parameters/SourceId'
+      responses:
+        '204':
+          description: Source deleted successfully
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: API Key
+      description: API key for authentication. Obtain from CLI using `npm run api-keys create`
+
+  parameters:
+    Page:
+      name: page
+      in: query
+      description: Page number
+      schema:
+        type: integer
+        minimum: 1
+        default: 1
+
+    Limit:
+      name: limit
+      in: query
+      description: Items per page
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 20
+
+    HighlightId:
+      name: id
+      in: path
+      required: true
+      description: Highlight ID
+      schema:
+        type: integer
+
+    SourceId:
+      name: id
+      in: path
+      required: true
+      description: Source ID
+      schema:
+        type: integer
+
+  schemas:
+    SourceType:
+      type: string
+      enum:
+        - book
+        - article
+        - pdf
+        - web
+        - podcast
+        - video
+
+    LocationType:
+      type: string
+      enum:
+        - page
+        - percentage
+        - kindle_location
+        - time
+
+    Tag:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        color:
+          type: string
+          nullable: true
+
+    Source:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        author:
+          type: string
+          nullable: true
+        sourceType:
+          $ref: '#/components/schemas/SourceType'
+
+    Highlight:
+      type: object
+      properties:
+        id:
+          type: integer
+        sourceId:
+          type: integer
+        text:
+          type: string
+        note:
+          type: string
+          nullable: true
+        locationType:
+          $ref: '#/components/schemas/LocationType'
+          nullable: true
+        locationValue:
+          type: number
+          nullable: true
+        locationStart:
+          type: number
+          nullable: true
+        locationEnd:
+          type: number
+          nullable: true
+        color:
+          type: string
+          default: yellow
+        isFavorite:
+          type: boolean
+          default: false
+        isArchived:
+          type: boolean
+          default: false
+        highlightedAt:
+          type: string
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        source:
+          $ref: '#/components/schemas/Source'
+          nullable: true
+        tags:
+          type: array
+          items:
+            $ref: '#/components/schemas/Tag'
+
+    FullSource:
+      type: object
+      properties:
+        id:
+          type: integer
+        sourceType:
+          $ref: '#/components/schemas/SourceType'
+        title:
+          type: string
+        author:
+          type: string
+          nullable: true
+        url:
+          type: string
+          nullable: true
+        isbn:
+          type: string
+          nullable: true
+        publishedDate:
+          type: string
+          format: date
+          nullable: true
+        category:
+          type: string
+          nullable: true
+        readingProgress:
+          type: number
+          minimum: 0
+          maximum: 100
+          default: 0
+        highlightCount:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        lastHighlightedAt:
+          type: string
+          format: date-time
+          nullable: true
+        highlights:
+          type: array
+          items:
+            $ref: '#/components/schemas/Highlight'
+
+    CreateHighlight:
+      type: object
+      required:
+        - sourceId
+        - text
+      properties:
+        sourceId:
+          type: integer
+        text:
+          type: string
+          minLength: 1
+        note:
+          type: string
+        locationType:
+          $ref: '#/components/schemas/LocationType'
+        locationValue:
+          type: number
+        locationStart:
+          type: number
+        locationEnd:
+          type: number
+        color:
+          type: string
+          default: yellow
+        highlightedAt:
+          type: string
+          format: date-time
+
+    UpdateHighlight:
+      type: object
+      properties:
+        text:
+          type: string
+          minLength: 1
+        note:
+          type: string
+          nullable: true
+        color:
+          type: string
+        tags:
+          type: array
+          items:
+            type: integer
+
+    CreateSource:
+      type: object
+      required:
+        - sourceType
+        - title
+      properties:
+        sourceType:
+          $ref: '#/components/schemas/SourceType'
+        title:
+          type: string
+          minLength: 1
+        author:
+          type: string
+        url:
+          type: string
+        isbn:
+          type: string
+        publishedDate:
+          type: string
+          format: date
+        domain:
+          type: string
+        content:
+          type: string
+        excerpt:
+          type: string
+        category:
+          type: string
+
+    UpdateSource:
+      type: object
+      properties:
+        title:
+          type: string
+          minLength: 1
+        author:
+          type: string
+        readingProgress:
+          type: number
+          minimum: 0
+          maximum: 100
+        category:
+          type: string
+
+    Pagination:
+      type: object
+      properties:
+        page:
+          type: integer
+        limit:
+          type: integer
+        total:
+          type: integer
+        totalPages:
+          type: integer
+        hasNextPage:
+          type: boolean
+        hasPrevPage:
+          type: boolean
+
+    HighlightListResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          const: true
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Highlight'
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+
+    HighlightResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          const: true
+        data:
+          $ref: '#/components/schemas/Highlight'
+
+    SourceListResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          const: true
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/FullSource'
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+
+    SourceResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          const: true
+        data:
+          $ref: '#/components/schemas/FullSource'
+
+    MessageResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          const: true
+        data:
+          type: object
+          properties:
+            message:
+              type: string
+
+    Error:
+      type: object
+      properties:
+        success:
+          type: boolean
+          const: false
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+            message:
+              type: string
+            details:
+              type: object
+            field:
+              type: string
+
+  responses:
+    Unauthorized:
+      description: Unauthorized - Invalid or missing API key
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            success: false
+            error:
+              code: UNAUTHORIZED
+              message: Invalid or missing API key
+
+    NotFound:
+      description: Not Found - Resource does not exist
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            success: false
+            error:
+              code: NOT_FOUND
+              message: Highlight not found
+
+    ValidationError:
+      description: Bad Request - Invalid request data
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            success: false
+            error:
+              code: VALIDATION_ERROR
+              message: text is required and must be a non-empty string
+              field: text
+
+    RateLimitExceeded:
+      description: Rate Limit Exceeded - Too many requests
+      headers:
+        X-RateLimit-Limit-Hour:
+          schema:
+            type: integer
+          description: Hourly rate limit
+        X-RateLimit-Remaining-Hour:
+          schema:
+            type: integer
+          description: Remaining requests this hour
+        X-RateLimit-Reset-Hour:
+          schema:
+            type: string
+            format: date-time
+          description: When the hourly limit resets
+        Retry-After:
+          schema:
+            type: integer
+          description: Seconds until retry
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            success: false
+            error:
+              code: RATE_LIMIT_EXCEEDED
+              message: Rate limit exceeded. Please try again later.
+              details:
+                requestsLastHour: 100
+                requestsLastDay: 1000
+                resetHourAt: "2025-11-13T11:00:00Z"
+                resetDayAt: "2025-11-14T00:00:00Z"

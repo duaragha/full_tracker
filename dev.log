@@ -1,0 +1,14 @@
+
+> full_tracker@0.1.0 dev
+> next dev --turbopack
+
+ ⚠ Port 3000 is in use by process 60704, using available port 3003 instead.
+   ▲ Next.js 16.0.1 (Turbopack)
+   - Local:        http://localhost:3003
+   - Network:      http://192.168.1.175:3003
+   - Environments: .env.local
+
+ ✓ Starting...
+ ⨯ Unable to acquire lock at C:\Users\ragha\Projects\full_tracker\.next\dev\lock, is another instance of next dev running?
+   Suggestion: If you intended to restart next dev, terminate the other process, and then try again.
+[?25h

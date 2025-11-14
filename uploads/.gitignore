@@ -1,0 +1,6 @@
+# Ignore all uploaded files
+*
+
+# But keep this directory structure
+!.gitignore
+!reader/.gitkeep
