@@ -8,6 +8,8 @@ import Link from 'next/link'
 import { ReaderLibraryClient } from './reader-library-client'
 import type { Metadata } from 'next'
 
+export const dynamic = 'force-dynamic'
+
 export const metadata: Metadata = {
   title: 'Reader Library | Full Tracker',
   description: 'Your saved articles and reading list with offline access',

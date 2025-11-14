@@ -6,6 +6,8 @@ import { Badge } from '@/components/ui/badge'
 import { Rss, AlertCircle, RefreshCw } from 'lucide-react'
 import type { Metadata } from 'next'
 
+export const dynamic = 'force-dynamic'
+
 export const metadata: Metadata = {
   title: 'RSS Feeds | Full Tracker',
   description: 'Manage your RSS feed subscriptions',

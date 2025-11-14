@@ -8,6 +8,8 @@ import { FeedItemsClient } from './feed-items-client'
 import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 
+export const dynamic = 'force-dynamic'
+
 interface FeedItemsPageProps {
   params: {
     feedId: string

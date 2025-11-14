@@ -5,6 +5,8 @@ import { Button } from '@/components/ui/button'
 import { CheckCircle2, ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
 
+export const dynamic = 'force-dynamic'
+
 export default async function ReviewPage() {
   const reviews = await getDueReviewsAction()
 

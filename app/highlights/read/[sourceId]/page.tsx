@@ -6,6 +6,8 @@ import { EPUBReader } from '@/components/reader/epub-reader'
 import { getSourceByIdAction, getHighlightsAction } from '@/app/actions/highlights'
 import { HighlightSource } from '@/types/highlight'
 
+export const dynamic = 'force-dynamic'
+
 interface ReadPageProps {
   params: Promise<{
     sourceId: string

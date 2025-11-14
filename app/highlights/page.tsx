@@ -11,6 +11,8 @@ import { HighlightFilters } from '@/components/highlight-filters'
 import { HighlightsClient } from './highlights-client'
 import Link from 'next/link'
 
+export const dynamic = 'force-dynamic'
+
 export default async function HighlightsPage({
   searchParams,
 }: {
