@@ -1,4 +1,3 @@
-import { JSDOM } from 'jsdom'
 import { Readability } from '@mozilla/readability'
 
 export interface ParsedArticle {
@@ -194,9 +193,10 @@ export async function parseArticle(url: string): Promise<ParsedArticle | Article
       }
     }
 
-    // Parse HTML with JSDOM
-    let dom: JSDOM
+    // Parse HTML with JSDOM (dynamically imported for ESM compatibility)
+    let dom: any
     try {
+      const { JSDOM } = await import('jsdom')
       dom = new JSDOM(html, {
         url: url,
         contentType: 'text/html'
