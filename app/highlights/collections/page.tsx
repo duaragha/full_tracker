@@ -26,7 +26,7 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from '@/components/ui/alert'
+} from '@/components/ui/alert-dialog'
 import { Plus, Edit, Trash2, FolderOpen, Folder, TrendingUp } from 'lucide-react'
 import {
   getCollectionsAction,

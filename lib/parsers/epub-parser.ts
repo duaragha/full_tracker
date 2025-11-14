@@ -130,8 +130,8 @@ function decodeHTMLEntities(text: string): string {
     '&hellip;': '…',
     '&ldquo;': '"',
     '&rdquo;': '"',
-    '&lsquo;': ''',
-    '&rsquo;': ''',
+    '&lsquo;': "'",
+    '&rsquo;': "'",
   }
 
   let decoded = text

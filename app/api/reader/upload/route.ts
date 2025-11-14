@@ -183,9 +183,3 @@ export async function POST(request: NextRequest): Promise<NextResponse<UploadRes
     )
   }
 }
-
-export const config = {
-  api: {
-    bodyParser: false,
-  },
-}

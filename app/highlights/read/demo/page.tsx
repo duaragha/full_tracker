@@ -1,3 +1,5 @@
+'use client'
+
 import { ArticleReader } from '@/components/reader/article-reader'
 
 /**
