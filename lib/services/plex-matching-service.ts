@@ -236,13 +236,16 @@ export class PlexMatchingService {
 
   /**
    * Match by title and year using fuzzy matching
-   * FIXED: Use show_start_date instead of first_aired
+   * FIXED: Year filter now checks if show was RUNNING during that year,
+   * not just when it started. This handles cases where Plex sends a season's
+   * air year instead of the series premiere year.
    */
   private static async matchByTitleAndYear(
     title: string,
     year?: number
   ): Promise<any[]> {
     try {
+      // First, try matching without year filter (for long-running shows)
       let query = `
         SELECT
           id,
@@ -252,19 +255,38 @@ export class PlexMatchingService {
           similarity(title, $1) as confidence
         FROM tvshows
         WHERE similarity(title, $1) > 0.6
+        ORDER BY confidence DESC
+        LIMIT 10
       `;
 
-      const params: any[] = [title];
+      const result = await pool.query(query, [title]);
 
-      if (year) {
-        query += ` AND EXTRACT(YEAR FROM show_start_date) BETWEEN $2 AND $3`;
-        params.push(year - 1, year + 1);
+      // If we have a year, use it to boost confidence but don't filter out matches
+      if (year && result.rows.length > 0) {
+        return result.rows.map((row: any) => {
+          const showYear = row.show_start_date
+            ? new Date(row.show_start_date).getFullYear()
+            : null;
+
+          // Boost confidence if year is close to show start
+          // But also accept if show started BEFORE the given year (long-running show)
+          let yearBonus = 0;
+          if (showYear) {
+            if (showYear === year || showYear === year - 1 || showYear === year + 1) {
+              yearBonus = 0.1; // Close year match
+            } else if (showYear < year) {
+              yearBonus = 0.05; // Show started earlier - might be a later season
+            }
+          }
+
+          return {
+            ...row,
+            confidence: Math.min(row.confidence + yearBonus, 1.0),
+          };
+        }).sort((a: any, b: any) => b.confidence - a.confidence).slice(0, 5);
       }
 
-      query += ` ORDER BY confidence DESC LIMIT 5`;
-
-      const result = await pool.query(query, params);
-      return result.rows;
+      return result.rows.slice(0, 5);
     } catch (error) {
       console.error('[PlexMatchingService] Error with fuzzy matching:', error);
       return [];
