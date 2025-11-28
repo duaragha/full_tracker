@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { AppSidebar } from "@/components/app-sidebar";
@@ -20,6 +20,12 @@ export const metadata: Metadata = {
   description: "Track your games, books, movies, and room inventory all in one place",
 };
 
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  viewportFit: 'cover',
+};
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -34,7 +40,7 @@ export default function RootLayout({
           <AppSidebar />
           <SidebarInset>
             <header className="flex h-14 sm:h-16 shrink-0 items-center gap-2 border-b px-3 sm:px-4">
-              <SidebarTrigger className="-ml-1 size-10 sm:size-7" />
+              <SidebarTrigger className="-ml-1 size-8 sm:size-7" />
               <Separator orientation="vertical" className="mr-2 h-4" />
             </header>
             <main className="flex-1 p-3 sm:p-4 md:p-6">
