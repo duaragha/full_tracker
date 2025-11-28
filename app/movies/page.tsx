@@ -232,29 +232,29 @@ export default function MoviesPage() {
         </Button>
       </div>
 
-      <div className="w-full grid gap-2 sm:gap-3 grid-cols-2 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-4">
+      <div className="w-full grid gap-1.5 sm:gap-2 md:gap-3 grid-cols-2 md:grid-cols-4">
         <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-lg">{totalMovies}</CardTitle>
-            <CardDescription className="text-xs">Total Movies</CardDescription>
+          <CardHeader className="pb-1 sm:pb-2">
+            <CardTitle className="text-base sm:text-lg">{totalMovies}</CardTitle>
+            <CardDescription className="text-[10px] sm:text-xs">Total Movies</CardDescription>
           </CardHeader>
         </Card>
         <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-lg">{totalHours}h {totalMinutes}m</CardTitle>
-            <CardDescription className="text-xs">Total Runtime</CardDescription>
+          <CardHeader className="pb-1 sm:pb-2">
+            <CardTitle className="text-base sm:text-lg">{totalHours}h {totalMinutes}m</CardTitle>
+            <CardDescription className="text-[10px] sm:text-xs">Total Runtime</CardDescription>
           </CardHeader>
         </Card>
         <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-lg">{avgRating}/10</CardTitle>
-            <CardDescription className="text-xs">Average Rating</CardDescription>
+          <CardHeader className="pb-1 sm:pb-2">
+            <CardTitle className="text-base sm:text-lg">{avgRating}/10</CardTitle>
+            <CardDescription className="text-[10px] sm:text-xs">Average Rating</CardDescription>
           </CardHeader>
         </Card>
         <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-lg">{moviesThisYear}</CardTitle>
-            <CardDescription className="text-xs">Movies This Year</CardDescription>
+          <CardHeader className="pb-1 sm:pb-2">
+            <CardTitle className="text-base sm:text-lg">{moviesThisYear}</CardTitle>
+            <CardDescription className="text-[10px] sm:text-xs">Movies This Year</CardDescription>
           </CardHeader>
         </Card>
       </div>

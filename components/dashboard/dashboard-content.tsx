@@ -186,77 +186,77 @@ export function DashboardContent({
         .slice(0, 5)
 
     return (
-        <div className="space-y-4 sm:space-y-6">
+        <div className="space-y-3 sm:space-y-4 md:space-y-6">
             <div>
                 <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Dashboard</h1>
                 <p className="text-sm sm:text-base text-muted-foreground">Welcome to your tracking hub</p>
             </div>
 
-            <div className="w-full grid gap-2 sm:gap-3 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 xl:grid-cols-9">
+            <div className="w-full grid gap-1.5 sm:gap-2 md:gap-3 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-9">
                 <Card>
-                    <CardHeader className="pb-2">
-                        <CardTitle className="text-lg">{gamesCount}</CardTitle>
-                        <CardDescription className="text-xs">Total Games</CardDescription>
+                    <CardHeader className="pb-1 sm:pb-2">
+                        <CardTitle className="text-base sm:text-lg">{gamesCount}</CardTitle>
+                        <CardDescription className="text-[10px] sm:text-xs">Total Games</CardDescription>
                     </CardHeader>
                 </Card>
 
                 <Card>
-                    <CardHeader className="pb-2">
-                        <CardTitle className="text-lg">{booksCount}</CardTitle>
-                        <CardDescription className="text-xs">Total Books</CardDescription>
+                    <CardHeader className="pb-1 sm:pb-2">
+                        <CardTitle className="text-base sm:text-lg">{booksCount}</CardTitle>
+                        <CardDescription className="text-[10px] sm:text-xs">Total Books</CardDescription>
                     </CardHeader>
                 </Card>
 
                 <Card>
-                    <CardHeader className="pb-2">
-                        <CardTitle className="text-lg">{totalGameHours.toFixed(0)}h</CardTitle>
-                        <CardDescription className="text-xs">Gaming Time</CardDescription>
+                    <CardHeader className="pb-1 sm:pb-2">
+                        <CardTitle className="text-base sm:text-lg">{totalGameHours.toFixed(0)}h</CardTitle>
+                        <CardDescription className="text-[10px] sm:text-xs">Gaming Time</CardDescription>
                     </CardHeader>
                 </Card>
 
                 <Card>
-                    <CardHeader className="pb-2">
-                        <CardTitle className="text-lg">{Math.floor(totalBookMinutes / 60)}h {totalBookMinutes % 60}m</CardTitle>
-                        <CardDescription className="text-xs">Reading Time</CardDescription>
+                    <CardHeader className="pb-1 sm:pb-2">
+                        <CardTitle className="text-base sm:text-lg">{Math.floor(totalBookMinutes / 60)}h {totalBookMinutes % 60}m</CardTitle>
+                        <CardDescription className="text-[10px] sm:text-xs">Reading Time</CardDescription>
                     </CardHeader>
                 </Card>
 
                 <Card>
-                    <CardHeader className="pb-2">
-                        <CardTitle className="text-lg">{tvshowsCount}</CardTitle>
-                        <CardDescription className="text-xs">TV Shows</CardDescription>
+                    <CardHeader className="pb-1 sm:pb-2">
+                        <CardTitle className="text-base sm:text-lg">{tvshowsCount}</CardTitle>
+                        <CardDescription className="text-[10px] sm:text-xs">TV Shows</CardDescription>
                     </CardHeader>
                 </Card>
 
                 <Card>
-                    <CardHeader className="pb-2">
-                        <CardTitle className="text-lg">{moviesCount}</CardTitle>
-                        <CardDescription className="text-xs">Movies</CardDescription>
+                    <CardHeader className="pb-1 sm:pb-2">
+                        <CardTitle className="text-base sm:text-lg">{moviesCount}</CardTitle>
+                        <CardDescription className="text-[10px] sm:text-xs">Movies</CardDescription>
                     </CardHeader>
                 </Card>
 
                 <Card>
-                    <CardHeader className="pb-2">
-                        <CardTitle className="text-lg">{monthlyKm.toFixed(0)} km</CardTitle>
-                        <CardDescription className="text-xs">This Month KMs</CardDescription>
+                    <CardHeader className="pb-1 sm:pb-2">
+                        <CardTitle className="text-base sm:text-lg">{monthlyKm.toFixed(0)} km</CardTitle>
+                        <CardDescription className="text-[10px] sm:text-xs">This Month KMs</CardDescription>
                     </CardHeader>
                 </Card>
 
                 <Card>
-                    <CardHeader className="pb-2">
-                        <CardTitle className="text-lg">${monthlyCost.toFixed(2)}</CardTitle>
-                        <CardDescription className="text-xs">This Month Cost</CardDescription>
+                    <CardHeader className="pb-1 sm:pb-2">
+                        <CardTitle className="text-base sm:text-lg">${monthlyCost.toFixed(2)}</CardTitle>
+                        <CardDescription className="text-[10px] sm:text-xs">This Month Cost</CardDescription>
                     </CardHeader>
                 </Card>
 
                 <Link href="/jobs" className="block">
                     <Card className="cursor-pointer hover:bg-muted/50 transition-colors h-full">
-                        <CardHeader className="pb-2">
-                            <CardTitle className="flex items-center gap-2 text-lg">
-                                <Briefcase className="w-4 h-4" />
+                        <CardHeader className="pb-1 sm:pb-2">
+                            <CardTitle className="flex items-center gap-1.5 sm:gap-2 text-base sm:text-lg">
+                                <Briefcase className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                                 {jobStats?.totalJobs || 0}
                             </CardTitle>
-                            <CardDescription className="text-xs">Job Applications</CardDescription>
+                            <CardDescription className="text-[10px] sm:text-xs">Job Applications</CardDescription>
                         </CardHeader>
                     </Card>
                 </Link>
@@ -280,7 +280,7 @@ export function DashboardContent({
                         </div>
                     </CardHeader>
                     <CardContent>
-                        <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-4">
+                        <div className="grid gap-2 sm:gap-3 grid-cols-2 lg:grid-cols-2 xl:grid-cols-4">
                             {watchingShows.map((show) => {
                                 const progress = show.totalEpisodes > 0 ? Math.round((show.watchedEpisodes / show.totalEpisodes) * 100) : 0
 
@@ -354,7 +354,7 @@ export function DashboardContent({
                 </Card>
             )}
 
-            <div className="grid gap-2 sm:gap-3 grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
+            <div className="grid gap-2 sm:gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
                 <Card>
                     <CardHeader className="pb-2">
                         <div className="flex items-center justify-between gap-2">

@@ -203,7 +203,7 @@ export function JobsClient({
   }
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
+    <div className="container mx-auto p-3 sm:p-4 md:p-6 space-y-3 sm:space-y-4 md:space-y-6">
       {/* Global Save Status */}
       {globalSaveStatus && (
         <div className={`fixed top-4 right-4 z-50 px-4 py-2 rounded-lg shadow-lg transition-all ${
@@ -218,93 +218,94 @@ export function JobsClient({
       )}
 
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-2">
         <div>
-          <h1 className="text-3xl font-bold">Job Application Tracker</h1>
-          <p className="text-muted-foreground">Track and manage your job search</p>
+          <h1 className="text-2xl sm:text-3xl font-bold">Job Application Tracker</h1>
+          <p className="text-xs sm:text-sm text-muted-foreground">Track and manage your job search</p>
         </div>
-        <Button onClick={handleAddJob} size="lg">
-          <Plus className="w-4 h-4 mr-2" />
-          Add Application
+        <Button onClick={handleAddJob} size="sm" className="sm:size-default">
+          <Plus className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1.5 sm:mr-2" />
+          <span className="hidden sm:inline">Add Application</span>
+          <span className="sm:hidden">Add</span>
         </Button>
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-1.5 sm:gap-2 md:gap-4">
         <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Total</CardTitle>
+          <CardHeader className="pb-1 sm:pb-2">
+            <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">Total</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="flex items-center gap-2">
-              <Briefcase className="w-4 h-4 text-muted-foreground" />
-              <span className="text-2xl font-bold">{stats.totalJobs}</span>
+            <div className="flex items-center gap-1.5 sm:gap-2">
+              <Briefcase className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-muted-foreground" />
+              <span className="text-xl sm:text-2xl font-bold">{stats.totalJobs}</span>
             </div>
-            <div className="text-xs text-muted-foreground mt-1">All applications</div>
+            <div className="text-[10px] sm:text-xs text-muted-foreground mt-0.5 sm:mt-1">All applications</div>
           </CardContent>
         </Card>
 
         <Card className="border-l-4" style={{ borderLeftColor: '#0ea5e9' }}>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Applied</CardTitle>
+          <CardHeader className="pb-1 sm:pb-2">
+            <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">Applied</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold" style={{ color: '#0ea5e9' }}>{stats.appliedCount}</div>
-            <div className="text-xs text-muted-foreground mt-1">
+            <div className="text-xl sm:text-2xl font-bold" style={{ color: '#0ea5e9' }}>{stats.appliedCount}</div>
+            <div className="text-[10px] sm:text-xs text-muted-foreground mt-0.5 sm:mt-1">
               {stats.totalJobs > 0 ? ((stats.appliedCount / stats.totalJobs) * 100).toFixed(1) : 0}%
             </div>
           </CardContent>
         </Card>
 
         <Card className="border-l-4" style={{ borderLeftColor: '#3b82f6' }}>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Screening</CardTitle>
+          <CardHeader className="pb-1 sm:pb-2">
+            <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">Screening</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold" style={{ color: '#3b82f6' }}>{stats.screeningCount}</div>
-            <div className="text-xs text-muted-foreground mt-1">
+            <div className="text-xl sm:text-2xl font-bold" style={{ color: '#3b82f6' }}>{stats.screeningCount}</div>
+            <div className="text-[10px] sm:text-xs text-muted-foreground mt-0.5 sm:mt-1">
               {stats.totalJobs > 0 ? ((stats.screeningCount / stats.totalJobs) * 100).toFixed(1) : 0}%
             </div>
           </CardContent>
         </Card>
 
         <Card className="border-l-4" style={{ borderLeftColor: '#f59e0b' }}>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Assessment</CardTitle>
+          <CardHeader className="pb-1 sm:pb-2">
+            <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">Assessment</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold" style={{ color: '#f59e0b' }}>{stats.assessmentCount}</div>
-            <div className="text-xs text-muted-foreground mt-1">
+            <div className="text-xl sm:text-2xl font-bold" style={{ color: '#f59e0b' }}>{stats.assessmentCount}</div>
+            <div className="text-[10px] sm:text-xs text-muted-foreground mt-0.5 sm:mt-1">
               {stats.totalJobs > 0 ? ((stats.assessmentCount / stats.totalJobs) * 100).toFixed(1) : 0}%
             </div>
           </CardContent>
         </Card>
 
         <Card className="border-l-4" style={{ borderLeftColor: '#22c55e' }}>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Interviewing</CardTitle>
+          <CardHeader className="pb-1 sm:pb-2">
+            <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">Interviewing</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="flex items-center gap-2">
-              <TrendingUp className="w-4 h-4" style={{ color: '#22c55e' }} />
-              <span className="text-2xl font-bold" style={{ color: '#22c55e' }}>{stats.interviewingCount}</span>
+            <div className="flex items-center gap-1.5 sm:gap-2">
+              <TrendingUp className="w-3.5 h-3.5 sm:w-4 sm:h-4" style={{ color: '#22c55e' }} />
+              <span className="text-xl sm:text-2xl font-bold" style={{ color: '#22c55e' }}>{stats.interviewingCount}</span>
             </div>
-            <div className="text-xs text-muted-foreground mt-1">
+            <div className="text-[10px] sm:text-xs text-muted-foreground mt-0.5 sm:mt-1">
               {stats.totalJobs > 0 ? ((stats.interviewingCount / stats.totalJobs) * 100).toFixed(1) : 0}%
             </div>
           </CardContent>
         </Card>
 
         <Card className="border-l-4" style={{ borderLeftColor: '#ef4444' }}>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Rejected</CardTitle>
+          <CardHeader className="pb-1 sm:pb-2">
+            <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">Rejected</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="flex items-center gap-2">
-              <XCircle className="w-4 h-4" style={{ color: '#ef4444' }} />
-              <span className="text-2xl font-bold" style={{ color: '#ef4444' }}>{stats.rejectedCount}</span>
+            <div className="flex items-center gap-1.5 sm:gap-2">
+              <XCircle className="w-3.5 h-3.5 sm:w-4 sm:h-4" style={{ color: '#ef4444' }} />
+              <span className="text-xl sm:text-2xl font-bold" style={{ color: '#ef4444' }}>{stats.rejectedCount}</span>
             </div>
-            <div className="text-xs text-muted-foreground mt-1">
+            <div className="text-[10px] sm:text-xs text-muted-foreground mt-0.5 sm:mt-1">
               {stats.totalJobs > 0 ? ((stats.rejectedCount / stats.totalJobs) * 100).toFixed(1) : 0}%
             </div>
           </CardContent>
@@ -312,24 +313,24 @@ export function JobsClient({
       </div>
 
       {/* Response Rate */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-2 gap-1.5 sm:gap-2 md:gap-4">
         <Card className="border-l-4" style={{ borderLeftColor: '#6b7280' }}>
-          <CardHeader>
-            <CardTitle className="text-sm font-medium">Response Rate</CardTitle>
-            <CardDescription>Non-rejected jobs that progressed past Applied</CardDescription>
+          <CardHeader className="pb-1 sm:pb-2">
+            <CardTitle className="text-xs sm:text-sm font-medium">Response Rate</CardTitle>
+            <CardDescription className="text-[10px] sm:text-xs">Non-rejected jobs progressed</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold" style={{ color: '#6b7280' }}>{stats.responseRate}%</div>
+            <div className="text-2xl sm:text-3xl font-bold" style={{ color: '#6b7280' }}>{stats.responseRate}%</div>
           </CardContent>
         </Card>
 
         <Card className="border-l-4" style={{ borderLeftColor: '#22c55e' }}>
-          <CardHeader>
-            <CardTitle className="text-sm font-medium">Active Applications</CardTitle>
-            <CardDescription>Non-rejected applications</CardDescription>
+          <CardHeader className="pb-1 sm:pb-2">
+            <CardTitle className="text-xs sm:text-sm font-medium">Active Applications</CardTitle>
+            <CardDescription className="text-[10px] sm:text-xs">Non-rejected applications</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold" style={{ color: '#22c55e' }}>{stats.activeApplications}</div>
+            <div className="text-2xl sm:text-3xl font-bold" style={{ color: '#22c55e' }}>{stats.activeApplications}</div>
           </CardContent>
         </Card>
       </div>

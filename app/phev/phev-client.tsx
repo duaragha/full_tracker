@@ -150,10 +150,10 @@ export function PhevClient({ initialCars, initialCarSummaries, initialUnassigned
   const displaySummaries = activeSummary ? [activeSummary, ...otherSummaries] : carSummaries
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-3 sm:space-y-4 md:space-y-6">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">🚗🔋 PHEV Tracker</h1>
-        <p className="text-muted-foreground">Track every EV-only kilometre and the cost to drive them</p>
+        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">🚗🔋 PHEV Tracker</h1>
+        <p className="text-xs sm:text-sm text-muted-foreground">Track every EV-only kilometre and the cost to drive them</p>
       </div>
 
       {/* Stats */}

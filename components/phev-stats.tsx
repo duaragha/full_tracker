@@ -1,5 +1,5 @@
 import { PhevStats } from "@/types/phev"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 
 interface PhevStatsProps {
   stats: PhevStats
@@ -7,46 +7,46 @@ interface PhevStatsProps {
 
 export function PhevStatsCards({ stats }: PhevStatsProps) {
   return (
-    <div className="w-full grid gap-2 sm:gap-3 grid-cols-2 md:grid-cols-3 lg:grid-cols-6 xl:grid-cols-6">
+    <div className="w-full grid gap-1.5 sm:gap-2 md:gap-3 grid-cols-2 sm:grid-cols-3 lg:grid-cols-6">
       <Card>
-        <CardHeader className="pb-2">
-          <CardTitle className="text-lg">{stats.totalKm.toFixed(2)}</CardTitle>
-          <CardDescription className="text-xs">Total KM</CardDescription>
+        <CardHeader className="pb-1 sm:pb-2">
+          <CardTitle className="text-base sm:text-lg">{stats.totalKm.toFixed(2)}</CardTitle>
+          <CardDescription className="text-[10px] sm:text-xs">Total KM</CardDescription>
         </CardHeader>
       </Card>
 
       <Card>
-        <CardHeader className="pb-2">
-          <CardTitle className="text-lg">${stats.totalCost.toFixed(2)}</CardTitle>
-          <CardDescription className="text-xs">Total Cost</CardDescription>
+        <CardHeader className="pb-1 sm:pb-2">
+          <CardTitle className="text-base sm:text-lg">${stats.totalCost.toFixed(2)}</CardTitle>
+          <CardDescription className="text-[10px] sm:text-xs">Total Cost</CardDescription>
         </CardHeader>
       </Card>
 
       <Card>
-        <CardHeader className="pb-2">
-          <CardTitle className="text-lg">{stats.totalEnergyKwh.toFixed(2)} kWh</CardTitle>
-          <CardDescription className="text-xs">Total Energy</CardDescription>
+        <CardHeader className="pb-1 sm:pb-2">
+          <CardTitle className="text-base sm:text-lg">{stats.totalEnergyKwh.toFixed(2)} kWh</CardTitle>
+          <CardDescription className="text-[10px] sm:text-xs">Total Energy</CardDescription>
         </CardHeader>
       </Card>
 
       <Card>
-        <CardHeader className="pb-2">
-          <CardTitle className="text-lg">${stats.costPerKm.toFixed(4)}</CardTitle>
-          <CardDescription className="text-xs">Cost per KM</CardDescription>
+        <CardHeader className="pb-1 sm:pb-2">
+          <CardTitle className="text-base sm:text-lg">${stats.costPerKm.toFixed(4)}</CardTitle>
+          <CardDescription className="text-[10px] sm:text-xs">Cost per KM</CardDescription>
         </CardHeader>
       </Card>
 
       <Card>
-        <CardHeader className="pb-2">
-          <CardTitle className="text-lg">${stats.costPerKwh > 0 ? stats.costPerKwh.toFixed(3) : 'N/A'}</CardTitle>
-          <CardDescription className="text-xs">Cost per kWh</CardDescription>
+        <CardHeader className="pb-1 sm:pb-2">
+          <CardTitle className="text-base sm:text-lg">${stats.costPerKwh > 0 ? stats.costPerKwh.toFixed(3) : 'N/A'}</CardTitle>
+          <CardDescription className="text-[10px] sm:text-xs">Cost per kWh</CardDescription>
         </CardHeader>
       </Card>
 
       <Card>
-        <CardHeader className="pb-2">
-          <CardTitle className="text-lg">{stats.kwhPerKm > 0 ? (stats.kwhPerKm * 100).toFixed(2) : 'N/A'}</CardTitle>
-          <CardDescription className="text-xs">kWh/100km</CardDescription>
+        <CardHeader className="pb-1 sm:pb-2">
+          <CardTitle className="text-base sm:text-lg">{stats.kwhPerKm > 0 ? (stats.kwhPerKm * 100).toFixed(2) : 'N/A'}</CardTitle>
+          <CardDescription className="text-[10px] sm:text-xs">kWh/100km</CardDescription>
         </CardHeader>
       </Card>
     </div>
