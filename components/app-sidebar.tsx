@@ -3,7 +3,7 @@
 import * as React from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { BarChart3, Gamepad2, BookOpen, Home, Tv, Film, Package, Zap, Briefcase, TrendingUp, Settings, ChevronDown, Radio, Sparkles, BookOpenText } from "lucide-react"
+import { BarChart3, Gamepad2, BookOpen, Home, Tv, Film, Package, Zap, Briefcase, TrendingUp, Settings, ChevronDown, Radio, Sparkles, BookOpenText, Dumbbell } from "lucide-react"
 
 import {
   Sidebar,
@@ -73,6 +73,11 @@ const navItems = [
     url: "/inventory",
     icon: Package,
   },
+  {
+    title: "Workouts",
+    url: "/workouts",
+    icon: Dumbbell,
+  },
 ]
 
 const settingsItems = [
@@ -92,7 +97,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <div className="flex items-center gap-2 px-2 py-2 sm:py-3">
           <BarChart3 className="size-6 sm:size-5" />
           <div className="flex flex-col">
-            <span className="font-semibold text-base sm:text-sm">Full Tracker</span>
+            <span className="font-semibold text-sm sm:text-base">Full Tracker</span>
             <span className="text-xs text-muted-foreground">Track everything</span>
           </div>
         </div>
@@ -105,7 +110,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               {navItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild isActive={pathname === item.url} className="px-3 h-11 sm:px-2 sm:h-9">
-                    <Link href={item.url} className="text-base sm:text-sm">
+                    <Link href={item.url} className="text-sm sm:text-base">
                       <item.icon className="size-5 sm:size-4 mr-3 sm:mr-2" />
                       <span>{item.title}</span>
                     </Link>
@@ -124,7 +129,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               {settingsItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild isActive={pathname === item.url} className="px-3 h-11 sm:px-2 sm:h-9">
-                    <Link href={item.url} className="text-base sm:text-sm">
+                    <Link href={item.url} className="text-sm sm:text-base">
                       <item.icon className="size-5 sm:size-4 mr-3 sm:mr-2" />
                       <span>{item.title}</span>
                     </Link>

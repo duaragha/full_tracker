@@ -512,29 +512,29 @@ export default function BooksPage() {
         </div>
       </div>
 
-      <div className="w-full grid gap-2 sm:gap-3 grid-cols-2 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-4">
+      <div className="w-full grid gap-1.5 sm:gap-2 md:gap-3 grid-cols-2 md:grid-cols-4">
         <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-lg">{books.length}</CardTitle>
-            <CardDescription className="text-xs">Total Books</CardDescription>
+          <CardHeader className="pb-1 sm:pb-2">
+            <CardTitle className="text-base sm:text-lg">{books.length}</CardTitle>
+            <CardDescription className="text-[10px] sm:text-xs">Total Books</CardDescription>
           </CardHeader>
         </Card>
         <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-lg">{totalPages.toLocaleString()}</CardTitle>
-            <CardDescription className="text-xs">Pages Read (Ebooks)</CardDescription>
+          <CardHeader className="pb-1 sm:pb-2">
+            <CardTitle className="text-base sm:text-lg">{totalPages.toLocaleString()}</CardTitle>
+            <CardDescription className="text-[10px] sm:text-xs">Pages Read (Ebooks)</CardDescription>
           </CardHeader>
         </Card>
         <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-lg">{totalHours}h {remainingMinutes}m</CardTitle>
-            <CardDescription className="text-xs">Time Listened (Audiobooks)</CardDescription>
+          <CardHeader className="pb-1 sm:pb-2">
+            <CardTitle className="text-base sm:text-lg">{totalHours}h {remainingMinutes}m</CardTitle>
+            <CardDescription className="text-[10px] sm:text-xs">Time Listened (Audiobooks)</CardDescription>
           </CardHeader>
         </Card>
         <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-lg">{totalDays}</CardTitle>
-            <CardDescription className="text-xs">Total Days</CardDescription>
+          <CardHeader className="pb-1 sm:pb-2">
+            <CardTitle className="text-base sm:text-lg">{totalDays}</CardTitle>
+            <CardDescription className="text-[10px] sm:text-xs">Total Days</CardDescription>
           </CardHeader>
         </Card>
       </div>

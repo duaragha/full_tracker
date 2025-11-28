@@ -121,3 +121,12 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Touch device interaction utilities */
+@layer utilities {
+  @media (hover: hover) {
+    .hover-only\:hover\:bg-muted:hover {
+      background-color: hsl(var(--muted));
+    }
+  }
+}

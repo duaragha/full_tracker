@@ -520,35 +520,35 @@ export default function InventoryPage() {
         </Button>
       </div>
 
-      <div className="grid gap-4 grid-cols-2 sm:grid-cols-3 md:grid-cols-5">
+      <div className="grid gap-1.5 sm:gap-2 md:gap-3 grid-cols-2 sm:grid-cols-3 md:grid-cols-5">
         <Card>
-          <CardHeader>
-            <CardTitle>{totalItems}</CardTitle>
-            <CardDescription>Total Items</CardDescription>
+          <CardHeader className="pb-1 sm:pb-2">
+            <CardTitle className="text-base sm:text-lg">{totalItems}</CardTitle>
+            <CardDescription className="text-[10px] sm:text-xs">Total Items</CardDescription>
           </CardHeader>
         </Card>
         <Card>
-          <CardHeader>
-            <CardTitle>{itemsUsedInLastYear}</CardTitle>
-            <CardDescription>Used in Last Year</CardDescription>
+          <CardHeader className="pb-1 sm:pb-2">
+            <CardTitle className="text-base sm:text-lg">{itemsUsedInLastYear}</CardTitle>
+            <CardDescription className="text-[10px] sm:text-xs">Used in Last Year</CardDescription>
           </CardHeader>
         </Card>
         <Card>
-          <CardHeader>
-            <CardTitle>${totalCost.toFixed(2)}</CardTitle>
-            <CardDescription>Total Cost</CardDescription>
+          <CardHeader className="pb-1 sm:pb-2">
+            <CardTitle className="text-base sm:text-lg">${totalCost.toFixed(2)}</CardTitle>
+            <CardDescription className="text-[10px] sm:text-xs">Total Cost</CardDescription>
           </CardHeader>
         </Card>
         <Card>
-          <CardHeader>
-            <CardTitle>{giftsReceived}</CardTitle>
-            <CardDescription>Gifts Received</CardDescription>
+          <CardHeader className="pb-1 sm:pb-2">
+            <CardTitle className="text-base sm:text-lg">{giftsReceived}</CardTitle>
+            <CardDescription className="text-[10px] sm:text-xs">Gifts Received</CardDescription>
           </CardHeader>
         </Card>
         <Card>
-          <CardHeader>
-            <CardTitle>{itemsToDiscard}</CardTitle>
-            <CardDescription>To Discard</CardDescription>
+          <CardHeader className="pb-1 sm:pb-2">
+            <CardTitle className="text-base sm:text-lg">{itemsToDiscard}</CardTitle>
+            <CardDescription className="text-[10px] sm:text-xs">To Discard</CardDescription>
           </CardHeader>
         </Card>
       </div>

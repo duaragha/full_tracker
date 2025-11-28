@@ -302,35 +302,35 @@ export default function TVShowsPage() {
         </Button>
       </div>
 
-      <div className="w-full grid gap-2 sm:gap-3 grid-cols-2 md:grid-cols-3 lg:grid-cols-5 xl:grid-cols-5">
+      <div className="w-full grid gap-1.5 sm:gap-2 md:gap-3 grid-cols-2 sm:grid-cols-3 md:grid-cols-5">
         <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-lg">{totalShows}</CardTitle>
-            <CardDescription className="text-xs">Total Shows</CardDescription>
+          <CardHeader className="pb-1 sm:pb-2">
+            <CardTitle className="text-base sm:text-lg">{totalShows}</CardTitle>
+            <CardDescription className="text-[10px] sm:text-xs">Total Shows</CardDescription>
           </CardHeader>
         </Card>
         <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-lg">{totalEpisodesWatched}</CardTitle>
-            <CardDescription className="text-xs">Episodes Watched</CardDescription>
+          <CardHeader className="pb-1 sm:pb-2">
+            <CardTitle className="text-base sm:text-lg">{totalEpisodesWatched}</CardTitle>
+            <CardDescription className="text-[10px] sm:text-xs">Episodes Watched</CardDescription>
           </CardHeader>
         </Card>
         <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-lg">{totalTimeFormatted}</CardTitle>
-            <CardDescription className="text-xs">Total Time Watched</CardDescription>
+          <CardHeader className="pb-1 sm:pb-2">
+            <CardTitle className="text-base sm:text-lg">{totalTimeFormatted}</CardTitle>
+            <CardDescription className="text-[10px] sm:text-xs">Total Time Watched</CardDescription>
           </CardHeader>
         </Card>
         <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-lg">{totalRewatches}</CardTitle>
-            <CardDescription className="text-xs">Total Rewatches</CardDescription>
+          <CardHeader className="pb-1 sm:pb-2">
+            <CardTitle className="text-base sm:text-lg">{totalRewatches}</CardTitle>
+            <CardDescription className="text-[10px] sm:text-xs">Total Rewatches</CardDescription>
           </CardHeader>
         </Card>
         <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-lg">{totalDaysTracking}</CardTitle>
-            <CardDescription className="text-xs">Days Tracking</CardDescription>
+          <CardHeader className="pb-1 sm:pb-2">
+            <CardTitle className="text-base sm:text-lg">{totalDaysTracking}</CardTitle>
+            <CardDescription className="text-[10px] sm:text-xs">Days Tracking</CardDescription>
           </CardHeader>
         </Card>
       </div>
