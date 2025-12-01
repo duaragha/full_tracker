@@ -339,7 +339,7 @@ export default function MoviesPage() {
                     key={key}
                     title={title}
                     count={items.length}
-                    defaultOpen={true}
+                    defaultOpen={key === 'stopped'}
                     storageKey={`movies-section-${key}`}
                   >
                     <GridView
@@ -365,7 +365,7 @@ export default function MoviesPage() {
                     key={key}
                     title={title}
                     count={movies.length}
-                    defaultOpen={true}
+                    defaultOpen={key === 'stopped'}
                     storageKey={`movies-section-${key}`}
                   >
                     {/* Desktop Table View */}

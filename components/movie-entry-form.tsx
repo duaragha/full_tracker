@@ -33,7 +33,13 @@ export function MovieEntryForm({ selectedMovie, onSubmit, onCancel, initialData 
     rating: initialData?.rating || 5,
     notes: initialData?.notes || "",
   })
-  const [movieDetails, setMovieDetails] = React.useState<any>(null)
+  const [movieDetails, setMovieDetails] = React.useState<{
+    title: string;
+    release_date: string;
+    runtime: number;
+    poster_path: string | null;
+    genres: Array<{ id: number; name: string }>;
+  } | null>(null)
   const [director, setDirector] = React.useState<string>("")
 
   React.useEffect(() => {
@@ -95,7 +101,7 @@ export function MovieEntryForm({ selectedMovie, onSubmit, onCancel, initialData 
       tmdbId: selectedMovie.id,
       title: movieDetails.title,
       director,
-      genres: movieDetails.genres.map((g: any) => g.name),
+      genres: movieDetails.genres.map((g: { id: number; name: string }) => g.name),
       runtime: movieDetails.runtime || 0,
       releaseDate: movieDetails.release_date || null,
       releaseYear,
@@ -138,7 +144,7 @@ export function MovieEntryForm({ selectedMovie, onSubmit, onCancel, initialData 
                 Director: {director}
               </p>
               <p className="text-sm text-muted-foreground">
-                Genres: {movieDetails.genres.map((g: any) => g.name).join(", ")}
+                Genres: {movieDetails.genres.map((g: { id: number; name: string }) => g.name).join(", ")}
               </p>
               <p className="text-sm text-muted-foreground">
                 Runtime: {hours}h {minutes}m

@@ -33,7 +33,18 @@ export function TVShowEntryForm({ selectedShow, onSubmit, onCancel, initialData 
     notes: initialData?.notes || "",
     rewatchCount: initialData?.rewatchCount || 0
   })
-  const [showDetails, setShowDetails] = React.useState<any>(null)
+  const [showDetails, setShowDetails] = React.useState<{
+    name: string;
+    poster_path: string | null;
+    backdrop_path: string | null;
+    first_air_date: string;
+    last_air_date: string | null;
+    genres: Array<{ id: number; name: string }>;
+    networks: Array<{ id: number; name: string }>;
+    created_by: Array<{ id: number; name: string }>;
+    number_of_episodes: number;
+    overview: string;
+  } | null>(null)
 
   React.useEffect(() => {
     if (selectedShow && !initialData) {
@@ -102,9 +113,9 @@ export function TVShowEntryForm({ selectedShow, onSubmit, onCancel, initialData 
         tmdbId: selectedShow.id,
         title: showDetails.name,
         status: formData.status,
-        creators: showDetails.created_by?.map((c: any) => c.name) || [],
+        creators: showDetails.created_by?.map((c: { id: number; name: string }) => c.name) || [],
         network: showDetails.networks[0]?.name || "Unknown",
-        genres: showDetails.genres.map((g: any) => g.name),
+        genres: showDetails.genres.map((g: { id: number; name: string }) => g.name),
         posterImage: getPosterUrl(showDetails.poster_path, 'w342'),
         backdropImage: getBackdropUrl(showDetails.backdrop_path, 'w780'),
         showStartDate: showDetails.first_air_date || "",
@@ -152,14 +163,14 @@ export function TVShowEntryForm({ selectedShow, onSubmit, onCancel, initialData 
               <h3 className="text-base sm:text-lg font-semibold">{showDetails.name}</h3>
               {showDetails.created_by && showDetails.created_by.length > 0 && (
                 <p className="text-sm text-muted-foreground">
-                  Created by: {showDetails.created_by.map((c: any) => c.name).join(", ")}
+                  Created by: {showDetails.created_by.map((c: { id: number; name: string }) => c.name).join(", ")}
                 </p>
               )}
               <p className="text-sm text-muted-foreground">
                 Network: {showDetails.networks[0]?.name || "Unknown"}
               </p>
               <p className="text-sm text-muted-foreground">
-                Genres: {showDetails.genres.map((g: any) => g.name).join(", ")}
+                Genres: {showDetails.genres.map((g: { id: number; name: string }) => g.name).join(", ")}
               </p>
               <p className="text-sm text-muted-foreground">
                 Aired: {showDetails.first_air_date ? new Date(showDetails.first_air_date).getFullYear() : "N/A"}

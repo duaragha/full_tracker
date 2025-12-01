@@ -45,7 +45,7 @@ export default function BooksPage() {
   const [sortBy, setSortBy] = React.useState<BookSortField>("title")
   const [sortOrder, setSortOrder] = React.useState<BookSortOrder>("asc")
   const [isScanning, setIsScanning] = React.useState(false)
-  const [organizeMode, setOrganizeMode] = React.useState<OrganizeMode>("status")
+  const [organizeMode, setOrganizeMode] = React.useState<OrganizeMode>("series")
 
   // Grid view state
   const [viewMode, setViewMode] = useViewMode("table", "books-view-mode")
@@ -631,7 +631,7 @@ export default function BooksPage() {
                         key={seriesName}
                         title={seriesName}
                         count={seriesBooks.length}
-                        defaultOpen={true}
+                        defaultOpen={false}
                         storageKey={`books-series-${seriesName}`}
                       >
                         <GridView
@@ -650,7 +650,7 @@ export default function BooksPage() {
                         key={seriesName}
                         title={seriesName}
                         count={seriesBooks.length}
-                        defaultOpen={true}
+                        defaultOpen={false}
                         storageKey={`books-series-${seriesName}`}
                       >
                         {/* Render table and mobile card views for series */}
@@ -666,7 +666,7 @@ export default function BooksPage() {
                   <CollapsibleSection
                     title="Standalone Books"
                     count={groupedBySeries.noSeriesBooks.length}
-                    defaultOpen={true}
+                    defaultOpen={false}
                     storageKey="books-series-standalone"
                   >
                     <GridView
@@ -682,7 +682,7 @@ export default function BooksPage() {
                   <CollapsibleSection
                     title="Standalone Books"
                     count={groupedBySeries.noSeriesBooks.length}
-                    defaultOpen={true}
+                    defaultOpen={false}
                     storageKey="books-series-standalone"
                   >
                     {renderBooksList(groupedBySeries.noSeriesBooks)}

@@ -22,9 +22,9 @@ interface GameEntryFormProps {
 export function GameEntryForm({ selectedGame, onSubmit, onCancel, initialData }: GameEntryFormProps) {
   const [formData, setFormData] = React.useState({
     title: initialData?.title || selectedGame?.name || "",
-    publisher: initialData?.publisher || (selectedGame as any)?.publishers?.[0]?.name || "",
-    developer: initialData?.developer || (selectedGame as any)?.developers?.[0]?.name || "",
-    genres: initialData?.genres || (selectedGame as any)?.genres?.map((g: any) => g.name) || [],
+    publisher: initialData?.publisher || selectedGame?.publishers?.[0]?.name || "",
+    developer: initialData?.developer || "",
+    genres: initialData?.genres || [],
     releaseDate: initialData?.releaseDate || selectedGame?.released || "",
     coverImage: initialData?.coverImage || selectedGame?.background_image || "",
     status: initialData?.status || "Playing" as const,
@@ -123,7 +123,7 @@ export function GameEntryForm({ selectedGame, onSubmit, onCancel, initialData }:
           <Label htmlFor="status">Status</Label>
           <Select
             value={formData.status}
-            onValueChange={(value: any) => setFormData({ ...formData, status: value })}
+            onValueChange={(value: 'Playing' | 'Completed' | 'Stopped') => setFormData({ ...formData, status: value })}
           >
             <SelectTrigger>
               <SelectValue />
