@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { BookSeriesDetectionService } from '@/lib/services/book-series-detection-service';
 import { Pool } from 'pg';
+import { logger } from '@/lib/logger';
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL || process.env.POSTGRES_URL,
@@ -41,7 +42,12 @@ export async function POST(
 
     const book = result.rows[0];
 
-    console.log(`[API] Detecting series for: "${book.title}" (AI: ${useAI}, minConfidence: ${minConfidence})`);
+    logger.info({
+      title: book.title,
+      useAI,
+      minConfidence,
+      bookId,
+    }, 'Detecting series for book');
 
     // Auto-detect series with enhanced options
     const detection = await BookSeriesDetectionService.autoDetectAndLinkSeries(
@@ -75,7 +81,11 @@ export async function POST(
       });
     }
   } catch (error) {
-    console.error('[API] Error detecting series for book:', error);
+    logger.error({
+      error: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined,
+      bookId: id,
+    }, 'Error detecting series for book');
     return NextResponse.json(
       {
         success: false,

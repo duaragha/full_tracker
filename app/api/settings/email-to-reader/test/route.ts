@@ -3,6 +3,7 @@ import { getUserById } from '@/lib/db/users-store'
 import { parseArticle, isArticleError } from '@/lib/parsers/article-parser'
 import { createSource } from '@/lib/db/highlight-sources-store'
 import { createEmailImportLog, updateEmailImportLog } from '@/lib/db/users-store'
+import { logger } from '@/lib/logger'
 
 // For now, we'll use a hardcoded user ID
 // In production, this should come from session/auth
@@ -66,7 +67,9 @@ export async function POST(request: NextRequest) {
 
     try {
       // Parse the article
-      console.log(`Test: Parsing article from URL: ${testUrl}`)
+      logger.debug({
+        testUrl,
+      }, 'Test: Parsing article from URL')
       const articleResult = await parseArticle(testUrl)
 
       if (isArticleError(articleResult)) {
@@ -75,6 +78,12 @@ export async function POST(request: NextRequest) {
           status: 'failed',
           errorMessage: `${articleResult.error}: ${articleResult.details || ''}`,
         })
+
+        logger.error({
+          error: articleResult.error,
+          details: articleResult.details,
+          testUrl,
+        }, 'Test: Article parse error')
 
         return NextResponse.json(
           {
@@ -129,7 +138,10 @@ export async function POST(request: NextRequest) {
         sourceIds: [source.id],
       })
 
-      console.log(`Test: Successfully imported article (source_id: ${source.id})`)
+      logger.info({
+        sourceId: source.id,
+        title: articleResult.title,
+      }, 'Test: Article successfully imported')
 
       return NextResponse.json({
         success: true,
@@ -150,7 +162,10 @@ export async function POST(request: NextRequest) {
         errorMessage,
       })
 
-      console.error('Test: Error importing article:', error)
+      logger.error({
+        error: errorMessage,
+        stack: error instanceof Error ? error.stack : undefined,
+      }, 'Test: Error importing article')
 
       return NextResponse.json(
         {
@@ -161,7 +176,10 @@ export async function POST(request: NextRequest) {
       )
     }
   } catch (error) {
-    console.error('Error in test endpoint:', error)
+    logger.error({
+      error: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined,
+    }, 'Error in test endpoint')
     return NextResponse.json(
       {
         error: 'Internal server error',

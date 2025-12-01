@@ -12,6 +12,7 @@ import {
 } from '@/lib/db/users-store'
 import { createSource } from '@/lib/db/highlight-sources-store'
 import { parseArticle, isArticleError } from '@/lib/parsers/article-parser'
+import { logger } from '@/lib/logger'
 
 /**
  * Email-to-Reader Webhook Endpoint
@@ -52,7 +53,10 @@ export async function POST(request: NextRequest) {
     const parseResult = parseEmailWebhook(webhookData)
 
     if (isEmailParseError(parseResult)) {
-      console.error('Email parse error:', parseResult)
+      logger.error({
+        error: parseResult.error,
+        details: parseResult.details,
+      }, 'Email parse error')
       return NextResponse.json(
         {
           success: false,
@@ -69,7 +73,9 @@ export async function POST(request: NextRequest) {
     const token = extractTokenFromEmail(toAddress)
 
     if (!token) {
-      console.error('No token found in recipient address:', toAddress)
+      logger.error({
+        toAddress,
+      }, 'No token found in recipient address')
       return NextResponse.json(
         {
           success: false,
@@ -82,7 +88,9 @@ export async function POST(request: NextRequest) {
 
     // Validate token format
     if (!isValidEmailToken(token)) {
-      console.error('Invalid token format:', token)
+      logger.error({
+        token,
+      }, 'Invalid token format')
       return NextResponse.json(
         {
           success: false,
@@ -97,7 +105,9 @@ export async function POST(request: NextRequest) {
     const user = await getUserByEmailToken(token)
 
     if (!user) {
-      console.error('User not found for token:', token)
+      logger.error({
+        token,
+      }, 'User not found for token')
       return NextResponse.json(
         {
           success: false,
@@ -108,7 +118,11 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    console.log(`Email received from ${fromAddress} for user ${user.username} (${user.email})`)
+    logger.info({
+      fromAddress,
+      username: user.username,
+      email: user.email,
+    }, 'Email received for user')
 
     // Check if any content was found
     if (urls.length === 0 && !hasInlineContent) {
@@ -162,13 +176,18 @@ export async function POST(request: NextRequest) {
     // Process URLs
     for (const url of urls) {
       try {
-        console.log(`Parsing article from URL: ${url}`)
+        logger.debug({
+          url,
+        }, 'Parsing article from URL')
 
         // Parse the article
         const articleResult = await parseArticle(url)
 
         if (isArticleError(articleResult)) {
-          console.error(`Failed to parse article from ${url}:`, articleResult.error)
+          logger.error({
+            url,
+            error: articleResult.error,
+          }, 'Failed to parse article')
           errors.push(`${url}: ${articleResult.error}`)
           continue
         }
@@ -212,9 +231,17 @@ export async function POST(request: NextRequest) {
         await pool.end()
 
         importedSourceIds.push(source.id)
-        console.log(`Successfully imported: ${articleResult.title} (source_id: ${source.id})`)
+        logger.info({
+          title: articleResult.title,
+          sourceId: source.id,
+          url,
+        }, 'Article successfully imported')
       } catch (error) {
-        console.error(`Error importing ${url}:`, error)
+        logger.error({
+          url,
+          error: error instanceof Error ? error.message : String(error),
+          stack: error instanceof Error ? error.stack : undefined,
+        }, 'Error importing URL')
         errors.push(`${url}: ${error instanceof Error ? error.message : 'Unknown error'}`)
       }
     }
@@ -222,7 +249,7 @@ export async function POST(request: NextRequest) {
     // Handle inline content if present and no URLs were successfully imported
     if (hasInlineContent && inlineContent && importedSourceIds.length === 0) {
       try {
-        console.log('Importing inline article content')
+        logger.debug({}, 'Importing inline article content')
 
         // Create source from inline content
         const source = await createSource({
@@ -256,9 +283,14 @@ export async function POST(request: NextRequest) {
         await pool.end()
 
         importedSourceIds.push(source.id)
-        console.log(`Successfully imported inline content (source_id: ${source.id})`)
+        logger.info({
+          sourceId: source.id,
+        }, 'Inline content successfully imported')
       } catch (error) {
-        console.error('Error importing inline content:', error)
+        logger.error({
+          error: error instanceof Error ? error.message : String(error),
+          stack: error instanceof Error ? error.stack : undefined,
+        }, 'Error importing inline content')
         errors.push(`Inline content: ${error instanceof Error ? error.message : 'Unknown error'}`)
       }
     }
@@ -290,7 +322,10 @@ export async function POST(request: NextRequest) {
       { status: 200 }
     )
   } catch (error) {
-    console.error('Email-to-reader webhook error:', error)
+    logger.error({
+      error: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined,
+    }, 'Email-to-reader webhook error')
 
     return NextResponse.json(
       {

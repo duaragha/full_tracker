@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { Pool } from 'pg';
 import { PlexWebhookService } from '@/lib/services/plex-webhook-service';
+import { logger } from '@/lib/logger';
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL || process.env.POSTGRES_URL,
@@ -44,11 +45,8 @@ export async function POST(req: NextRequest) {
     const url = new URL(req.url);
     const providedSecret = url.searchParams.get('secret');
 
-    console.log('[Plex Webhook] Full URL:', req.url);
-    console.log('[Plex Webhook] Provided secret:', providedSecret ? `${providedSecret.substring(0, 10)}...` : 'NONE');
-
     if (!providedSecret) {
-      console.warn('[Plex Webhook] No secret in URL');
+      logger.warn({ component: 'PlexWebhook' }, 'No secret in URL');
       return NextResponse.json(
         { error: 'Missing webhook secret' },
         { status: 401 }
@@ -69,12 +67,9 @@ export async function POST(req: NextRequest) {
 
     const { webhook_secret, enabled } = configResult.rows[0];
 
-    console.log('[Plex Webhook] Expected secret:', webhook_secret ? `${webhook_secret.substring(0, 10)}...` : 'NONE');
-    console.log('[Plex Webhook] Secrets match:', providedSecret === webhook_secret);
-
     // 4. Verify secret
     if (providedSecret !== webhook_secret) {
-      console.warn('[Plex Webhook] Invalid secret provided');
+      logger.warn({ component: 'PlexWebhook' }, 'Invalid secret provided');
       return NextResponse.json(
         { error: 'Invalid webhook secret' },
         { status: 401 }
@@ -105,14 +100,14 @@ export async function POST(req: NextRequest) {
     const result = await PlexWebhookService.processWebhook(payload);
 
     // 7. Log processing info
-    console.log('[Plex Webhook] Processed:', {
+    logger.info({
       status: result.status,
       action: result.action,
       duration: result.duration,
       show: payload.Metadata?.grandparentTitle || payload.Metadata?.title,
       season: payload.Metadata?.parentIndex,
       episode: payload.Metadata?.index,
-    });
+    }, 'Plex webhook processed');
 
     // 8. Return response based on status
     if (result.status === 'failed') {
@@ -133,7 +128,10 @@ export async function POST(req: NextRequest) {
     });
 
   } catch (error) {
-    console.error('[Plex Webhook] Unexpected error:', error);
+    logger.error({
+      error: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined,
+    }, 'Plex webhook unexpected error');
     return NextResponse.json(
       {
         error: 'Internal server error',
