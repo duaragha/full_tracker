@@ -43,3 +43,79 @@ next-env.d.ts
 # Reader uploads (PDFs, EPUBs)
 /uploads/reader/*
 !/uploads/reader/.gitkeep
+hooks_backup_*/
+.moai/logs/
+*.backup
+# Logs
+# Build artifacts
+.idea/
+Thumbs.db
+.claude/settings.local.json
+# Backups
+# OS
+*.temp
+.venv_issue43_py313
+.mypy_cache
+# Package templates (src/moai_adk/templates/) are tracked
+.env/
+env/
+*_backup_*/
+.aws/
+# Environment variables and deployment secrets
+.ruff_cache
+# Claude and MoAI configuration (user-specific, root only)
+docs/.next/
+coverage.json
+.moai/*.tmp
+.moai/temp/
+*.log
+*-backup/
+*.swp
+.vercel/
+.vscode/
+*.swo
+*.bak
+dist/
+.coverage
+.moai/reports/*-draft.*
+__pycache__/
+*.pyo
+# IDE
+.uv_cache
+*.pyc
+.pytest_cache/
+# Cache
+.uv-cache
+venv/
+.claude/settings.local.*.json
+*~
+/CLAUDE.md
+# Next.js build output
+.netlify/
+.venv/
+.moai/reports/*.tmp
+*.tmp
+# MoAI dynamic content (로컬 프로젝트만 무시, but package templates are tracked)
+# Virtual environment
+docs_backup_*/
+docs/out/
+build/
+.playwright-mcp
+# Temporary files
+# Test coverage
+.claude/.env.local*
+node_modules/
+logs/
+# MoAI reports (임시 보고서만 무시)
+.moai-backups/
+.firebase/
+*.egg-info/
+*.backup/
+*.egg
+.tscache/
+
+# Build artifacts and temp files
+build_output.txt
+snapshot.json
+test-import.js
+nul
