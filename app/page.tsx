@@ -1,3 +1,6 @@
+// Force dynamic rendering - database not available at build time
+export const dynamic = 'force-dynamic'
+
 import { getGamesAction } from "@/app/actions/games"
 import { getBooksAction } from "@/app/actions/books"
 import { getTVShowsAction } from "@/app/actions/tvshows"
