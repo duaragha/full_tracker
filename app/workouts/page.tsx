@@ -31,13 +31,53 @@ import {
 } from '@/lib/actions/fitness-workouts';
 import { ActiveWorkout } from '@/components/workouts/ActiveWorkout';
 
+interface RecentWorkout {
+  id: number;
+  name: string;
+  date: string;
+  duration: number;
+  sets: number;
+  prs: number;
+}
+
+interface Routine {
+  id: number;
+  name: string;
+  folder: string;
+  exercises: number;
+  lastUsed: string;
+}
+
+interface ExerciseItem {
+  id: number;
+  name: string;
+  category: string;
+  muscle: string;
+  pr: string;
+}
+
+interface WeeklyProgressItem {
+  hasWorkout: boolean;
+}
+
+interface Exercise {
+  id: number;
+  name: string;
+  category: string;
+  primary_muscle: string;
+  target_reps?: string;
+  target_weight?: number;
+  rest_seconds?: number;
+  workoutExerciseId?: number;
+}
+
 export default function WorkoutsPage() {
   const [activeTab, setActiveTab] = React.useState('overview');
-  const [recentWorkouts, setRecentWorkouts] = React.useState<any[]>([]);
-  const [routines, setRoutines] = React.useState<any[]>([]);
-  const [exercises, setExercises] = React.useState<any[]>([]);
-  const [weeklyProgress, setWeeklyProgress] = React.useState<any[]>([]);
-  const [activeSession, setActiveSession] = React.useState<{ id: number; exercises: any[] } | null>(null);
+  const [recentWorkouts, setRecentWorkouts] = React.useState<RecentWorkout[]>([]);
+  const [routines, setRoutines] = React.useState<Routine[]>([]);
+  const [exercises, setExercises] = React.useState<ExerciseItem[]>([]);
+  const [weeklyProgress, setWeeklyProgress] = React.useState<WeeklyProgressItem[]>([]);
+  const [activeSession, setActiveSession] = React.useState<{ id: number; exercises: Exercise[] } | null>(null);
   const [stats, setStats] = React.useState({
     totalWorkouts: 0,
     thisWeek: 0,

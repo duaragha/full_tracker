@@ -1,0 +1,1936 @@
+openapi: 3.1.0
+info:
+  title: Full Tracker Fitness API
+  version: 1.0.0
+  description: |
+    RESTful API for fitness tracking with support for Wear OS, Health Connect, and mobile applications.
+
+    ## Features
+    - Exercise library management
+    - Workout session tracking
+    - Real-time workout updates
+    - Batch synchronization for wearables
+    - Health metrics integration
+    - Routine templates
+
+    ## Authentication
+    This API uses OAuth 2.0 for authentication. Include your access token in the Authorization header:
+    ```
+    Authorization: Bearer YOUR_ACCESS_TOKEN
+    ```
+
+  contact:
+    name: API Support
+    url: https://fulltracker.app/support
+    email: api@fulltracker.app
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: https://api.fulltracker.app/v1
+    description: Production server
+  - url: http://localhost:3000/api/v1
+    description: Development server
+
+security:
+  - bearerAuth: []
+  - apiKey: []
+
+tags:
+  - name: Exercises
+    description: Exercise library management
+  - name: Workouts
+    description: Workout session tracking
+  - name: Routines
+    description: Workout routine templates
+  - name: Sets
+    description: Individual exercise set tracking
+  - name: Health
+    description: Health metrics and measurements
+  - name: Sync
+    description: Batch synchronization operations
+  - name: Authentication
+    description: Authentication and authorization
+
+paths:
+  # ==================== AUTHENTICATION ====================
+  /auth/token:
+    post:
+      tags: [Authentication]
+      summary: Get access token
+      description: Exchange authorization code for access token (OAuth 2.0)
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - grant_type
+                - client_id
+              properties:
+                grant_type:
+                  type: string
+                  enum: [authorization_code, refresh_token]
+                code:
+                  type: string
+                  description: Authorization code (required for authorization_code grant)
+                refresh_token:
+                  type: string
+                  description: Refresh token (required for refresh_token grant)
+                client_id:
+                  type: string
+                client_secret:
+                  type: string
+                redirect_uri:
+                  type: string
+      responses:
+        '200':
+          description: Token issued successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  # ==================== EXERCISES ====================
+  /exercises:
+    get:
+      tags: [Exercises]
+      summary: List exercises
+      description: Get a paginated list of exercises from the library
+      parameters:
+        - name: category
+          in: query
+          schema:
+            $ref: '#/components/schemas/ExerciseCategory'
+        - name: muscle_group
+          in: query
+          schema:
+            $ref: '#/components/schemas/MuscleGroup'
+        - name: equipment
+          in: query
+          schema:
+            $ref: '#/components/schemas/Equipment'
+        - name: difficulty
+          in: query
+          schema:
+            type: string
+            enum: [beginner, intermediate, advanced]
+        - name: is_custom
+          in: query
+          schema:
+            type: boolean
+        - name: search
+          in: query
+          schema:
+            type: string
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/LimitParam'
+        - $ref: '#/components/parameters/SortParam'
+      responses:
+        '200':
+          description: List of exercises
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/PaginatedResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Exercise'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+    post:
+      tags: [Exercises]
+      summary: Create custom exercise
+      description: Create a new custom exercise in your library
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ExerciseCreate'
+      responses:
+        '201':
+          description: Exercise created successfully
+          headers:
+            Location:
+              schema:
+                type: string
+              description: URL of the created exercise
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExerciseResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+
+  /exercises/{exerciseId}:
+    get:
+      tags: [Exercises]
+      summary: Get exercise
+      description: Get detailed information about a specific exercise
+      parameters:
+        - $ref: '#/components/parameters/ExerciseIdParam'
+      responses:
+        '200':
+          description: Exercise details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExerciseResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    patch:
+      tags: [Exercises]
+      summary: Update custom exercise
+      description: Update a custom exercise (only exercises you created)
+      parameters:
+        - $ref: '#/components/parameters/ExerciseIdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ExerciseUpdate'
+      responses:
+        '200':
+          description: Exercise updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExerciseResponse'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    delete:
+      tags: [Exercises]
+      summary: Delete custom exercise
+      description: Delete a custom exercise (only exercises you created)
+      parameters:
+        - $ref: '#/components/parameters/ExerciseIdParam'
+      responses:
+        '204':
+          description: Exercise deleted successfully
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # ==================== WORKOUTS ====================
+  /workouts:
+    get:
+      tags: [Workouts]
+      summary: List workouts
+      description: Get a paginated list of your workout sessions
+      parameters:
+        - name: status
+          in: query
+          schema:
+            $ref: '#/components/schemas/WorkoutStatus'
+        - name: from_date
+          in: query
+          schema:
+            type: string
+            format: date-time
+        - name: to_date
+          in: query
+          schema:
+            type: string
+            format: date-time
+        - name: routine_id
+          in: query
+          schema:
+            type: string
+        - name: include
+          in: query
+          description: Comma-separated list of relationships to include
+          schema:
+            type: string
+            example: exercises,routine,metrics
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/LimitParam'
+        - $ref: '#/components/parameters/SortParam'
+      responses:
+        '200':
+          description: List of workouts
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/PaginatedResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Workout'
+
+    post:
+      tags: [Workouts]
+      summary: Create workout
+      description: Create a new workout session (start a workout)
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKeyHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WorkoutCreate'
+      responses:
+        '201':
+          description: Workout created successfully
+          headers:
+            Location:
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkoutResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+
+  /workouts/{workoutId}:
+    get:
+      tags: [Workouts]
+      summary: Get workout
+      description: Get detailed information about a specific workout
+      parameters:
+        - $ref: '#/components/parameters/WorkoutIdParam'
+        - name: include
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Workout details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkoutResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    patch:
+      tags: [Workouts]
+      summary: Update workout
+      description: Update workout details or mark as completed
+      parameters:
+        - $ref: '#/components/parameters/WorkoutIdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WorkoutUpdate'
+      responses:
+        '200':
+          description: Workout updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkoutResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+
+    delete:
+      tags: [Workouts]
+      summary: Delete workout
+      description: Delete a workout session
+      parameters:
+        - $ref: '#/components/parameters/WorkoutIdParam'
+      responses:
+        '204':
+          description: Workout deleted successfully
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /workouts/batch:
+    post:
+      tags: [Workouts, Sync]
+      summary: Batch create workouts
+      description: Create multiple workouts in a single request (for wearable sync)
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKeyHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - workouts
+              properties:
+                workouts:
+                  type: array
+                  maxItems: 100
+                  items:
+                    allOf:
+                      - $ref: '#/components/schemas/WorkoutCreate'
+                      - type: object
+                        required:
+                          - client_id
+                        properties:
+                          client_id:
+                            type: string
+                            description: Client-side identifier for reference
+      responses:
+        '207':
+          description: Multi-status (some succeeded, some failed)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BatchWorkoutResponse'
+
+  /workouts/{workoutId}/exercises:
+    post:
+      tags: [Workouts]
+      summary: Add exercise to workout
+      description: Add an exercise with sets to the workout
+      parameters:
+        - $ref: '#/components/parameters/WorkoutIdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WorkoutExerciseCreate'
+      responses:
+        '201':
+          description: Exercise added to workout
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkoutExerciseResponse'
+
+  /workouts/{workoutId}/exercises/{exerciseId}:
+    patch:
+      tags: [Workouts]
+      summary: Update workout exercise
+      description: Update exercise details in the workout
+      parameters:
+        - $ref: '#/components/parameters/WorkoutIdParam'
+        - $ref: '#/components/parameters/ExerciseIdParam'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WorkoutExerciseUpdate'
+      responses:
+        '200':
+          description: Exercise updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkoutExerciseResponse'
+
+    delete:
+      tags: [Workouts]
+      summary: Remove exercise from workout
+      parameters:
+        - $ref: '#/components/parameters/WorkoutIdParam'
+        - $ref: '#/components/parameters/ExerciseIdParam'
+      responses:
+        '204':
+          description: Exercise removed from workout
+
+  /workouts/{workoutId}/exercises/{exerciseId}/sets/{setId}:
+    patch:
+      tags: [Workouts, Sets]
+      summary: Update set
+      description: Update set details and mark as completed
+      parameters:
+        - $ref: '#/components/parameters/WorkoutIdParam'
+        - $ref: '#/components/parameters/ExerciseIdParam'
+        - $ref: '#/components/parameters/SetIdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SetUpdate'
+      responses:
+        '200':
+          description: Set updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SetResponse'
+
+  /workouts/{workoutId}/exercises/{exerciseId}/sets/batch:
+    patch:
+      tags: [Workouts, Sets]
+      summary: Batch update sets
+      description: Update multiple sets at once
+      parameters:
+        - $ref: '#/components/parameters/WorkoutIdParam'
+        - $ref: '#/components/parameters/ExerciseIdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - sets
+              properties:
+                sets:
+                  type: array
+                  items:
+                    allOf:
+                      - $ref: '#/components/schemas/SetUpdate'
+                      - type: object
+                        required:
+                          - id
+                        properties:
+                          id:
+                            type: string
+      responses:
+        '200':
+          description: Sets updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Set'
+
+  # ==================== ROUTINES ====================
+  /routines:
+    get:
+      tags: [Routines]
+      summary: List routines
+      description: Get a list of workout routines
+      parameters:
+        - name: is_public
+          in: query
+          schema:
+            type: boolean
+        - name: category
+          in: query
+          schema:
+            type: string
+        - name: difficulty
+          in: query
+          schema:
+            type: string
+            enum: [beginner, intermediate, advanced]
+        - name: search
+          in: query
+          schema:
+            type: string
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/LimitParam'
+      responses:
+        '200':
+          description: List of routines
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/PaginatedResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Routine'
+
+    post:
+      tags: [Routines]
+      summary: Create routine
+      description: Create a new workout routine template
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RoutineCreate'
+      responses:
+        '201':
+          description: Routine created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RoutineResponse'
+
+  /routines/{routineId}:
+    get:
+      tags: [Routines]
+      summary: Get routine
+      parameters:
+        - $ref: '#/components/parameters/RoutineIdParam'
+      responses:
+        '200':
+          description: Routine details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RoutineResponse'
+
+    patch:
+      tags: [Routines]
+      summary: Update routine
+      parameters:
+        - $ref: '#/components/parameters/RoutineIdParam'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RoutineUpdate'
+      responses:
+        '200':
+          description: Routine updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RoutineResponse'
+
+    delete:
+      tags: [Routines]
+      summary: Delete routine
+      parameters:
+        - $ref: '#/components/parameters/RoutineIdParam'
+      responses:
+        '204':
+          description: Routine deleted
+
+  /routines/{routineId}/start:
+    post:
+      tags: [Routines, Workouts]
+      summary: Start workout from routine
+      description: Create a new workout pre-populated with routine exercises
+      parameters:
+        - $ref: '#/components/parameters/RoutineIdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                started_at:
+                  type: string
+                  format: date-time
+      responses:
+        '201':
+          description: Workout created from routine
+          headers:
+            Location:
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkoutResponse'
+
+  # ==================== HEALTH METRICS ====================
+  /health/metrics:
+    get:
+      tags: [Health]
+      summary: List health metrics
+      description: Get health metrics like heart rate, steps, etc.
+      parameters:
+        - name: metric_type
+          in: query
+          schema:
+            $ref: '#/components/schemas/MetricType'
+        - name: from_date
+          in: query
+          schema:
+            type: string
+            format: date-time
+        - name: to_date
+          in: query
+          schema:
+            type: string
+            format: date-time
+        - name: source
+          in: query
+          schema:
+            type: string
+        - name: aggregation
+          in: query
+          schema:
+            type: string
+            enum: [none, hourly, daily, weekly]
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/LimitParam'
+      responses:
+        '200':
+          description: List of health metrics
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/PaginatedResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/HealthMetric'
+
+    post:
+      tags: [Health]
+      summary: Create health metric
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/HealthMetricCreate'
+      responses:
+        '201':
+          description: Metric created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthMetricResponse'
+
+  /health/metrics/batch:
+    post:
+      tags: [Health, Sync]
+      summary: Batch create health metrics
+      description: Create multiple health metrics (for Health Connect sync)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - metrics
+              properties:
+                metrics:
+                  type: array
+                  maxItems: 1000
+                  items:
+                    $ref: '#/components/schemas/HealthMetricCreate'
+      responses:
+        '201':
+          description: Metrics created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/HealthMetric'
+
+  /measurements:
+    get:
+      tags: [Health]
+      summary: List body measurements
+      parameters:
+        - name: from_date
+          in: query
+          schema:
+            type: string
+            format: date-time
+        - name: to_date
+          in: query
+          schema:
+            type: string
+            format: date-time
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/LimitParam'
+      responses:
+        '200':
+          description: List of measurements
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/PaginatedResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/BodyMeasurement'
+
+    post:
+      tags: [Health]
+      summary: Create body measurement
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BodyMeasurementCreate'
+      responses:
+        '201':
+          description: Measurement created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BodyMeasurementResponse'
+
+  # ==================== SYNC ====================
+  /sync/workouts:
+    post:
+      tags: [Sync]
+      summary: Synchronize workouts
+      description: Bi-directional sync for offline-first wearable apps
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKeyHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SyncRequest'
+      responses:
+        '207':
+          description: Sync completed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SyncResponse'
+
+  /sync/changes:
+    get:
+      tags: [Sync]
+      summary: Get sync changes
+      description: Get changes since last sync (delta sync)
+      parameters:
+        - name: since_token
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: resource_types
+          in: query
+          description: Comma-separated list of resource types
+          schema:
+            type: string
+            example: workouts,routines,exercises
+      responses:
+        '200':
+          description: List of changes
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChangesResponse'
+
+# ==================== COMPONENTS ====================
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+    apiKey:
+      type: apiKey
+      in: header
+      name: X-API-Key
+
+  parameters:
+    ExerciseIdParam:
+      name: exerciseId
+      in: path
+      required: true
+      schema:
+        type: string
+      description: Exercise ID
+
+    WorkoutIdParam:
+      name: workoutId
+      in: path
+      required: true
+      schema:
+        type: string
+      description: Workout ID
+
+    RoutineIdParam:
+      name: routineId
+      in: path
+      required: true
+      schema:
+        type: string
+      description: Routine ID
+
+    SetIdParam:
+      name: setId
+      in: path
+      required: true
+      schema:
+        type: string
+      description: Set ID
+
+    PageParam:
+      name: page
+      in: query
+      schema:
+        type: integer
+        minimum: 1
+        default: 1
+
+    LimitParam:
+      name: limit
+      in: query
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 20
+
+    SortParam:
+      name: sort
+      in: query
+      schema:
+        type: string
+        example: -created_at
+      description: Sort field (prefix with - for descending)
+
+    IdempotencyKeyHeader:
+      name: Idempotency-Key
+      in: header
+      required: false
+      schema:
+        type: string
+      description: Idempotency key for safe retries
+
+  schemas:
+    # ==================== AUTH ====================
+    TokenResponse:
+      type: object
+      properties:
+        access_token:
+          type: string
+        refresh_token:
+          type: string
+        token_type:
+          type: string
+          example: Bearer
+        expires_in:
+          type: integer
+          example: 3600
+        scope:
+          type: string
+
+    # ==================== EXERCISE ====================
+    Exercise:
+      type: object
+      required:
+        - id
+        - name
+        - category
+        - difficulty
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        category:
+          $ref: '#/components/schemas/ExerciseCategory'
+        muscle_groups:
+          type: array
+          items:
+            $ref: '#/components/schemas/MuscleGroup'
+        equipment:
+          type: array
+          items:
+            $ref: '#/components/schemas/Equipment'
+        difficulty:
+          type: string
+          enum: [beginner, intermediate, advanced]
+        instructions:
+          type: array
+          items:
+            type: string
+        video_url:
+          type: string
+        thumbnail_url:
+          type: string
+        is_custom:
+          type: boolean
+        created_by:
+          type: string
+        metadata:
+          type: object
+          properties:
+            calories_per_rep:
+              type: number
+            mets_value:
+              type: number
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    ExerciseCreate:
+      type: object
+      required:
+        - name
+        - category
+        - difficulty
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        category:
+          $ref: '#/components/schemas/ExerciseCategory'
+        muscle_groups:
+          type: array
+          items:
+            $ref: '#/components/schemas/MuscleGroup'
+        equipment:
+          type: array
+          items:
+            $ref: '#/components/schemas/Equipment'
+        difficulty:
+          type: string
+          enum: [beginner, intermediate, advanced]
+        instructions:
+          type: array
+          items:
+            type: string
+
+    ExerciseUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        instructions:
+          type: array
+          items:
+            type: string
+
+    ExerciseCategory:
+      type: string
+      enum:
+        - strength
+        - cardio
+        - flexibility
+        - balance
+        - plyometric
+        - olympic_lifting
+        - powerlifting
+        - bodyweight
+        - functional
+
+    MuscleGroup:
+      type: string
+      enum:
+        - chest
+        - back
+        - shoulders
+        - biceps
+        - triceps
+        - forearms
+        - core
+        - quadriceps
+        - hamstrings
+        - glutes
+        - calves
+        - full_body
+
+    Equipment:
+      type: string
+      enum:
+        - barbell
+        - dumbbell
+        - kettlebell
+        - machine
+        - cable
+        - bodyweight
+        - bands
+        - medicine_ball
+        - none
+
+    # ==================== WORKOUT ====================
+    Workout:
+      type: object
+      required:
+        - id
+        - user_id
+        - title
+        - status
+        - started_at
+      properties:
+        id:
+          type: string
+        user_id:
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+        routine_id:
+          type: string
+        status:
+          $ref: '#/components/schemas/WorkoutStatus'
+        started_at:
+          type: string
+          format: date-time
+        completed_at:
+          type: string
+          format: date-time
+        duration_seconds:
+          type: integer
+        exercises:
+          type: array
+          items:
+            $ref: '#/components/schemas/WorkoutExercise'
+        notes:
+          type: string
+        location:
+          type: object
+          properties:
+            type:
+              type: string
+              enum: [gym, home, outdoor]
+            name:
+              type: string
+        metrics:
+          $ref: '#/components/schemas/WorkoutMetrics'
+        sync_metadata:
+          type: object
+          properties:
+            source:
+              type: string
+              enum: [web, wear_os, health_connect, ios]
+            device_id:
+              type: string
+            synced_at:
+              type: string
+              format: date-time
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    WorkoutCreate:
+      type: object
+      required:
+        - title
+        - started_at
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        routine_id:
+          type: string
+        started_at:
+          type: string
+          format: date-time
+        status:
+          $ref: '#/components/schemas/WorkoutStatus'
+        location:
+          type: object
+          properties:
+            type:
+              type: string
+              enum: [gym, home, outdoor]
+            name:
+              type: string
+
+    WorkoutUpdate:
+      type: object
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        status:
+          $ref: '#/components/schemas/WorkoutStatus'
+        completed_at:
+          type: string
+          format: date-time
+        notes:
+          type: string
+
+    WorkoutStatus:
+      type: string
+      enum:
+        - planned
+        - in_progress
+        - completed
+        - cancelled
+
+    WorkoutMetrics:
+      type: object
+      properties:
+        total_volume:
+          type: number
+          description: Total weight * reps
+        total_reps:
+          type: integer
+        total_sets:
+          type: integer
+        calories_burned:
+          type: number
+        average_heart_rate:
+          type: number
+        max_heart_rate:
+          type: number
+
+    WorkoutExercise:
+      type: object
+      required:
+        - id
+        - exercise_id
+        - exercise_name
+        - order
+      properties:
+        id:
+          type: string
+        exercise_id:
+          type: string
+        exercise_name:
+          type: string
+        order:
+          type: integer
+        sets:
+          type: array
+          items:
+            $ref: '#/components/schemas/Set'
+        notes:
+          type: string
+        superset_group:
+          type: string
+
+    WorkoutExerciseCreate:
+      type: object
+      required:
+        - exercise_id
+        - order
+      properties:
+        exercise_id:
+          type: string
+        order:
+          type: integer
+        sets:
+          type: array
+          items:
+            $ref: '#/components/schemas/SetCreate'
+        notes:
+          type: string
+        superset_group:
+          type: string
+
+    WorkoutExerciseUpdate:
+      type: object
+      properties:
+        notes:
+          type: string
+
+    # ==================== SET ====================
+    Set:
+      type: object
+      required:
+        - id
+        - set_number
+        - set_type
+      properties:
+        id:
+          type: string
+        workout_exercise_id:
+          type: string
+        set_number:
+          type: integer
+        set_type:
+          $ref: '#/components/schemas/SetType'
+        target_reps:
+          type: integer
+        actual_reps:
+          type: integer
+        target_weight:
+          type: number
+        actual_weight:
+          type: number
+        target_duration_seconds:
+          type: integer
+        actual_duration_seconds:
+          type: integer
+        target_distance_meters:
+          type: number
+        actual_distance_meters:
+          type: number
+        rpe:
+          type: integer
+          minimum: 1
+          maximum: 10
+          description: Rate of Perceived Exertion
+        rest_seconds:
+          type: integer
+        completed:
+          type: boolean
+        completed_at:
+          type: string
+          format: date-time
+        notes:
+          type: string
+
+    SetCreate:
+      type: object
+      required:
+        - set_number
+        - set_type
+      properties:
+        set_number:
+          type: integer
+        set_type:
+          $ref: '#/components/schemas/SetType'
+        target_reps:
+          type: integer
+        target_weight:
+          type: number
+        target_duration_seconds:
+          type: integer
+        target_distance_meters:
+          type: number
+        rest_seconds:
+          type: integer
+
+    SetUpdate:
+      type: object
+      properties:
+        actual_reps:
+          type: integer
+        actual_weight:
+          type: number
+        actual_duration_seconds:
+          type: integer
+        actual_distance_meters:
+          type: number
+        rpe:
+          type: integer
+          minimum: 1
+          maximum: 10
+        completed:
+          type: boolean
+        completed_at:
+          type: string
+          format: date-time
+        notes:
+          type: string
+
+    SetType:
+      type: string
+      enum:
+        - normal
+        - warmup
+        - drop_set
+        - superset
+        - rest_pause
+        - failure
+        - amrap
+
+    # ==================== ROUTINE ====================
+    Routine:
+      type: object
+      required:
+        - id
+        - user_id
+        - name
+      properties:
+        id:
+          type: string
+        user_id:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        category:
+          type: string
+        is_public:
+          type: boolean
+        exercises:
+          type: array
+          items:
+            $ref: '#/components/schemas/RoutineExercise'
+        schedule:
+          type: object
+          properties:
+            frequency:
+              type: string
+              enum: [daily, weekly, custom]
+            days:
+              type: array
+              items:
+                type: string
+        estimated_duration_minutes:
+          type: integer
+        difficulty:
+          type: string
+          enum: [beginner, intermediate, advanced]
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        last_used_at:
+          type: string
+          format: date-time
+        use_count:
+          type: integer
+
+    RoutineCreate:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        category:
+          type: string
+        is_public:
+          type: boolean
+        exercises:
+          type: array
+          items:
+            $ref: '#/components/schemas/RoutineExerciseCreate'
+        difficulty:
+          type: string
+          enum: [beginner, intermediate, advanced]
+
+    RoutineUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        is_public:
+          type: boolean
+
+    RoutineExercise:
+      type: object
+      required:
+        - exercise_id
+        - order
+      properties:
+        exercise_id:
+          type: string
+        exercise_name:
+          type: string
+        order:
+          type: integer
+        target_sets:
+          type: integer
+        target_reps:
+          type: integer
+        target_weight:
+          type: number
+        rest_seconds:
+          type: integer
+        notes:
+          type: string
+        superset_group:
+          type: string
+
+    RoutineExerciseCreate:
+      type: object
+      required:
+        - exercise_id
+        - order
+      properties:
+        exercise_id:
+          type: string
+        order:
+          type: integer
+        target_sets:
+          type: integer
+        target_reps:
+          type: integer
+        target_weight:
+          type: number
+        rest_seconds:
+          type: integer
+        notes:
+          type: string
+
+    # ==================== HEALTH ====================
+    HealthMetric:
+      type: object
+      required:
+        - id
+        - user_id
+        - metric_type
+        - value
+        - unit
+        - recorded_at
+      properties:
+        id:
+          type: string
+        user_id:
+          type: string
+        metric_type:
+          $ref: '#/components/schemas/MetricType'
+        value:
+          type: number
+        unit:
+          type: string
+        recorded_at:
+          type: string
+          format: date-time
+        source:
+          type: string
+          enum: [wear_os, health_connect, manual, apple_health]
+        device_id:
+          type: string
+        metadata:
+          type: object
+        created_at:
+          type: string
+          format: date-time
+
+    HealthMetricCreate:
+      type: object
+      required:
+        - metric_type
+        - value
+        - unit
+        - recorded_at
+      properties:
+        metric_type:
+          $ref: '#/components/schemas/MetricType'
+        value:
+          type: number
+        unit:
+          type: string
+        recorded_at:
+          type: string
+          format: date-time
+        source:
+          type: string
+        device_id:
+          type: string
+
+    MetricType:
+      type: string
+      enum:
+        - heart_rate
+        - steps
+        - distance
+        - calories_burned
+        - sleep_duration
+        - resting_heart_rate
+        - vo2_max
+        - blood_pressure_systolic
+        - blood_pressure_diastolic
+
+    BodyMeasurement:
+      type: object
+      required:
+        - id
+        - user_id
+        - measured_at
+      properties:
+        id:
+          type: string
+        user_id:
+          type: string
+        measured_at:
+          type: string
+          format: date-time
+        weight_kg:
+          type: number
+        body_fat_percentage:
+          type: number
+        muscle_mass_kg:
+          type: number
+        measurements:
+          type: object
+          properties:
+            chest_cm:
+              type: number
+            waist_cm:
+              type: number
+            hips_cm:
+              type: number
+            bicep_left_cm:
+              type: number
+            bicep_right_cm:
+              type: number
+            thigh_left_cm:
+              type: number
+            thigh_right_cm:
+              type: number
+            calf_left_cm:
+              type: number
+            calf_right_cm:
+              type: number
+        notes:
+          type: string
+        source:
+          type: string
+          enum: [manual, smart_scale, health_connect]
+        created_at:
+          type: string
+          format: date-time
+
+    BodyMeasurementCreate:
+      type: object
+      required:
+        - measured_at
+      properties:
+        measured_at:
+          type: string
+          format: date-time
+        weight_kg:
+          type: number
+        body_fat_percentage:
+          type: number
+        muscle_mass_kg:
+          type: number
+        measurements:
+          type: object
+        notes:
+          type: string
+        source:
+          type: string
+
+    # ==================== SYNC ====================
+    SyncRequest:
+      type: object
+      properties:
+        sync_since:
+          type: string
+          format: date-time
+        device_id:
+          type: string
+        workouts:
+          type: array
+          items:
+            allOf:
+              - $ref: '#/components/schemas/WorkoutCreate'
+              - type: object
+                properties:
+                  client_id:
+                    type: string
+                  client_updated_at:
+                    type: string
+                    format: date-time
+        conflict_resolution:
+          type: string
+          enum: [server_wins, client_wins, latest_wins]
+          default: server_wins
+
+    SyncResponse:
+      type: object
+      properties:
+        synced_workouts:
+          type: array
+          items:
+            type: object
+            properties:
+              client_id:
+                type: string
+              server_id:
+                type: string
+              status:
+                type: string
+              conflicts:
+                type: array
+                items:
+                  type: object
+        server_changes:
+          type: array
+          items:
+            type: object
+            properties:
+              server_id:
+                type: string
+              action:
+                type: string
+                enum: [created, updated, deleted]
+              data:
+                $ref: '#/components/schemas/Workout'
+              updated_at:
+                type: string
+                format: date-time
+        summary:
+          type: object
+          properties:
+            client_uploaded:
+              type: integer
+            server_downloaded:
+              type: integer
+            conflicts_resolved:
+              type: integer
+        next_sync_token:
+          type: string
+
+    ChangesResponse:
+      type: object
+      properties:
+        changes:
+          type: array
+          items:
+            type: object
+            properties:
+              type:
+                type: string
+              action:
+                type: string
+                enum: [created, updated, deleted]
+              id:
+                type: string
+              data:
+                type: object
+              version:
+                type: integer
+              updated_at:
+                type: string
+                format: date-time
+        next_token:
+          type: string
+        has_more:
+          type: boolean
+
+    # ==================== BATCH ====================
+    BatchWorkoutResponse:
+      type: object
+      properties:
+        results:
+          type: array
+          items:
+            type: object
+            properties:
+              client_id:
+                type: string
+              status:
+                type: string
+                enum: [created, updated, error]
+              data:
+                $ref: '#/components/schemas/Workout'
+              error:
+                $ref: '#/components/schemas/Error'
+        summary:
+          type: object
+          properties:
+            total:
+              type: integer
+            created:
+              type: integer
+            updated:
+              type: integer
+            failed:
+              type: integer
+
+    # ==================== GENERIC ====================
+    PaginatedResponse:
+      type: object
+      properties:
+        pagination:
+          type: object
+          properties:
+            page:
+              type: integer
+            limit:
+              type: integer
+            total:
+              type: integer
+            total_pages:
+              type: integer
+            has_next:
+              type: boolean
+            has_prev:
+              type: boolean
+        meta:
+          $ref: '#/components/schemas/Meta'
+
+    Meta:
+      type: object
+      properties:
+        api_version:
+          type: string
+        request_id:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+
+    Error:
+      type: object
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+        details:
+          type: object
+        field_errors:
+          type: array
+          items:
+            type: object
+            properties:
+              field:
+                type: string
+              code:
+                type: string
+              message:
+                type: string
+        documentation_url:
+          type: string
+
+    # ==================== WRAPPER RESPONSES ====================
+    ExerciseResponse:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/Exercise'
+        meta:
+          $ref: '#/components/schemas/Meta'
+
+    WorkoutResponse:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/Workout'
+        meta:
+          $ref: '#/components/schemas/Meta'
+
+    WorkoutExerciseResponse:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/WorkoutExercise'
+        meta:
+          $ref: '#/components/schemas/Meta'
+
+    SetResponse:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/Set'
+        meta:
+          $ref: '#/components/schemas/Meta'
+
+    RoutineResponse:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/Routine'
+        meta:
+          $ref: '#/components/schemas/Meta'
+
+    HealthMetricResponse:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/HealthMetric'
+        meta:
+          $ref: '#/components/schemas/Meta'
+
+    BodyMeasurementResponse:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/BodyMeasurement'
+        meta:
+          $ref: '#/components/schemas/Meta'
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          $ref: '#/components/schemas/Error'
+        meta:
+          $ref: '#/components/schemas/Meta'
+
+  responses:
+    BadRequest:
+      description: Bad request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+    Forbidden:
+      description: Forbidden
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+    NotFound:
+      description: Not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+    ValidationError:
+      description: Validation error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+    RateLimitExceeded:
+      description: Rate limit exceeded
+      headers:
+        X-RateLimit-Limit:
+          schema:
+            type: integer
+        X-RateLimit-Remaining:
+          schema:
+            type: integer
+        X-RateLimit-Reset:
+          schema:
+            type: integer
+        Retry-After:
+          schema:
+            type: integer
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
