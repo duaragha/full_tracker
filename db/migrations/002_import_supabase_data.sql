@@ -1,21 +1,36 @@
 -- Import data from Supabase export
 -- Run this after 001_create_phev_tables.sql
 
--- Disable triggers for faster import
-SET session_replication_role = 'replica';
+-- Check if data already imported (prevent duplicates)
+DO $$
+BEGIN
+  -- Skip if cars already exist
+  IF EXISTS (SELECT 1 FROM cars LIMIT 1) THEN
+    RAISE NOTICE 'Cars already exist, skipping car import...';
+    RETURN;
+  END IF;
 
--- Import cars (converting UUIDs to integer IDs)
-INSERT INTO cars (name, start_date, end_date, created_at, updated_at) VALUES
-('2024 Mitsu White PHEV', '2025-07-11', '2025-08-15', '2025-09-30T15:36:51.600707+00:00', '2025-09-30T15:36:51.600707+00:00'),
-('2025 Mitsu Black PHEV', '2025-08-15', NULL, '2025-09-30T15:37:00.500416+00:00', '2025-09-30T15:37:00.500416+00:00');
+  -- Also skip if PHEV entries already exist (extra safety check)
+  IF EXISTS (SELECT 1 FROM phev_tracker LIMIT 1) THEN
+    RAISE NOTICE 'PHEV entries already exist, skipping import...';
+    RETURN;
+  END IF;
 
--- Get the IDs for mapping
--- Car 1: d855ba4f-4e78-49b2-bf09-ab9780343d14 → Will get ID 1
--- Car 2: 1e38daaa-b0c0-48ea-886a-6cb729df4db5 → Will get ID 2
+  -- Disable triggers for faster import
+  SET session_replication_role = 'replica';
 
--- Import phev_tracker entries (mapping car_id from UUID to integer)
--- White PHEV entries (car_id = 1)
-INSERT INTO phev_tracker (date, cost, km_driven, notes, car_id, created_at) VALUES
+  -- Import cars (converting UUIDs to integer IDs)
+  INSERT INTO cars (name, start_date, end_date, created_at, updated_at) VALUES
+  ('2024 Mitsu White PHEV', '2025-07-11', '2025-08-15', '2025-09-30T15:36:51.600707+00:00', '2025-09-30T15:36:51.600707+00:00'),
+  ('2025 Mitsu Black PHEV', '2025-08-15', NULL, '2025-09-30T15:37:00.500416+00:00', '2025-09-30T15:37:00.500416+00:00');
+
+  -- Get the IDs for mapping
+  -- Car 1: d855ba4f-4e78-49b2-bf09-ab9780343d14 → Will get ID 1
+  -- Car 2: 1e38daaa-b0c0-48ea-886a-6cb729df4db5 → Will get ID 2
+
+  -- Import phev_tracker entries (mapping car_id from UUID to integer)
+  -- White PHEV entries (car_id = 1)
+  INSERT INTO phev_tracker (date, cost, km_driven, notes, car_id, created_at) VALUES
 ('2025-07-14', 0.64, 69.3, 'charge was already in the battery', 1, '2025-07-21T00:47:35.776229+00:00'),
 ('2025-07-15', 1.93, 43.2, '', 1, '2025-07-21T00:47:52.003814+00:00'),
 ('2025-07-16', 1.53, 56.8, '', 1, '2025-07-21T00:48:14.950708+00:00'),
@@ -97,8 +112,11 @@ INSERT INTO phev_tracker (date, cost, km_driven, notes, car_id, created_at) VALU
 ('2025-10-01', 1.49, 42, '', 2, '2025-10-03T10:39:48.75533+00:00'),
 ('2025-10-02', 0.9, 71, '', 2, '2025-10-03T10:40:10.096808+00:00');
 
--- Re-enable triggers
-SET session_replication_role = 'origin';
+  -- Re-enable triggers
+  SET session_replication_role = 'origin';
+
+  RAISE NOTICE 'Import completed successfully';
+END $$;
 
 -- Verify import
 SELECT 'Cars imported: ' || COUNT(*) FROM cars;
