@@ -1,44 +1,128 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createTuyaClient } from '@/lib/tuya-api'
-import { Pool } from 'pg'
+import { TuyaLocalAPI } from '@/lib/tuya-local'
 
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL || process.env.POSTGRES_URL,
-  ssl: false,
-  max: 5,
-})
+/**
+ * Monitor Tuya device in real-time
+ *
+ * GET /api/tuya/monitor - Check device connection status
+ * POST /api/tuya/monitor - Get current energy readings
+ *
+ * Returns live energy data from smart plug.
+ * No cloud connection required - local network only.
+ */
 
-export async function POST(request: NextRequest) {
+/**
+ * GET: Check if auto-collection is possible (local device status)
+ */
+export async function GET(request: NextRequest) {
   try {
-    // Create Tuya client
-    const tuyaClient = createTuyaClient()
+    // Get configuration from environment
+    const deviceId = process.env.TUYA_DEVICE_ID
+    const localKey = process.env.TUYA_LOCAL_KEY
+    const ip = process.env.TUYA_DEVICE_IP
 
-    // Monitor current charging session
-    const session = await tuyaClient.monitorChargingSession()
+    if (!deviceId || !localKey || !ip) {
+      return NextResponse.json({
+        success: false,
+        autoCollectionAvailable: false,
+        message: 'Local Tuya device not configured',
+      })
+    }
 
-    // Get device status for more details
-    const status = await tuyaClient.getDeviceStatus()
+    // Create local Tuya client
+    const tuyaClient = new TuyaLocalAPI({
+      deviceId,
+      localKey,
+      ip,
+    })
 
-    // Calculate cumulative energy (if available)
-    const cumulativeEnergy = await tuyaClient.getCumulativeEnergy()
+    // Test connection
+    const connected = await tuyaClient.connect()
+    await tuyaClient.disconnect()
 
-    // Return status
     return NextResponse.json({
       success: true,
-      data: {
-        isCharging: session.isCharging,
-        currentPower: session.currentPower,
-        switchState: session.switchState,
-        cumulativeEnergy,
-        deviceStatus: {
-          switch: status.switch_1,
-          power: (status.cur_power || 0) / 10,
-          current: status.cur_current,
-          voltage: (status.cur_voltage || 0) / 10,
-        },
-        timestamp: new Date().toISOString()
-      }
+      autoCollectionAvailable: connected,
+      connectionStatus: connected ? 'connected' : 'offline',
+      localDeviceConfigured: true,
     })
+  } catch (error) {
+    console.error('Error checking device status:', error)
+
+    return NextResponse.json({
+      success: false,
+      autoCollectionAvailable: false,
+      error: 'Failed to check device status',
+    })
+  }
+}
+
+/**
+ * POST: Get current energy monitoring data
+ */
+export async function POST(request: NextRequest) {
+  try {
+    // Get configuration from environment
+    const deviceId = process.env.TUYA_DEVICE_ID
+    const localKey = process.env.TUYA_LOCAL_KEY
+    const ip = process.env.TUYA_DEVICE_IP
+
+    if (!deviceId || !localKey || !ip) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Local Tuya device not configured',
+          details: 'Missing TUYA_DEVICE_ID, TUYA_LOCAL_KEY, or TUYA_DEVICE_IP',
+        },
+        { status: 500 }
+      )
+    }
+
+    // Create local Tuya client
+    const tuyaClient = new TuyaLocalAPI({
+      deviceId,
+      localKey,
+      ip,
+    })
+
+    // Connect to device
+    const connected = await tuyaClient.connect()
+    if (!connected) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Failed to connect to device',
+          details: 'Device is offline or unreachable',
+        },
+        { status: 500 }
+      )
+    }
+
+    try {
+      // Get current energy data
+      const energyData = await tuyaClient.getEnergyData()
+
+      // Return live monitoring data
+      return NextResponse.json({
+        success: true,
+        data: {
+          isCharging: energyData.power > 0,
+          currentPower: energyData.power,
+          voltage: energyData.voltage,
+          current: energyData.current,
+          totalEnergy: energyData.total_kwh,
+          switchState: energyData.switchState,
+          timestamp: new Date().toISOString(),
+        },
+        deviceInfo: {
+          id: deviceId,
+          ip: ip,
+          type: 'local',
+        },
+      })
+    } finally {
+      await tuyaClient.disconnect()
+    }
   } catch (error) {
     console.error('Error monitoring Tuya device:', error)
 
@@ -49,38 +133,6 @@ export async function POST(request: NextRequest) {
         success: false,
         error: 'Failed to monitor device',
         details: errorMessage,
-      },
-      { status: 500 }
-    )
-  }
-}
-
-/**
- * GET endpoint to check if auto-collection is possible
- */
-export async function GET(request: NextRequest) {
-  try {
-    const tuyaClient = createTuyaClient()
-    const diagnostics = await tuyaClient.runDiagnostics()
-
-    return NextResponse.json({
-      success: true,
-      autoCollectionAvailable: diagnostics.energyAPI,
-      diagnostics: {
-        authentication: diagnostics.authentication,
-        deviceStatus: diagnostics.deviceStatus,
-        energyAPI: diagnostics.energyAPI,
-        deviceLogs: diagnostics.deviceLogs,
-      },
-      recommendations: diagnostics.recommendations
-    })
-  } catch (error) {
-    console.error('Error checking auto-collection status:', error)
-
-    return NextResponse.json(
-      {
-        success: false,
-        error: 'Failed to check auto-collection status',
       },
       { status: 500 }
     )

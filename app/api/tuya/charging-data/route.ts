@@ -1,7 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createTuyaClient } from '@/lib/tuya-api'
+import { TuyaLocalAPI } from '@/lib/tuya-local'
 import { TOU_RATES } from '@/lib/ontario-tou-rates'
 
+/**
+ * Get energy consumption data from local Tuya device
+ *
+ * POST /api/tuya/charging-data
+ * Body: { date: "YYYY-MM-DD", electricityRate?: number }
+ *
+ * Returns current energy data from smart plug.
+ * For historical data by date, see /api/tuya/charging-data-historical
+ *
+ * Note: This uses local API. Device must be on the same network.
+ */
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
@@ -23,43 +34,68 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Create Tuya client
-    const tuyaClient = createTuyaClient()
+    // Create local Tuya client
+    const deviceId = process.env.TUYA_DEVICE_ID
+    const localKey = process.env.TUYA_LOCAL_KEY
+    const ip = process.env.TUYA_DEVICE_IP
 
-    // Use Ontario off-peak rate as default (most charging happens overnight)
-    // Historical data doesn't have exact timing, so we assume overnight charging
-    const rate = electricityRate || TOU_RATES.OFF_PEAK
-    tuyaClient.setElectricityRate(rate)
-
-    // Fetch comprehensive energy data for the specified date
-    const energyData = await tuyaClient.getEnergyDataForDate(date)
-
-    // Return data with metadata about source and confidence
-    if (energyData.energy_kwh === 0) {
-      return NextResponse.json({
-        success: true,
-        message: energyData.message,
-        data: {
-          energy_kwh: 0,
-          cost: 0,
-          date,
-          source: energyData.source,
-          confidence: energyData.confidence
+    if (!deviceId || !localKey || !ip) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Local Tuya configuration missing',
+          details: 'Missing TUYA_DEVICE_ID, TUYA_LOCAL_KEY, or TUYA_DEVICE_IP environment variables',
         },
-      })
+        { status: 500 }
+      )
     }
 
-    return NextResponse.json({
-      success: true,
-      message: energyData.message,
-      data: {
-        energy_kwh: parseFloat(energyData.energy_kwh.toFixed(3)),
-        cost: parseFloat(energyData.cost.toFixed(2)),
-        date,
-        source: energyData.source,
-        confidence: energyData.confidence
-      },
+    const tuyaClient = new TuyaLocalAPI({
+      deviceId,
+      localKey,
+      ip,
     })
+
+    // Connect to device
+    const connected = await tuyaClient.connect()
+    if (!connected) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Failed to connect to smart plug',
+          details: 'Device is offline or unreachable. Check network connection and IP address.',
+        },
+        { status: 500 }
+      )
+    }
+
+    try {
+      // Get current energy data from device
+      const energyData = await tuyaClient.getEnergyData()
+
+      // Use Ontario off-peak rate as default (most charging happens overnight)
+      const rate = electricityRate || TOU_RATES.OFF_PEAK
+      const cost = energyData.total_kwh * rate
+
+      return NextResponse.json({
+        success: true,
+        message: 'Energy data retrieved from local device',
+        data: {
+          energy_kwh: parseFloat(energyData.total_kwh.toFixed(3)),
+          cost: parseFloat(cost.toFixed(2)),
+          date,
+          voltage: parseFloat(energyData.voltage.toFixed(1)),
+          current: parseFloat(energyData.current.toFixed(3)),
+          power: parseFloat(energyData.power.toFixed(1)),
+          switchState: energyData.switchState,
+          source: 'local_device',
+          confidence: 'high',
+          timestamp: new Date().toISOString(),
+        },
+      })
+    } finally {
+      await tuyaClient.disconnect()
+    }
   } catch (error) {
     console.error('Error fetching Tuya charging data:', error)
 
@@ -71,6 +107,7 @@ export async function POST(request: NextRequest) {
         success: false,
         error: 'Failed to fetch charging data from smart plug',
         details: errorMessage,
+        solution: 'Verify device is on the same network and reachable at configured IP address',
       },
       { status: 500 }
     )

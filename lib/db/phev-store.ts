@@ -98,11 +98,19 @@ export async function getUnassignedEntries(): Promise<PhevEntry[]> {
 export async function addEntry(entry: Omit<PhevEntry, 'id' | 'created_at'>): Promise<PhevEntry> {
   const { date, cost, km_driven, energy_kwh, notes, car_id } = entry
 
-  const result = await pool.query<PhevEntry>(
-    'INSERT INTO phev_tracker (date, cost, km_driven, energy_kwh, notes, car_id, created_at) VALUES ($1, $2, $3, $4, $5, $6, NOW()) RETURNING *',
-    [date, cost, km_driven, energy_kwh, notes || '', car_id]
-  )
-  return normalizeEntry(result.rows[0])
+  try {
+    const result = await pool.query<PhevEntry>(
+      'INSERT INTO phev_tracker (date, cost, km_driven, energy_kwh, notes, car_id, created_at) VALUES ($1, $2, $3, $4, $5, $6, NOW()) RETURNING *',
+      [date, cost, km_driven, energy_kwh, notes || '', car_id]
+    )
+    return normalizeEntry(result.rows[0])
+  } catch (error: any) {
+    // Handle unique constraint violation (duplicate date + car_id)
+    if (error.code === '23505' && error.constraint === 'phev_tracker_date_car_unique') {
+      throw new Error(`An entry already exists for this car on ${date}. Please edit the existing entry instead.`)
+    }
+    throw error
+  }
 }
 
 export async function updateEntry(id: number, updates: Partial<PhevEntry>): Promise<void> {
