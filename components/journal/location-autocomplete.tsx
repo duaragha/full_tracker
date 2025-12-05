@@ -69,11 +69,8 @@ export function LocationAutocomplete({
   }, [])
 
   const handleSelect = useCallback((suggestion: LocationSuggestion) => {
-    // Use the compact display format for the input
-    const displayValue = suggestion.city
-      ? `${suggestion.city}${suggestion.state ? `, ${suggestion.state}` : suggestion.country ? `, ${suggestion.country}` : ''}`
-      : suggestion.name
-    onChange(displayValue)
+    // Use the full display name (e.g., "8 Legacy Lane, Brampton, ON L6X 5C1")
+    onChange(suggestion.displayName)
     onSelect(suggestion)
     setIsOpen(false)
     setSuggestions([])
@@ -177,12 +174,11 @@ export function LocationAutocomplete({
               )}
             >
               <div className="font-medium truncate">{suggestion.name}</div>
-              <div className="text-xs text-muted-foreground truncate">
-                {suggestion.city && suggestion.city !== suggestion.name
-                  ? `${suggestion.city}, `
-                  : ''}
-                {suggestion.state || suggestion.country || ''}
-              </div>
+              {suggestion.subtitle && (
+                <div className="text-xs text-muted-foreground truncate">
+                  {suggestion.subtitle}
+                </div>
+              )}
             </button>
           ))}
         </div>

@@ -15,8 +15,11 @@ export interface LocationSuggestion {
   id: string;
   name: string;           // Short name (e.g., "123 Main St")
   displayName: string;    // Full formatted name for display
+  subtitle: string;       // Secondary line (e.g., "Brampton, ON L6X 5C1, Canada")
   city?: string;
   state?: string;
+  stateCode?: string;     // Abbreviated state (e.g., "ON" for "Ontario")
+  postcode?: string;
   country?: string;
   latitude: number;
   longitude: number;
@@ -58,11 +61,100 @@ interface PhotonResponse {
 }
 
 /**
+ * Common state/province abbreviations for major countries
+ */
+const STATE_ABBREVIATIONS: Record<string, string> = {
+  // Canada
+  'Alberta': 'AB',
+  'British Columbia': 'BC',
+  'Manitoba': 'MB',
+  'New Brunswick': 'NB',
+  'Newfoundland and Labrador': 'NL',
+  'Northwest Territories': 'NT',
+  'Nova Scotia': 'NS',
+  'Nunavut': 'NU',
+  'Ontario': 'ON',
+  'Prince Edward Island': 'PE',
+  'Quebec': 'QC',
+  'Saskatchewan': 'SK',
+  'Yukon': 'YT',
+  // United States
+  'Alabama': 'AL',
+  'Alaska': 'AK',
+  'Arizona': 'AZ',
+  'Arkansas': 'AR',
+  'California': 'CA',
+  'Colorado': 'CO',
+  'Connecticut': 'CT',
+  'Delaware': 'DE',
+  'Florida': 'FL',
+  'Georgia': 'GA',
+  'Hawaii': 'HI',
+  'Idaho': 'ID',
+  'Illinois': 'IL',
+  'Indiana': 'IN',
+  'Iowa': 'IA',
+  'Kansas': 'KS',
+  'Kentucky': 'KY',
+  'Louisiana': 'LA',
+  'Maine': 'ME',
+  'Maryland': 'MD',
+  'Massachusetts': 'MA',
+  'Michigan': 'MI',
+  'Minnesota': 'MN',
+  'Mississippi': 'MS',
+  'Missouri': 'MO',
+  'Montana': 'MT',
+  'Nebraska': 'NE',
+  'Nevada': 'NV',
+  'New Hampshire': 'NH',
+  'New Jersey': 'NJ',
+  'New Mexico': 'NM',
+  'New York': 'NY',
+  'North Carolina': 'NC',
+  'North Dakota': 'ND',
+  'Ohio': 'OH',
+  'Oklahoma': 'OK',
+  'Oregon': 'OR',
+  'Pennsylvania': 'PA',
+  'Rhode Island': 'RI',
+  'South Carolina': 'SC',
+  'South Dakota': 'SD',
+  'Tennessee': 'TN',
+  'Texas': 'TX',
+  'Utah': 'UT',
+  'Vermont': 'VT',
+  'Virginia': 'VA',
+  'Washington': 'WA',
+  'West Virginia': 'WV',
+  'Wisconsin': 'WI',
+  'Wyoming': 'WY',
+  'District of Columbia': 'DC',
+  // Australia
+  'New South Wales': 'NSW',
+  'Victoria': 'VIC',
+  'Queensland': 'QLD',
+  'South Australia': 'SA',
+  'Western Australia': 'WA',
+  'Tasmania': 'TAS',
+  'Northern Territory': 'NT',
+  'Australian Capital Territory': 'ACT',
+};
+
+/**
+ * Get abbreviated state code if available
+ */
+function getStateCode(state: string | undefined): string | undefined {
+  if (!state) return undefined;
+  return STATE_ABBREVIATIONS[state] || state;
+}
+
+/**
  * Build a display name from Photon properties
- * Creates a hierarchical display string from available address components
+ * Creates a full address string like "8 Legacy Lane, Brampton, ON L6X 5C1"
  *
  * @param props - Photon feature properties
- * @returns Formatted display name
+ * @returns Formatted display name (without country for brevity)
  */
 function buildDisplayName(props: PhotonProperties): string {
   const parts: string[] = [];
@@ -82,23 +174,52 @@ function buildDisplayName(props: PhotonProperties): string {
     parts.push(locality);
   }
 
-  // State/Province
-  if (props.state && !parts.includes(props.state)) {
-    parts.push(props.state);
-  }
-
-  // Country
-  if (props.country && !parts.includes(props.country)) {
-    parts.push(props.country);
+  // State/Province (abbreviated) + Postal code combined
+  // Format: "ON L6X 5C1" or just "ON" or just "L6X 5C1"
+  const stateCode = getStateCode(props.state);
+  if (stateCode || props.postcode) {
+    const statePostal = [stateCode, props.postcode].filter(Boolean).join(' ');
+    parts.push(statePostal);
   }
 
   // If we have no parts, use any available info
   if (parts.length === 0) {
-    if (props.postcode) parts.push(props.postcode);
+    if (props.country) parts.push(props.country);
     if (props.countrycode) parts.push(props.countrycode.toUpperCase());
   }
 
   return parts.join(', ') || 'Unknown location';
+}
+
+/**
+ * Build a subtitle for dropdown display
+ * Shows: "Brampton, ON L6X 5C1, Canada" (excludes street address)
+ *
+ * @param props - Photon feature properties
+ * @returns Subtitle string for secondary display line
+ */
+function buildSubtitle(props: PhotonProperties): string {
+  const parts: string[] = [];
+
+  // City
+  const locality = props.city || props.county || props.district;
+  if (locality) {
+    parts.push(locality);
+  }
+
+  // State/Province (abbreviated) + Postal code combined
+  const stateCode = getStateCode(props.state);
+  if (stateCode || props.postcode) {
+    const statePostal = [stateCode, props.postcode].filter(Boolean).join(' ');
+    parts.push(statePostal);
+  }
+
+  // Country
+  if (props.country) {
+    parts.push(props.country);
+  }
+
+  return parts.join(', ') || '';
 }
 
 /**
@@ -165,8 +286,11 @@ function parsePhotonFeature(feature: PhotonFeature): LocationSuggestion {
     id: generateFeatureId(feature),
     name: getShortName(props),
     displayName: buildDisplayName(props),
+    subtitle: buildSubtitle(props),
     city: props.city || props.county || props.district,
     state: props.state,
+    stateCode: getStateCode(props.state),
+    postcode: props.postcode,
     country: props.country,
     latitude,
     longitude,
@@ -274,7 +398,7 @@ export function formatLocationName(suggestion: LocationSuggestion): string {
  *
  * @example
  * const compact = getCompactLocation(suggestion);
- * // Returns: "New York, NY" or "Toronto, Canada"
+ * // Returns: "New York, NY" or "Toronto, ON"
  */
 export function getCompactLocation(suggestion: LocationSuggestion): string {
   const parts: string[] = [];
@@ -285,7 +409,10 @@ export function getCompactLocation(suggestion: LocationSuggestion): string {
     parts.push(suggestion.name);
   }
 
-  if (suggestion.state) {
+  // Prefer abbreviated state code
+  if (suggestion.stateCode) {
+    parts.push(suggestion.stateCode);
+  } else if (suggestion.state) {
     parts.push(suggestion.state);
   } else if (suggestion.country) {
     parts.push(suggestion.country);
