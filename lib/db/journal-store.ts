@@ -206,7 +206,7 @@ export async function getJournalEntries(
 
   // Full-text search on title and content
   if (filters?.searchText) {
-    query += ` AND to_tsvector('english', je.title || ' ' || je.content) @@ plainto_tsquery('english', $${paramIndex})`
+    query += ` AND to_tsvector('english', COALESCE(je.title, '') || ' ' || je.content) @@ plainto_tsquery('english', $${paramIndex})`
     params.push(filters.searchText)
     paramIndex++
   }
@@ -224,12 +224,43 @@ export async function getJournalEntries(
     paramIndex += 2
   }
 
-  // Get total count before applying limit/offset
-  const countQuery = query.replace(
-    /SELECT.*?FROM journal_entries/,
-    'SELECT COUNT(DISTINCT je.id) as count FROM journal_entries'
-  )
-  const countResult = await pool.query(countQuery, params)
+  // Build count query separately (without JOINs for efficiency)
+  let countQuery = `SELECT COUNT(*) as count FROM journal_entries je WHERE 1=1`
+  const countParams: any[] = []
+  let countParamIndex = 1
+
+  if (filters?.mood) {
+    countQuery += ` AND je.mood = $${countParamIndex}`
+    countParams.push(filters.mood)
+    countParamIndex++
+  }
+  if (filters?.startDate) {
+    countQuery += ` AND je.entry_date >= $${countParamIndex}`
+    countParams.push(filters.startDate)
+    countParamIndex++
+  }
+  if (filters?.endDate) {
+    countQuery += ` AND je.entry_date <= $${countParamIndex}`
+    countParams.push(filters.endDate)
+    countParamIndex++
+  }
+  if (filters?.searchText) {
+    countQuery += ` AND to_tsvector('english', COALESCE(je.title, '') || ' ' || je.content) @@ plainto_tsquery('english', $${countParamIndex})`
+    countParams.push(filters.searchText)
+    countParamIndex++
+  }
+  if (filters?.tags && filters.tags.length > 0) {
+    countQuery += ` AND je.id IN (
+      SELECT entry_id FROM journal_entry_tags jet
+      JOIN journal_tags jt ON jet.tag_id = jt.id
+      WHERE jt.name = ANY($${countParamIndex})
+      GROUP BY jet.entry_id
+      HAVING COUNT(DISTINCT jt.id) = $${countParamIndex + 1}
+    )`
+    countParams.push(filters.tags, filters.tags.length)
+  }
+
+  const countResult = await pool.query(countQuery, countParams)
   const total = parseInt(countResult.rows[0].count, 10)
 
   // Add grouping and ordering
