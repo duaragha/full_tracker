@@ -5,8 +5,8 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { JournalEntryForm } from '@/components/journal/journal-entry-form'
+import { Card, CardContent } from '@/components/ui/card'
+import { JournalEntryEditor } from '@/components/journal/journal-entry-editor'
 import { JournalEntryCreate } from '@/types/journal'
 import { createJournalEntryAction } from '@/lib/actions/journal'
 
@@ -34,44 +34,37 @@ export default function NewJournalEntryPage() {
   }
 
   return (
-    <div className="space-y-4 sm:space-y-6 max-w-3xl mx-auto">
+    <div className="flex flex-col h-full">
       {/* Header */}
-      <div className="flex items-center gap-4">
-        <Button asChild variant="ghost" size="icon">
-          <Link href="/journal">
-            <ArrowLeft className="h-4 w-4" />
-          </Link>
-        </Button>
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">New Entry</h1>
-          <p className="text-xs sm:text-sm text-muted-foreground mt-0.5 sm:mt-1">
-            Capture your thoughts and reflections
-          </p>
+      <header className="h-14 border-b flex items-center justify-between px-4 flex-shrink-0">
+        <div className="flex items-center gap-3">
+          <Button asChild variant="ghost" size="icon">
+            <Link href="/journal">
+              <ArrowLeft className="h-4 w-4" />
+            </Link>
+          </Button>
+          <div className="w-px h-4 bg-border" />
+          <span className="text-sm text-muted-foreground">New Entry</span>
         </div>
-      </div>
+      </header>
 
       {/* Error Message */}
       {error && (
-        <Card className="border-destructive bg-destructive/10">
-          <CardContent className="pt-4 text-destructive text-sm">
-            {error}
-          </CardContent>
-        </Card>
+        <div className="px-4 pt-4">
+          <Card className="border-destructive bg-destructive/10 max-w-4xl">
+            <CardContent className="pt-4 text-destructive text-sm">
+              {error}
+            </CardContent>
+          </Card>
+        </div>
       )}
 
-      {/* Entry Form */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">Write Your Entry</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <JournalEntryForm
-            onSubmit={handleSubmit}
-            onCancel={handleCancel}
-            isLoading={isLoading}
-          />
-        </CardContent>
-      </Card>
+      {/* Editor with Sidebar Layout */}
+      <JournalEntryEditor
+        onSubmit={handleSubmit}
+        onCancel={handleCancel}
+        isLoading={isLoading}
+      />
     </div>
   )
 }

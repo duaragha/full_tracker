@@ -8,12 +8,18 @@ import { ArrowLeft, Plus, BookOpen } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { JournalCalendar, CalendarDay } from '@/components/journal/journal-calendar'
+import { JournalCalendarStats } from '@/components/journal/journal-calendar-stats'
 import { JournalTimeline } from '@/components/journal/journal-timeline'
-import { JournalEntry } from '@/types/journal'
+import { JournalEntry, Mood } from '@/types/journal'
 import {
   getCalendarDataAction,
   getJournalEntriesAction,
 } from '@/lib/actions/journal'
+
+interface YearOverview {
+  monthlyEntryCounts: number[]
+  totalYearEntries: number
+}
 
 export default function JournalCalendarPage() {
   const router = useRouter()
@@ -25,6 +31,14 @@ export default function JournalCalendarPage() {
   const [selectedDateEntries, setSelectedDateEntries] = useState<JournalEntry[]>([])
   const [loading, setLoading] = useState(true)
   const [loadingEntries, setLoadingEntries] = useState(false)
+  const [yearOverview, setYearOverview] = useState<YearOverview | null>(null)
+  const [monthlyStats, setMonthlyStats] = useState<{
+    totalEntries: number
+    daysInMonth: number
+    currentStreak: number
+    averageMood: Mood | null
+    totalWords: number
+  } | null>(null)
 
   // Load calendar data for current month
   const loadCalendarData = useCallback(async () => {
@@ -36,6 +50,73 @@ export default function JournalCalendarPage() {
       console.error('Failed to load calendar data:', error)
     } finally {
       setLoading(false)
+    }
+  }, [year, month])
+
+  // Load year overview data
+  const loadYearOverview = useCallback(async () => {
+    try {
+      const monthPromises = Array.from({ length: 12 }, (_, i) =>
+        getCalendarDataAction(year, i + 1).catch(() => [])
+      )
+      const monthsData = await Promise.all(monthPromises)
+      const monthlyEntryCounts = monthsData.map(data => data.filter(d => d.hasEntry).length)
+      const totalYearEntries = monthlyEntryCounts.reduce((a, b) => a + b, 0)
+      setYearOverview({ monthlyEntryCounts, totalYearEntries })
+    } catch (error) {
+      console.error('Failed to load year overview:', error)
+    }
+  }, [year])
+
+  // Load monthly stats
+  const loadMonthlyStats = useCallback(async () => {
+    try {
+      const startDate = format(new Date(year, month - 1, 1), 'yyyy-MM-dd')
+      const endDate = format(new Date(year, month, 0), 'yyyy-MM-dd')
+      const { entries } = await getJournalEntriesAction({ startDate, endDate }, 1, 100)
+
+      const daysInMonth = new Date(year, month, 0).getDate()
+      const totalEntries = entries.length
+      const totalWords = entries.reduce((sum, e) => sum + (e.wordCount || 0), 0)
+
+      // Calculate average mood
+      const moodScores: Record<Mood, number> = { great: 5, good: 4, okay: 3, bad: 2, terrible: 1 }
+      const moodLabels: Mood[] = ['terrible', 'bad', 'okay', 'good', 'great']
+
+      let totalMoodScore = 0
+      let moodCount = 0
+      for (const entry of entries) {
+        if (entry.mood) {
+          totalMoodScore += moodScores[entry.mood]
+          moodCount++
+        }
+      }
+      const averageMood = moodCount > 0
+        ? moodLabels[Math.round(totalMoodScore / moodCount) - 1]
+        : null
+
+      // Calculate current streak
+      const entryDates = new Set(entries.map(e => e.entryDate))
+      let currentStreak = 0
+      const today = new Date()
+      const checkDate = new Date(today)
+
+      while (true) {
+        const dateStr = format(checkDate, 'yyyy-MM-dd')
+        if (entryDates.has(dateStr)) {
+          currentStreak++
+          checkDate.setDate(checkDate.getDate() - 1)
+        } else if (currentStreak === 0 && format(today, 'yyyy-MM-dd') === dateStr) {
+          // Allow skipping today if no entry yet
+          checkDate.setDate(checkDate.getDate() - 1)
+        } else {
+          break
+        }
+      }
+
+      setMonthlyStats({ totalEntries, daysInMonth, currentStreak, averageMood, totalWords })
+    } catch (error) {
+      console.error('Failed to load monthly stats:', error)
     }
   }, [year, month])
 
@@ -59,7 +140,12 @@ export default function JournalCalendarPage() {
 
   useEffect(() => {
     loadCalendarData()
-  }, [loadCalendarData])
+    loadMonthlyStats()
+  }, [loadCalendarData, loadMonthlyStats])
+
+  useEffect(() => {
+    loadYearOverview()
+  }, [loadYearOverview])
 
   useEffect(() => {
     if (selectedDate) {
@@ -111,9 +197,10 @@ export default function JournalCalendarPage() {
         </Button>
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-2">
+      {/* Main Content - 3 Column Layout */}
+      <div className="flex flex-col lg:flex-row gap-4">
         {/* Calendar */}
-        <div>
+        <div className="flex-1 min-w-0">
           {loading ? (
             <Card className="p-6">
               <div className="flex items-center justify-center py-12">
@@ -133,7 +220,7 @@ export default function JournalCalendarPage() {
         </div>
 
         {/* Selected Date Entries */}
-        <div>
+        <div className="flex-1 min-w-0">
           {selectedDate ? (
             <Card>
               <CardHeader>
@@ -177,6 +264,17 @@ export default function JournalCalendarPage() {
               </CardContent>
             </Card>
           )}
+        </div>
+
+        {/* Right Sidebar - Stats */}
+        <div className="lg:w-72 shrink-0">
+          <JournalCalendarStats
+            year={year}
+            month={month}
+            calendarData={calendarData}
+            monthlyStats={monthlyStats || undefined}
+            yearOverview={yearOverview || undefined}
+          />
         </div>
       </div>
     </div>
