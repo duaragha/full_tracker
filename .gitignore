@@ -119,3 +119,6 @@ build_output.txt
 snapshot.json
 test-import.js
 nul
+
+# Uploaded files
+uploads/
