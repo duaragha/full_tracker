@@ -1,18 +1,20 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { Plus, Calendar, BarChart3, BookOpen } from 'lucide-react'
+import { Plus, BookOpen } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { JournalTimeline } from '@/components/journal/journal-timeline'
 import { JournalFiltersComponent } from '@/components/journal/journal-filters'
-import { JournalEntry, JournalFilters } from '@/types/journal'
+import { JournalQuickStats } from '@/components/journal/journal-quick-stats'
+import { JournalViewTabs } from '@/components/journal/journal-view-tabs'
+import { JournalEntry, JournalFilters, JournalStats } from '@/types/journal'
 import {
   getJournalEntriesAction,
   getJournalTagsAction,
+  getJournalStatsAction,
 } from '@/lib/actions/journal'
 
 export default function JournalPage() {
@@ -23,6 +25,8 @@ export default function JournalPage() {
   const [filters, setFilters] = useState<JournalFilters>({})
   const [loading, setLoading] = useState(true)
   const [page, setPage] = useState(1)
+  const [stats, setStats] = useState<JournalStats | null>(null)
+  const [statsLoading, setStatsLoading] = useState(true)
   const limit = 20
 
   // Load entries
@@ -53,6 +57,51 @@ export default function JournalPage() {
     }
   }, [])
 
+  // Load stats
+  const loadStats = useCallback(async () => {
+    setStatsLoading(true)
+    try {
+      const fetchedStats = await getJournalStatsAction()
+      setStats(fetchedStats)
+    } catch (error) {
+      console.error('Failed to load stats:', error)
+    } finally {
+      setStatsLoading(false)
+    }
+  }, [])
+
+  // Calculate week counts and streak from entries
+  const { thisWeekCount, lastWeekCount, currentStreak, bestStreak } = useMemo(() => {
+    const now = new Date()
+    const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
+    const twoWeeksAgo = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000)
+
+    const thisWeek = entries.filter(e => new Date(e.entryDate) >= weekAgo).length
+    const lastWeek = entries.filter(e => {
+      const d = new Date(e.entryDate)
+      return d >= twoWeeksAgo && d < weekAgo
+    }).length
+
+    // Simple streak calculation
+    const sortedDates = [...new Set(entries.map(e => e.entryDate))].sort().reverse()
+    let streak = 0
+    const today = new Date().toISOString().split('T')[0]
+    let checkDate = today
+
+    for (const date of sortedDates) {
+      if (date === checkDate || (streak === 0 && date === sortedDates[0])) {
+        streak++
+        const d = new Date(checkDate)
+        d.setDate(d.getDate() - 1)
+        checkDate = d.toISOString().split('T')[0]
+      } else {
+        break
+      }
+    }
+
+    return { thisWeekCount: thisWeek, lastWeekCount: lastWeek, currentStreak: streak, bestStreak: streak }
+  }, [entries])
+
   useEffect(() => {
     loadEntries()
   }, [loadEntries])
@@ -60,6 +109,10 @@ export default function JournalPage() {
   useEffect(() => {
     loadTags()
   }, [loadTags])
+
+  useEffect(() => {
+    loadStats()
+  }, [loadStats])
 
   const handleFiltersChange = (newFilters: JournalFilters) => {
     setFilters(newFilters)
@@ -79,161 +132,96 @@ export default function JournalPage() {
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Journal</h1>
           <p className="text-xs sm:text-sm text-muted-foreground mt-0.5 sm:mt-1">
-            Write and reflect on your daily thoughts
+            Your personal thoughts and daily reflections
           </p>
         </div>
-        <div className="flex flex-wrap gap-1.5 sm:gap-2">
-          <Button asChild variant="outline" size="sm">
-            <Link href="/journal/calendar">
-              <Calendar className="mr-1 sm:mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4" />
-              Calendar
-            </Link>
-          </Button>
-          <Button asChild variant="outline" size="sm">
-            <Link href="/journal/stats">
-              <BarChart3 className="mr-1 sm:mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4" />
-              Stats
-            </Link>
-          </Button>
-          <Button asChild size="sm">
-            <Link href="/journal/new">
-              <Plus className="mr-1 sm:mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4" />
-              New Entry
-            </Link>
-          </Button>
-        </div>
+        <Button asChild size="sm">
+          <Link href="/journal/new">
+            <Plus className="mr-1 sm:mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4" />
+            New Entry
+          </Link>
+        </Button>
       </div>
 
       {/* Quick Stats */}
-      <div className="grid gap-1.5 sm:gap-2 md:gap-4 grid-cols-2 md:grid-cols-4">
+      <JournalQuickStats
+        stats={stats}
+        thisWeekCount={thisWeekCount}
+        lastWeekCount={lastWeekCount}
+        currentStreak={currentStreak}
+        bestStreak={bestStreak}
+        loading={statsLoading}
+      />
+
+      {/* View Tabs */}
+      <JournalViewTabs />
+
+      {/* Filters */}
+      <Card>
+        <CardContent className="pt-4 sm:pt-6">
+          <JournalFiltersComponent
+            filters={filters}
+            onChange={handleFiltersChange}
+            availableTags={availableTags}
+          />
+        </CardContent>
+      </Card>
+
+      {/* Timeline */}
+      {loading ? (
         <Card>
-          <CardContent className="pt-4 sm:pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs sm:text-sm text-muted-foreground">Total Entries</p>
-                <p className="text-xl sm:text-2xl font-bold">{totalEntries}</p>
-              </div>
-              <BookOpen className="h-6 w-6 sm:h-8 sm:w-8 text-muted-foreground" />
-            </div>
+          <CardContent className="flex items-center justify-center py-12">
+            <p className="text-muted-foreground">Loading entries...</p>
           </CardContent>
         </Card>
+      ) : entries.length === 0 ? (
         <Card>
-          <CardContent className="pt-4 sm:pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs sm:text-sm text-muted-foreground">This Week</p>
-                <p className="text-xl sm:text-2xl font-bold">
-                  {entries.filter((e) => {
-                    const entryDate = new Date(e.entryDate)
-                    const now = new Date()
-                    const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
-                    return entryDate >= weekAgo
-                  }).length}
-                </p>
-              </div>
-              <Calendar className="h-6 w-6 sm:h-8 sm:w-8 text-muted-foreground" />
-            </div>
+          <CardContent className="flex flex-col items-center justify-center py-12 sm:py-16">
+            <BookOpen className="h-10 w-10 sm:h-12 sm:w-12 text-muted-foreground mb-4" />
+            <h3 className="text-base sm:text-lg font-semibold mb-2">No journal entries yet</h3>
+            <p className="text-sm text-muted-foreground text-center mb-6 max-w-md">
+              {Object.keys(filters).length > 0
+                ? 'No entries match your current filters. Try adjusting or clearing them.'
+                : 'Start capturing your thoughts and memories by writing your first entry.'}
+            </p>
+            {Object.keys(filters).length === 0 && (
+              <Button asChild>
+                <Link href="/journal/new">
+                  <Plus className="mr-2 h-4 w-4" />
+                  Write Your First Entry
+                </Link>
+              </Button>
+            )}
           </CardContent>
         </Card>
-        <Card>
-          <CardContent className="pt-4 sm:pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs sm:text-sm text-muted-foreground">Tags Used</p>
-                <p className="text-xl sm:text-2xl font-bold">{availableTags.length}</p>
-              </div>
-              <span className="text-xl sm:text-2xl">#</span>
+      ) : (
+        <>
+          <JournalTimeline entries={entries} onEntryClick={handleEntryClick} />
+
+          {/* Pagination */}
+          {(page > 1 || hasMorePages) && (
+            <div className="flex items-center justify-center gap-4 pt-4">
+              <Button
+                variant="outline"
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
+                disabled={page === 1}
+              >
+                Previous
+              </Button>
+              <span className="text-sm text-muted-foreground">
+                Page {page}
+              </span>
+              <Button
+                variant="outline"
+                onClick={() => setPage((p) => p + 1)}
+                disabled={!hasMorePages}
+              >
+                Next
+              </Button>
             </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-4 sm:pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs sm:text-sm text-muted-foreground">Showing</p>
-                <p className="text-xl sm:text-2xl font-bold">{entries.length}</p>
-              </div>
-              <span className="text-xs sm:text-sm text-muted-foreground">of {totalEntries}</span>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Tabs for different views */}
-      <Tabs defaultValue="timeline" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-1 max-w-md">
-          <TabsTrigger value="timeline">Timeline</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="timeline" className="space-y-4">
-          {/* Filters */}
-          <Card>
-            <CardContent className="pt-4 sm:pt-6">
-              <JournalFiltersComponent
-                filters={filters}
-                onChange={handleFiltersChange}
-                availableTags={availableTags}
-              />
-            </CardContent>
-          </Card>
-
-          {/* Timeline */}
-          {loading ? (
-            <Card>
-              <CardContent className="flex items-center justify-center py-12">
-                <p className="text-muted-foreground">Loading entries...</p>
-              </CardContent>
-            </Card>
-          ) : entries.length === 0 ? (
-            <Card>
-              <CardContent className="flex flex-col items-center justify-center py-12 sm:py-16">
-                <BookOpen className="h-10 w-10 sm:h-12 sm:w-12 text-muted-foreground mb-4" />
-                <h3 className="text-base sm:text-lg font-semibold mb-2">No journal entries yet</h3>
-                <p className="text-sm text-muted-foreground text-center mb-6 max-w-md">
-                  {Object.keys(filters).length > 0
-                    ? 'No entries match your current filters. Try adjusting or clearing them.'
-                    : 'Start capturing your thoughts and memories by writing your first entry.'}
-                </p>
-                {Object.keys(filters).length === 0 && (
-                  <Button asChild>
-                    <Link href="/journal/new">
-                      <Plus className="mr-2 h-4 w-4" />
-                      Write Your First Entry
-                    </Link>
-                  </Button>
-                )}
-              </CardContent>
-            </Card>
-          ) : (
-            <>
-              <JournalTimeline entries={entries} onEntryClick={handleEntryClick} />
-
-              {/* Pagination */}
-              {(page > 1 || hasMorePages) && (
-                <div className="flex items-center justify-center gap-4 pt-4">
-                  <Button
-                    variant="outline"
-                    onClick={() => setPage((p) => Math.max(1, p - 1))}
-                    disabled={page === 1}
-                  >
-                    Previous
-                  </Button>
-                  <span className="text-sm text-muted-foreground">
-                    Page {page}
-                  </span>
-                  <Button
-                    variant="outline"
-                    onClick={() => setPage((p) => p + 1)}
-                    disabled={!hasMorePages}
-                  >
-                    Next
-                  </Button>
-                </div>
-              )}
-            </>
           )}
-        </TabsContent>
-      </Tabs>
+        </>
+      )}
     </div>
   )
 }
