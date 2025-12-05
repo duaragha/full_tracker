@@ -72,6 +72,17 @@ const insertMetric = async (input: MetricInput) => {
   const recordedAt = input.recordedAt ? new Date(input.recordedAt) : new Date();
   const metadata = input.metadata ? JSON.stringify(input.metadata) : null;
 
+  // Get the date part for deduplication (same metric type + same day = update)
+  const recordedDate = recordedAt.toISOString().split('T')[0];
+
+  // Delete existing record for same metric_type on same day, then insert new
+  await pool.query(
+    `DELETE FROM fitness_health_metrics
+     WHERE metric_type = $1
+     AND DATE(recorded_at AT TIME ZONE 'UTC') = $2`,
+    [input.metricType, recordedDate]
+  );
+
   const result = await pool.query(
     `
       INSERT INTO fitness_health_metrics (
