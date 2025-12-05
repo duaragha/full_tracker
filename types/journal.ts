@@ -100,6 +100,8 @@ export interface JournalFilters {
   endDate?: string; // YYYY-MM-DD format
   tags?: string[];
   searchText?: string;
+  hasPhotos?: boolean;
+  sortOrder?: 'newest' | 'oldest';
   limit?: number;
   offset?: number;
 }
