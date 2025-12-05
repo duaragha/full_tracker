@@ -1,10 +1,12 @@
 {
+  "enabledMcpjsonServers": [
+    "context7",
+    "playwright",
+    "figma-dev-mode-mcp-server"
+  ],
   "_meta": {
     "description": "User-specific Claude Code settings (gitignored - never commit)",
     "created_at": "2025-11-28T09:32:55.786699Z",
     "note": "Edit this file to customize your local development environment"
-  },
-  "enabledMcpjsonServers": [
-    "context7"
-  ]
+  }
 }

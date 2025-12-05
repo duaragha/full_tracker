@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>New Entry | Journal | Full Tracker</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    :root {
+      --background: oklch(0 0 0);
+      --foreground: oklch(0.985 0 0);
+      --card: oklch(0.05 0 0);
+      --card-foreground: oklch(0.985 0 0);
+      --muted: oklch(0.1 0 0);
+      --muted-foreground: oklch(0.708 0 0);
+      --border: oklch(1 0 0 / 8%);
+      --primary: oklch(0.922 0 0);
+      --accent: oklch(0.1 0 0);
+      --ring: oklch(0.556 0 0);
+    }
+    body {
+      background: var(--background);
+      color: var(--foreground);
+      font-family: system-ui, -apple-system, sans-serif;
+    }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 0.625rem;
+    }
+    .muted-text { color: var(--muted-foreground); }
+    .border-color { border-color: var(--border); }
+    .input {
+      background: var(--muted);
+      border: 1px solid var(--border);
+      border-radius: 0.5rem;
+      padding: 0.5rem 0.75rem;
+      color: var(--foreground);
+      width: 100%;
+    }
+    .input:focus {
+      outline: none;
+      border-color: var(--ring);
+    }
+    .textarea {
+      background: transparent;
+      border: none;
+      color: var(--foreground);
+      width: 100%;
+      resize: none;
+      min-height: 300px;
+      font-size: 1rem;
+      line-height: 1.75;
+    }
+    .textarea:focus { outline: none; }
+    .textarea::placeholder { color: var(--muted-foreground); }
+    .toolbar-btn {
+      padding: 0.5rem;
+      border-radius: 0.375rem;
+      color: var(--muted-foreground);
+      transition: all 0.15s;
+    }
+    .toolbar-btn:hover {
+      background: var(--muted);
+      color: var(--foreground);
+    }
+    .toolbar-btn.active {
+      background: var(--muted);
+      color: var(--foreground);
+    }
+    .mood-btn {
+      padding: 0.5rem 0.75rem;
+      border-radius: 0.5rem;
+      border: 2px solid transparent;
+      transition: all 0.15s;
+      font-size: 1.5rem;
+    }
+    .mood-btn:hover { background: var(--muted); }
+    .mood-btn.selected { border-color: var(--primary); background: var(--muted); }
+    .tag-input {
+      background: transparent;
+      border: none;
+      color: var(--foreground);
+      font-size: 0.875rem;
+    }
+    .tag-input:focus { outline: none; }
+    .tag {
+      background: var(--muted);
+      color: var(--muted-foreground);
+      padding: 0.25rem 0.5rem;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+    }
+    .sidebar {
+      width: 180px;
+      background: var(--background);
+      border-right: 1px solid var(--border);
+    }
+    .sidebar-item {
+      padding: 0.5rem 0.75rem;
+      border-radius: 0.375rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.875rem;
+      color: var(--muted-foreground);
+      transition: background 0.15s;
+    }
+    .sidebar-item:hover { background: var(--muted); }
+    .sidebar-item.active { background: var(--muted); color: var(--foreground); }
+    .template-card {
+      background: var(--muted);
+      border: 1px solid var(--border);
+      border-radius: 0.5rem;
+      padding: 0.75rem;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .template-card:hover {
+      border-color: var(--ring);
+    }
+  </style>
+</head>
+<body class="min-h-screen">
+  <div class="flex min-h-screen">
+    <!-- Sidebar (collapsed) -->
+    <aside class="sidebar flex flex-col p-3">
+      <div class="flex items-center gap-2 px-2 py-3 mb-4">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+        <div class="flex flex-col">
+          <span class="font-semibold text-sm">Full Tracker</span>
+          <span class="text-xs muted-text">Track everything</span>
+        </div>
+      </div>
+      <div class="text-xs px-2 muted-text mb-2">Navigation</div>
+      <nav class="space-y-1">
+        <a href="journal-timeline.html" class="sidebar-item active">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
+          Journal
+        </a>
+      </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 flex flex-col">
+      <!-- Header -->
+      <header class="h-14 border-b border-color flex items-center justify-between px-4">
+        <div class="flex items-center gap-3">
+          <a href="journal-timeline.html" class="p-1.5 hover:bg-[var(--muted)] rounded">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+          </a>
+          <div class="w-px h-4 bg-[var(--border)]"></div>
+          <span class="text-sm muted-text">New Entry</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <button class="px-3 py-1.5 text-sm muted-text hover:text-white">Discard</button>
+          <button class="inline-flex items-center gap-2 bg-white text-black px-4 py-1.5 rounded-lg font-medium text-sm hover:bg-gray-200 transition">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+            Save Entry
+          </button>
+        </div>
+      </header>
+
+      <!-- Editor -->
+      <div class="flex-1 flex">
+        <!-- Main Editor Area -->
+        <div class="flex-1 p-6 max-w-4xl mx-auto w-full">
+          <!-- Date & Time -->
+          <div class="flex items-center gap-4 mb-6">
+            <div class="flex items-center gap-2 text-sm">
+              <svg class="w-4 h-4 muted-text" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+              <input type="date" value="2025-12-04" class="input w-auto bg-transparent border-none p-0">
+            </div>
+            <div class="flex items-center gap-2 text-sm">
+              <svg class="w-4 h-4 muted-text" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+              <input type="time" value="15:30" class="input w-auto bg-transparent border-none p-0">
+            </div>
+          </div>
+
+          <!-- Title -->
+          <input
+            type="text"
+            placeholder="Entry title (optional)"
+            class="w-full text-2xl font-semibold bg-transparent border-none mb-4 focus:outline-none"
+            value="Good day at work"
+          >
+
+          <!-- Mood Selector -->
+          <div class="flex items-center gap-2 mb-6">
+            <span class="text-sm muted-text mr-2">How are you feeling?</span>
+            <button class="mood-btn" title="Great">😄</button>
+            <button class="mood-btn selected" title="Good">😊</button>
+            <button class="mood-btn" title="Okay">😐</button>
+            <button class="mood-btn" title="Bad">😔</button>
+            <button class="mood-btn" title="Terrible">😢</button>
+          </div>
+
+          <!-- Formatting Toolbar -->
+          <div class="flex items-center gap-1 mb-4 pb-4 border-b border-color">
+            <button class="toolbar-btn" title="Bold"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 4h8a4 4 0 014 4 4 4 0 01-4 4H6z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 12h9a4 4 0 014 4 4 4 0 01-4 4H6z"></path></svg></button>
+            <button class="toolbar-btn" title="Italic"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 4h4m-2 0v16m-4 0h8"></path></svg></button>
+            <button class="toolbar-btn" title="Strikethrough"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 10H3m14 0a4 4 0 010 8m0-8a4 4 0 000-8H7a4 4 0 00-4 4"></path></svg></button>
+            <div class="w-px h-5 bg-[var(--border)] mx-2"></div>
+            <button class="toolbar-btn" title="Heading"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10M7 12h10m-7 4h7"></path></svg></button>
+            <button class="toolbar-btn" title="List"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"></path></svg></button>
+            <button class="toolbar-btn" title="Checkbox"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg></button>
+            <div class="w-px h-5 bg-[var(--border)] mx-2"></div>
+            <button class="toolbar-btn" title="Add Image"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg></button>
+            <button class="toolbar-btn" title="Add Link"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path></svg></button>
+          </div>
+
+          <!-- Main Text Area -->
+          <textarea class="textarea" placeholder="What's on your mind today?">Had a productive meeting with the team today. We finally resolved the sync issue with the health tracker app.
+
+The Railway deployment is working now and Zapier is sending data correctly to Journey. It was a tricky bug - turns out there was a literal newline character inside a string in the Python code. Classic mistake that's easy to miss.
+
+## Key accomplishments:
+- Fixed the Railway deployment syntax error
+- Got Zapier integration working with Journey
+- Updated the Android app sync time to 11:59 PM
+
+## Tomorrow's plan:
+- Research Journey's tech stack for the clone project
+- Start designing the database schema
+- Create initial mockups
+
+Feeling good about the progress today. The health sync project is almost complete!</textarea>
+
+          <!-- Tags -->
+          <div class="mt-6 pt-4 border-t border-color">
+            <div class="flex items-center gap-2 flex-wrap">
+              <span class="text-sm muted-text">Tags:</span>
+              <span class="tag">
+                #work
+                <button class="hover:text-white">&times;</button>
+              </span>
+              <span class="tag">
+                #coding
+                <button class="hover:text-white">&times;</button>
+              </span>
+              <span class="tag">
+                #productivity
+                <button class="hover:text-white">&times;</button>
+              </span>
+              <input type="text" placeholder="Add tag..." class="tag-input w-24">
+            </div>
+          </div>
+        </div>
+
+        <!-- Right Sidebar - Metadata & Templates -->
+        <aside class="w-72 border-l border-color p-4 space-y-6">
+          <!-- Metadata -->
+          <div>
+            <h3 class="text-sm font-medium mb-3">Metadata</h3>
+            <div class="space-y-3">
+              <!-- Location -->
+              <div class="flex items-center gap-2">
+                <svg class="w-4 h-4 muted-text" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path></svg>
+                <input type="text" placeholder="Add location..." class="input text-sm py-1" value="Bangalore, India">
+              </div>
+              <!-- Weather -->
+              <div class="flex items-center gap-2">
+                <svg class="w-4 h-4 muted-text" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z"></path></svg>
+                <span class="text-sm">28°C Sunny</span>
+                <button class="text-xs muted-text hover:text-white ml-auto">Refresh</button>
+              </div>
+              <!-- Activity -->
+              <div class="flex items-center gap-2">
+                <svg class="w-4 h-4 muted-text" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                <select class="input text-sm py-1">
+                  <option>Select activity...</option>
+                  <option selected>Working</option>
+                  <option>Relaxing</option>
+                  <option>Exercising</option>
+                  <option>Traveling</option>
+                  <option>Eating</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- Health Stats (Auto) -->
+          <div>
+            <h3 class="text-sm font-medium mb-3">Today's Health Stats</h3>
+            <div class="card p-3 space-y-2">
+              <div class="flex justify-between text-sm">
+                <span class="muted-text">Steps</span>
+                <span>8,542</span>
+              </div>
+              <div class="flex justify-between text-sm">
+                <span class="muted-text">Sleep</span>
+                <span>7.2 hrs</span>
+              </div>
+              <div class="flex justify-between text-sm">
+                <span class="muted-text">Weight</span>
+                <span>70.5 kg</span>
+              </div>
+              <button class="w-full text-xs muted-text hover:text-white mt-2 pt-2 border-t border-color">
+                + Attach to entry
+              </button>
+            </div>
+          </div>
+
+          <!-- Attachments -->
+          <div>
+            <h3 class="text-sm font-medium mb-3">Attachments</h3>
+            <div class="grid grid-cols-3 gap-2 mb-3">
+              <img src="https://placehold.co/80x80/1a1a1a/666?text=IMG" class="w-full aspect-square rounded-lg object-cover" alt="Attachment">
+            </div>
+            <button class="w-full card p-3 text-sm muted-text hover:text-white border-dashed">
+              <svg class="w-5 h-5 mx-auto mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+              Add photo or file
+            </button>
+          </div>
+
+          <!-- Templates -->
+          <div>
+            <h3 class="text-sm font-medium mb-3">Quick Templates</h3>
+            <div class="space-y-2">
+              <div class="template-card">
+                <div class="text-sm font-medium">Daily Reflection</div>
+                <div class="text-xs muted-text">Gratitude, highlights, learnings</div>
+              </div>
+              <div class="template-card">
+                <div class="text-sm font-medium">Work Log</div>
+                <div class="text-xs muted-text">Tasks, meetings, blockers</div>
+              </div>
+              <div class="template-card">
+                <div class="text-sm font-medium">Workout Notes</div>
+                <div class="text-xs muted-text">Exercises, sets, feelings</div>
+              </div>
+            </div>
+          </div>
+        </aside>
+      </div>
+    </main>
+  </div>
+</body>
+</html>

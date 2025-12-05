@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Journal - Stats & Insights | Full Tracker</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    :root {
+      --background: oklch(0 0 0);
+      --foreground: oklch(0.985 0 0);
+      --card: oklch(0.05 0 0);
+      --card-foreground: oklch(0.985 0 0);
+      --muted: oklch(0.1 0 0);
+      --muted-foreground: oklch(0.708 0 0);
+      --border: oklch(1 0 0 / 8%);
+      --primary: oklch(0.922 0 0);
+      --accent: oklch(0.1 0 0);
+      --ring: oklch(0.556 0 0);
+      --blue: oklch(0.488 0.243 264.376);
+      --green: oklch(0.696 0.17 162.48);
+      --yellow: oklch(0.769 0.188 70.08);
+      --purple: oklch(0.627 0.265 303.9);
+      --red: oklch(0.645 0.246 16.439);
+    }
+    body {
+      background: var(--background);
+      color: var(--foreground);
+      font-family: system-ui, -apple-system, sans-serif;
+    }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 0.625rem;
+    }
+    .muted-text { color: var(--muted-foreground); }
+    .border-color { border-color: var(--border); }
+    .sidebar {
+      width: 180px;
+      background: var(--background);
+      border-right: 1px solid var(--border);
+    }
+    .sidebar-item {
+      padding: 0.5rem 0.75rem;
+      border-radius: 0.375rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.875rem;
+      color: var(--muted-foreground);
+      transition: background 0.15s;
+    }
+    .sidebar-item:hover { background: var(--muted); }
+    .sidebar-item.active { background: var(--muted); color: var(--foreground); }
+    .chart-bar {
+      background: var(--blue);
+      border-radius: 4px 4px 0 0;
+      min-height: 4px;
+    }
+    .mood-bar {
+      height: 8px;
+      border-radius: 4px;
+    }
+    .heatmap-cell {
+      width: 12px;
+      height: 12px;
+      border-radius: 2px;
+      background: var(--muted);
+    }
+    .heatmap-cell.level-1 { background: oklch(0.696 0.17 162.48 / 25%); }
+    .heatmap-cell.level-2 { background: oklch(0.696 0.17 162.48 / 50%); }
+    .heatmap-cell.level-3 { background: oklch(0.696 0.17 162.48 / 75%); }
+    .heatmap-cell.level-4 { background: oklch(0.696 0.17 162.48 / 100%); }
+    .tag-cloud span {
+      display: inline-block;
+      padding: 0.25rem 0.75rem;
+      background: var(--muted);
+      border-radius: 9999px;
+      margin: 0.25rem;
+      font-size: 0.875rem;
+    }
+  </style>
+</head>
+<body class="min-h-screen">
+  <div class="flex min-h-screen">
+    <!-- Sidebar -->
+    <aside class="sidebar flex flex-col p-3">
+      <div class="flex items-center gap-2 px-2 py-3 mb-4">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+        <div class="flex flex-col">
+          <span class="font-semibold text-sm">Full Tracker</span>
+          <span class="text-xs muted-text">Track everything</span>
+        </div>
+      </div>
+      <div class="text-xs px-2 muted-text mb-2">Navigation</div>
+      <nav class="space-y-1">
+        <a href="#" class="sidebar-item">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
+          Dashboard
+        </a>
+        <a href="journal-timeline.html" class="sidebar-item active">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
+          Journal
+        </a>
+      </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1">
+      <!-- Header -->
+      <header class="h-14 border-b border-color flex items-center px-4 gap-3">
+        <button class="p-1.5 hover:bg-[var(--muted)] rounded">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+        </button>
+        <div class="w-px h-4 bg-[var(--border)]"></div>
+        <span class="text-sm muted-text">Journal</span>
+      </header>
+
+      <!-- Content -->
+      <div class="p-6 space-y-6">
+        <!-- Page Header -->
+        <div class="flex items-center justify-between">
+          <div>
+            <h1 class="text-3xl font-bold tracking-tight">Journal Insights</h1>
+            <p class="muted-text">Analytics and patterns from your journal entries</p>
+          </div>
+          <select class="bg-[var(--muted)] border border-color rounded-lg px-3 py-2 text-sm">
+            <option>Last 30 days</option>
+            <option>Last 90 days</option>
+            <option selected>This year</option>
+            <option>All time</option>
+          </select>
+        </div>
+
+        <!-- View Tabs -->
+        <div class="flex items-center gap-1 p-1 bg-[var(--muted)] rounded-lg w-fit">
+          <a href="journal-timeline.html" class="px-3 py-1.5 text-sm font-medium muted-text hover:text-white rounded-md">Timeline</a>
+          <a href="journal-calendar.html" class="px-3 py-1.5 text-sm font-medium muted-text hover:text-white rounded-md">Calendar</a>
+          <button class="px-3 py-1.5 text-sm font-medium muted-text hover:text-white rounded-md">Map</button>
+          <button class="px-3 py-1.5 text-sm font-medium bg-[var(--card)] rounded-md">Stats</button>
+        </div>
+
+        <!-- Overview Stats -->
+        <div class="grid grid-cols-5 gap-4">
+          <div class="card p-4">
+            <div class="text-sm muted-text mb-1">Total Entries</div>
+            <div class="text-3xl font-bold">247</div>
+            <div class="text-xs text-green-500 mt-1">+12% vs last year</div>
+          </div>
+          <div class="card p-4">
+            <div class="text-sm muted-text mb-1">Words Written</div>
+            <div class="text-3xl font-bold">89.4k</div>
+            <div class="text-xs muted-text mt-1">~362 per entry</div>
+          </div>
+          <div class="card p-4">
+            <div class="text-sm muted-text mb-1">Current Streak</div>
+            <div class="text-3xl font-bold">12</div>
+            <div class="text-xs muted-text mt-1">Best: 34 days</div>
+          </div>
+          <div class="card p-4">
+            <div class="text-sm muted-text mb-1">Photos Added</div>
+            <div class="text-3xl font-bold">156</div>
+            <div class="text-xs muted-text mt-1">63% of entries</div>
+          </div>
+          <div class="card p-4">
+            <div class="text-sm muted-text mb-1">Avg. Mood</div>
+            <div class="text-3xl font-bold">😊</div>
+            <div class="text-xs muted-text mt-1">Good (3.6/5)</div>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-6">
+          <!-- Writing Frequency Chart -->
+          <div class="card p-5">
+            <h3 class="font-medium mb-4">Writing Frequency</h3>
+            <div class="h-48 flex items-end gap-2">
+              <div class="flex-1 flex flex-col items-center">
+                <div class="chart-bar w-full" style="height: 60%"></div>
+                <span class="text-xs muted-text mt-2">Jan</span>
+              </div>
+              <div class="flex-1 flex flex-col items-center">
+                <div class="chart-bar w-full" style="height: 75%"></div>
+                <span class="text-xs muted-text mt-2">Feb</span>
+              </div>
+              <div class="flex-1 flex flex-col items-center">
+                <div class="chart-bar w-full" style="height: 45%"></div>
+                <span class="text-xs muted-text mt-2">Mar</span>
+              </div>
+              <div class="flex-1 flex flex-col items-center">
+                <div class="chart-bar w-full" style="height: 80%"></div>
+                <span class="text-xs muted-text mt-2">Apr</span>
+              </div>
+              <div class="flex-1 flex flex-col items-center">
+                <div class="chart-bar w-full" style="height: 55%"></div>
+                <span class="text-xs muted-text mt-2">May</span>
+              </div>
+              <div class="flex-1 flex flex-col items-center">
+                <div class="chart-bar w-full" style="height: 90%"></div>
+                <span class="text-xs muted-text mt-2">Jun</span>
+              </div>
+              <div class="flex-1 flex flex-col items-center">
+                <div class="chart-bar w-full" style="height: 70%"></div>
+                <span class="text-xs muted-text mt-2">Jul</span>
+              </div>
+              <div class="flex-1 flex flex-col items-center">
+                <div class="chart-bar w-full" style="height: 85%"></div>
+                <span class="text-xs muted-text mt-2">Aug</span>
+              </div>
+              <div class="flex-1 flex flex-col items-center">
+                <div class="chart-bar w-full" style="height: 65%"></div>
+                <span class="text-xs muted-text mt-2">Sep</span>
+              </div>
+              <div class="flex-1 flex flex-col items-center">
+                <div class="chart-bar w-full" style="height: 78%"></div>
+                <span class="text-xs muted-text mt-2">Oct</span>
+              </div>
+              <div class="flex-1 flex flex-col items-center">
+                <div class="chart-bar w-full" style="height: 95%"></div>
+                <span class="text-xs muted-text mt-2">Nov</span>
+              </div>
+              <div class="flex-1 flex flex-col items-center">
+                <div class="chart-bar w-full opacity-50" style="height: 15%"></div>
+                <span class="text-xs muted-text mt-2">Dec</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Mood Distribution -->
+          <div class="card p-5">
+            <h3 class="font-medium mb-4">Mood Distribution</h3>
+            <div class="space-y-4">
+              <div>
+                <div class="flex justify-between text-sm mb-1">
+                  <span>😄 Great</span>
+                  <span class="muted-text">18%</span>
+                </div>
+                <div class="mood-bar" style="background: linear-gradient(to right, oklch(0.75 0.15 142) 18%, var(--muted) 18%)"></div>
+              </div>
+              <div>
+                <div class="flex justify-between text-sm mb-1">
+                  <span>😊 Good</span>
+                  <span class="muted-text">45%</span>
+                </div>
+                <div class="mood-bar" style="background: linear-gradient(to right, oklch(0.75 0.15 162) 45%, var(--muted) 45%)"></div>
+              </div>
+              <div>
+                <div class="flex justify-between text-sm mb-1">
+                  <span>😐 Okay</span>
+                  <span class="muted-text">25%</span>
+                </div>
+                <div class="mood-bar" style="background: linear-gradient(to right, oklch(0.75 0.15 70) 25%, var(--muted) 25%)"></div>
+              </div>
+              <div>
+                <div class="flex justify-between text-sm mb-1">
+                  <span>😔 Bad</span>
+                  <span class="muted-text">9%</span>
+                </div>
+                <div class="mood-bar" style="background: linear-gradient(to right, oklch(0.75 0.15 25) 9%, var(--muted) 9%)"></div>
+              </div>
+              <div>
+                <div class="flex justify-between text-sm mb-1">
+                  <span>😢 Terrible</span>
+                  <span class="muted-text">3%</span>
+                </div>
+                <div class="mood-bar" style="background: linear-gradient(to right, oklch(0.65 0.2 15) 3%, var(--muted) 3%)"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-3 gap-6">
+          <!-- Activity Heatmap -->
+          <div class="card p-5 col-span-2">
+            <h3 class="font-medium mb-4">Activity Heatmap</h3>
+            <div class="flex gap-1 flex-wrap">
+              <!-- Generate 365 cells for year heatmap -->
+              <div class="flex flex-col gap-1">
+                <div class="heatmap-cell level-2"></div>
+                <div class="heatmap-cell level-3"></div>
+                <div class="heatmap-cell level-1"></div>
+                <div class="heatmap-cell level-4"></div>
+                <div class="heatmap-cell level-2"></div>
+                <div class="heatmap-cell"></div>
+                <div class="heatmap-cell level-1"></div>
+              </div>
+              <div class="flex flex-col gap-1">
+                <div class="heatmap-cell level-3"></div>
+                <div class="heatmap-cell level-2"></div>
+                <div class="heatmap-cell level-4"></div>
+                <div class="heatmap-cell level-1"></div>
+                <div class="heatmap-cell"></div>
+                <div class="heatmap-cell level-2"></div>
+                <div class="heatmap-cell level-3"></div>
+              </div>
+              <div class="flex flex-col gap-1">
+                <div class="heatmap-cell level-1"></div>
+                <div class="heatmap-cell level-4"></div>
+                <div class="heatmap-cell level-2"></div>
+                <div class="heatmap-cell level-3"></div>
+                <div class="heatmap-cell level-1"></div>
+                <div class="heatmap-cell level-4"></div>
+                <div class="heatmap-cell"></div>
+              </div>
+              <div class="flex flex-col gap-1">
+                <div class="heatmap-cell level-2"></div>
+                <div class="heatmap-cell"></div>
+                <div class="heatmap-cell level-1"></div>
+                <div class="heatmap-cell level-2"></div>
+                <div class="heatmap-cell level-4"></div>
+                <div class="heatmap-cell level-3"></div>
+                <div class="heatmap-cell level-1"></div>
+              </div>
+              <!-- More columns... simplified for mockup -->
+              <div class="flex flex-col gap-1">
+                <div class="heatmap-cell level-3"></div>
+                <div class="heatmap-cell level-1"></div>
+                <div class="heatmap-cell level-4"></div>
+                <div class="heatmap-cell level-2"></div>
+                <div class="heatmap-cell"></div>
+                <div class="heatmap-cell level-1"></div>
+                <div class="heatmap-cell level-3"></div>
+              </div>
+              <div class="flex flex-col gap-1">
+                <div class="heatmap-cell level-4"></div>
+                <div class="heatmap-cell level-2"></div>
+                <div class="heatmap-cell level-1"></div>
+                <div class="heatmap-cell level-3"></div>
+                <div class="heatmap-cell level-2"></div>
+                <div class="heatmap-cell level-4"></div>
+                <div class="heatmap-cell level-1"></div>
+              </div>
+              <div class="flex flex-col gap-1">
+                <div class="heatmap-cell"></div>
+                <div class="heatmap-cell level-3"></div>
+                <div class="heatmap-cell level-2"></div>
+                <div class="heatmap-cell level-1"></div>
+                <div class="heatmap-cell level-4"></div>
+                <div class="heatmap-cell"></div>
+                <div class="heatmap-cell level-2"></div>
+              </div>
+              <!-- Repeat pattern for remaining weeks -->
+              <div class="flex flex-col gap-1"><div class="heatmap-cell level-2"></div><div class="heatmap-cell level-1"></div><div class="heatmap-cell level-3"></div><div class="heatmap-cell"></div><div class="heatmap-cell level-2"></div><div class="heatmap-cell level-4"></div><div class="heatmap-cell level-1"></div></div>
+              <div class="flex flex-col gap-1"><div class="heatmap-cell level-1"></div><div class="heatmap-cell level-4"></div><div class="heatmap-cell"></div><div class="heatmap-cell level-2"></div><div class="heatmap-cell level-3"></div><div class="heatmap-cell level-1"></div><div class="heatmap-cell level-4"></div></div>
+              <div class="flex flex-col gap-1"><div class="heatmap-cell level-3"></div><div class="heatmap-cell"></div><div class="heatmap-cell level-2"></div><div class="heatmap-cell level-4"></div><div class="heatmap-cell level-1"></div><div class="heatmap-cell level-2"></div><div class="heatmap-cell"></div></div>
+              <div class="flex flex-col gap-1"><div class="heatmap-cell level-2"></div><div class="heatmap-cell level-3"></div><div class="heatmap-cell level-1"></div><div class="heatmap-cell"></div><div class="heatmap-cell level-4"></div><div class="heatmap-cell level-3"></div><div class="heatmap-cell level-2"></div></div>
+              <div class="flex flex-col gap-1"><div class="heatmap-cell"></div><div class="heatmap-cell level-2"></div><div class="heatmap-cell level-4"></div><div class="heatmap-cell level-1"></div><div class="heatmap-cell level-3"></div><div class="heatmap-cell"></div><div class="heatmap-cell level-1"></div></div>
+              <div class="flex flex-col gap-1"><div class="heatmap-cell level-4"></div><div class="heatmap-cell level-1"></div><div class="heatmap-cell level-3"></div><div class="heatmap-cell level-2"></div><div class="heatmap-cell"></div><div class="heatmap-cell level-4"></div><div class="heatmap-cell level-2"></div></div>
+              <div class="flex flex-col gap-1"><div class="heatmap-cell level-1"></div><div class="heatmap-cell"></div><div class="heatmap-cell level-2"></div><div class="heatmap-cell level-4"></div><div class="heatmap-cell level-1"></div><div class="heatmap-cell level-3"></div><div class="heatmap-cell"></div></div>
+              <div class="flex flex-col gap-1"><div class="heatmap-cell level-3"></div><div class="heatmap-cell level-4"></div><div class="heatmap-cell"></div><div class="heatmap-cell level-1"></div><div class="heatmap-cell level-2"></div><div class="heatmap-cell"></div><div class="heatmap-cell level-4"></div></div>
+            </div>
+            <div class="flex items-center gap-2 mt-4 text-xs muted-text">
+              <span>Less</span>
+              <div class="heatmap-cell"></div>
+              <div class="heatmap-cell level-1"></div>
+              <div class="heatmap-cell level-2"></div>
+              <div class="heatmap-cell level-3"></div>
+              <div class="heatmap-cell level-4"></div>
+              <span>More</span>
+            </div>
+          </div>
+
+          <!-- Top Tags -->
+          <div class="card p-5">
+            <h3 class="font-medium mb-4">Top Tags</h3>
+            <div class="space-y-3">
+              <div class="flex items-center justify-between">
+                <span class="text-sm">#work</span>
+                <span class="text-sm muted-text">87</span>
+              </div>
+              <div class="flex items-center justify-between">
+                <span class="text-sm">#coding</span>
+                <span class="text-sm muted-text">64</span>
+              </div>
+              <div class="flex items-center justify-between">
+                <span class="text-sm">#fitness</span>
+                <span class="text-sm muted-text">52</span>
+              </div>
+              <div class="flex items-center justify-between">
+                <span class="text-sm">#personal</span>
+                <span class="text-sm muted-text">48</span>
+              </div>
+              <div class="flex items-center justify-between">
+                <span class="text-sm">#goals</span>
+                <span class="text-sm muted-text">41</span>
+              </div>
+              <div class="flex items-center justify-between">
+                <span class="text-sm">#reading</span>
+                <span class="text-sm muted-text">35</span>
+              </div>
+              <div class="flex items-center justify-between">
+                <span class="text-sm">#travel</span>
+                <span class="text-sm muted-text">28</span>
+              </div>
+              <div class="flex items-center justify-between">
+                <span class="text-sm">#gratitude</span>
+                <span class="text-sm muted-text">24</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Health Correlations -->
+        <div class="card p-5">
+          <h3 class="font-medium mb-4">Health & Mood Correlations</h3>
+          <p class="text-sm muted-text mb-4">Based on your health data synced from Samsung Health</p>
+          <div class="grid grid-cols-4 gap-6">
+            <div class="text-center p-4 bg-[var(--muted)] rounded-lg">
+              <div class="text-3xl mb-2">😊</div>
+              <div class="text-sm font-medium">Better mood</div>
+              <div class="text-xs muted-text mt-1">when sleep > 7 hrs</div>
+              <div class="text-xs text-green-500 mt-2">+23% correlation</div>
+            </div>
+            <div class="text-center p-4 bg-[var(--muted)] rounded-lg">
+              <div class="text-3xl mb-2">📈</div>
+              <div class="text-sm font-medium">More entries</div>
+              <div class="text-xs muted-text mt-1">on workout days</div>
+              <div class="text-xs text-green-500 mt-2">+45% more likely</div>
+            </div>
+            <div class="text-center p-4 bg-[var(--muted)] rounded-lg">
+              <div class="text-3xl mb-2">🚶</div>
+              <div class="text-sm font-medium">Avg steps</div>
+              <div class="text-xs muted-text mt-1">on good mood days</div>
+              <div class="text-xs mt-2">8,234 steps</div>
+            </div>
+            <div class="text-center p-4 bg-[var(--muted)] rounded-lg">
+              <div class="text-3xl mb-2">⚡</div>
+              <div class="text-sm font-medium">Peak writing</div>
+              <div class="text-xs muted-text mt-1">time of day</div>
+              <div class="text-xs mt-2">9:00 PM - 11:00 PM</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Locations Map Preview -->
+        <div class="card p-5">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="font-medium">Places You've Journaled</h3>
+            <button class="text-sm muted-text hover:text-white">View Map →</button>
+          </div>
+          <div class="grid grid-cols-4 gap-4">
+            <div class="flex items-center gap-3 p-3 bg-[var(--muted)] rounded-lg">
+              <div class="w-10 h-10 rounded-full bg-[var(--blue)] opacity-50 flex items-center justify-center">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
+              </div>
+              <div>
+                <div class="text-sm font-medium">Home</div>
+                <div class="text-xs muted-text">156 entries</div>
+              </div>
+            </div>
+            <div class="flex items-center gap-3 p-3 bg-[var(--muted)] rounded-lg">
+              <div class="w-10 h-10 rounded-full bg-[var(--purple)] opacity-50 flex items-center justify-center">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+              </div>
+              <div>
+                <div class="text-sm font-medium">Office</div>
+                <div class="text-xs muted-text">67 entries</div>
+              </div>
+            </div>
+            <div class="flex items-center gap-3 p-3 bg-[var(--muted)] rounded-lg">
+              <div class="w-10 h-10 rounded-full bg-[var(--green)] opacity-50 flex items-center justify-center">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"></path></svg>
+              </div>
+              <div>
+                <div class="text-sm font-medium">Cafe</div>
+                <div class="text-xs muted-text">18 entries</div>
+              </div>
+            </div>
+            <div class="flex items-center gap-3 p-3 bg-[var(--muted)] rounded-lg">
+              <div class="w-10 h-10 rounded-full bg-[var(--yellow)] opacity-50 flex items-center justify-center">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+              </div>
+              <div>
+                <div class="text-sm font-medium">Travel</div>
+                <div class="text-xs muted-text">6 entries</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+</body>
+</html>
