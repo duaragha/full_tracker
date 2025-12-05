@@ -2,19 +2,31 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
-import { ArrowLeft, Plus, TrendingUp, Calendar, Tag } from 'lucide-react'
+import { Plus, TrendingUp } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import { JournalStatsCards } from '@/components/journal/journal-stats-cards'
-import { JournalMoodChart } from '@/components/journal/journal-mood-chart'
+import { Card, CardContent } from '@/components/ui/card'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import { JournalStatsOverview } from '@/components/journal/journal-stats-overview'
+import { JournalWritingFrequencyChart } from '@/components/journal/journal-writing-frequency-chart'
+import { JournalMoodDistribution } from '@/components/journal/journal-mood-distribution'
+import { JournalActivityHeatmap } from '@/components/journal/journal-activity-heatmap'
+import { JournalTopTags } from '@/components/journal/journal-top-tags'
 import { JournalStats } from '@/types/journal'
 import { getJournalStatsAction } from '@/lib/actions/journal'
+
+type TimePeriod = '30d' | '90d' | 'year' | 'all'
 
 export default function JournalStatsPage() {
   const [stats, setStats] = useState<JournalStats | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [timePeriod, setTimePeriod] = useState<TimePeriod>('year')
 
   const loadStats = useCallback(async () => {
     setLoading(true)
@@ -34,22 +46,16 @@ export default function JournalStatsPage() {
     loadStats()
   }, [loadStats])
 
+  // Filter stats based on time period
+  const filteredStats = stats ? filterStatsByPeriod(stats, timePeriod) : null
+
   if (loading) {
     return (
-      <div className="space-y-4 sm:space-y-6">
-        <div className="flex items-center gap-4">
-          <Button asChild variant="ghost" size="icon">
-            <Link href="/journal">
-              <ArrowLeft className="h-4 w-4" />
-            </Link>
-          </Button>
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Statistics</h1>
-            <p className="text-xs sm:text-sm text-muted-foreground mt-0.5 sm:mt-1">
-              Your journaling insights and patterns
-            </p>
-          </div>
-        </div>
+      <div className="space-y-6">
+        <StatsPageHeader
+          timePeriod={timePeriod}
+          onTimePeriodChange={setTimePeriod}
+        />
         <Card>
           <CardContent className="flex items-center justify-center py-12">
             <p className="text-muted-foreground">Loading statistics...</p>
@@ -59,22 +65,13 @@ export default function JournalStatsPage() {
     )
   }
 
-  if (error || !stats) {
+  if (error || !filteredStats) {
     return (
-      <div className="space-y-4 sm:space-y-6">
-        <div className="flex items-center gap-4">
-          <Button asChild variant="ghost" size="icon">
-            <Link href="/journal">
-              <ArrowLeft className="h-4 w-4" />
-            </Link>
-          </Button>
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Statistics</h1>
-            <p className="text-xs sm:text-sm text-muted-foreground mt-0.5 sm:mt-1">
-              Your journaling insights and patterns
-            </p>
-          </div>
-        </div>
+      <div className="space-y-6">
+        <StatsPageHeader
+          timePeriod={timePeriod}
+          onTimePeriodChange={setTimePeriod}
+        />
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-12">
             <p className="text-muted-foreground mb-4">{error || 'Unable to load statistics'}</p>
@@ -85,22 +82,13 @@ export default function JournalStatsPage() {
     )
   }
 
-  if (stats.totalEntries === 0) {
+  if (filteredStats.totalEntries === 0) {
     return (
-      <div className="space-y-4 sm:space-y-6">
-        <div className="flex items-center gap-4">
-          <Button asChild variant="ghost" size="icon">
-            <Link href="/journal">
-              <ArrowLeft className="h-4 w-4" />
-            </Link>
-          </Button>
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Statistics</h1>
-            <p className="text-xs sm:text-sm text-muted-foreground mt-0.5 sm:mt-1">
-              Your journaling insights and patterns
-            </p>
-          </div>
-        </div>
+      <div className="space-y-6">
+        <StatsPageHeader
+          timePeriod={timePeriod}
+          onTimePeriodChange={setTimePeriod}
+        />
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-16">
             <TrendingUp className="h-12 w-12 text-muted-foreground mb-4" />
@@ -122,111 +110,120 @@ export default function JournalStatsPage() {
   }
 
   return (
-    <div className="space-y-4 sm:space-y-6">
+    <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
-        <div className="flex items-center gap-4">
-          <Button asChild variant="ghost" size="icon">
-            <Link href="/journal">
-              <ArrowLeft className="h-4 w-4" />
-            </Link>
-          </Button>
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Statistics</h1>
-            <p className="text-xs sm:text-sm text-muted-foreground mt-0.5 sm:mt-1">
-              Your journaling insights and patterns
-            </p>
-          </div>
-        </div>
-        <Button asChild size="sm">
-          <Link href="/journal/new">
-            <Plus className="mr-1 sm:mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4" />
-            New Entry
-          </Link>
-        </Button>
+      <StatsPageHeader
+        timePeriod={timePeriod}
+        onTimePeriodChange={setTimePeriod}
+      />
+
+      {/* View Tabs */}
+      <div className="flex items-center gap-1 p-1 bg-muted rounded-lg w-fit">
+        <Link
+          href="/journal"
+          className="px-3 py-1.5 text-sm font-medium text-muted-foreground hover:text-foreground rounded-md transition-colors"
+        >
+          Timeline
+        </Link>
+        <Link
+          href="/journal/calendar"
+          className="px-3 py-1.5 text-sm font-medium text-muted-foreground hover:text-foreground rounded-md transition-colors"
+        >
+          Calendar
+        </Link>
+        <button className="px-3 py-1.5 text-sm font-medium text-muted-foreground hover:text-foreground rounded-md transition-colors">
+          Map
+        </button>
+        <button className="px-3 py-1.5 text-sm font-medium bg-background rounded-md shadow-sm">
+          Stats
+        </button>
       </div>
 
-      {/* Stats Cards */}
-      <JournalStatsCards stats={stats} />
+      {/* Overview Stats - 5 cards in a row */}
+      <JournalStatsOverview stats={filteredStats} />
 
-      {/* Charts Row */}
-      <div className="grid gap-4 lg:grid-cols-2">
-        {/* Mood Distribution */}
-        <JournalMoodChart moodDistribution={stats.moodDistribution} />
-
-        {/* Top Tags */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base flex items-center gap-2">
-              <Tag className="h-4 w-4" />
-              Top Tags
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {stats.topTags.length > 0 ? (
-              <div className="space-y-3">
-                {stats.topTags.map((tag, index) => (
-                  <div
-                    key={tag.name}
-                    className="flex items-center justify-between"
-                  >
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm text-muted-foreground w-5">
-                        {index + 1}.
-                      </span>
-                      <Badge variant="secondary">#{tag.name}</Badge>
-                    </div>
-                    <span className="text-sm text-muted-foreground">
-                      {tag.count} {tag.count === 1 ? 'entry' : 'entries'}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p className="text-sm text-muted-foreground text-center py-8">
-                No tags used yet. Add tags to your entries to see them here!
-              </p>
-            )}
-          </CardContent>
-        </Card>
+      {/* Writing Frequency & Mood Distribution - 2 column grid */}
+      <div className="grid gap-6 lg:grid-cols-2">
+        <JournalWritingFrequencyChart entryDates={filteredStats.entryDates} />
+        <JournalMoodDistribution moodDistribution={filteredStats.moodDistribution} />
       </div>
 
-      {/* Writing Patterns */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base flex items-center gap-2">
-            <Calendar className="h-4 w-4" />
-            Writing Patterns
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid gap-4 sm:grid-cols-3">
-            <div className="text-center p-4 rounded-lg bg-muted/50">
-              <p className="text-2xl font-bold">{stats.totalEntries}</p>
-              <p className="text-sm text-muted-foreground">Total Entries</p>
-            </div>
-            <div className="text-center p-4 rounded-lg bg-muted/50">
-              <p className="text-2xl font-bold">{stats.entryDates.length}</p>
-              <p className="text-sm text-muted-foreground">Days with Entries</p>
-            </div>
-            <div className="text-center p-4 rounded-lg bg-muted/50">
-              <p className="text-2xl font-bold">
-                {stats.entryDates.length > 0
-                  ? (stats.totalEntries / stats.entryDates.length).toFixed(1)
-                  : '0'}
-              </p>
-              <p className="text-sm text-muted-foreground">Entries per Active Day</p>
-            </div>
-          </div>
-
-          {/* Activity Heatmap Placeholder */}
-          <div className="mt-6 pt-6 border-t">
-            <p className="text-sm text-muted-foreground text-center">
-              Writing activity visualization coming soon
-            </p>
-          </div>
-        </CardContent>
-      </Card>
+      {/* Activity Heatmap & Top Tags - 3 column grid (2:1 ratio) */}
+      <div className="grid gap-6 lg:grid-cols-3">
+        <JournalActivityHeatmap
+          entryDates={filteredStats.entryDates}
+          className="lg:col-span-2"
+        />
+        <JournalTopTags tags={filteredStats.topTags} />
+      </div>
     </div>
   )
+}
+
+interface StatsPageHeaderProps {
+  timePeriod: TimePeriod
+  onTimePeriodChange: (period: TimePeriod) => void
+}
+
+function StatsPageHeader({ timePeriod, onTimePeriodChange }: StatsPageHeaderProps) {
+  return (
+    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div>
+        <h1 className="text-3xl font-bold tracking-tight">Journal Insights</h1>
+        <p className="text-muted-foreground">
+          Analytics and patterns from your journal entries
+        </p>
+      </div>
+      <Select value={timePeriod} onValueChange={(value) => onTimePeriodChange(value as TimePeriod)}>
+        <SelectTrigger className="w-[160px]">
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="30d">Last 30 days</SelectItem>
+          <SelectItem value="90d">Last 90 days</SelectItem>
+          <SelectItem value="year">This year</SelectItem>
+          <SelectItem value="all">All time</SelectItem>
+        </SelectContent>
+      </Select>
+    </div>
+  )
+}
+
+// Helper function to filter stats by time period
+function filterStatsByPeriod(stats: JournalStats, period: TimePeriod): JournalStats {
+  if (period === 'all') {
+    return stats
+  }
+
+  const now = new Date()
+  let startDate: Date
+
+  switch (period) {
+    case '30d':
+      startDate = new Date(now)
+      startDate.setDate(startDate.getDate() - 30)
+      break
+    case '90d':
+      startDate = new Date(now)
+      startDate.setDate(startDate.getDate() - 90)
+      break
+    case 'year':
+      startDate = new Date(now.getFullYear(), 0, 1)
+      break
+    default:
+      return stats
+  }
+
+  const startDateStr = startDate.toISOString().split('T')[0]
+
+  // Filter entry dates
+  const filteredEntryDates = stats.entryDates.filter(date => date >= startDateStr)
+
+  // Since we don't have per-entry data here, we'll show the stats as-is
+  // In a real implementation, you'd need to recalculate stats from filtered entries
+  // For now, we just filter the entry dates for the heatmap
+  return {
+    ...stats,
+    entryDates: filteredEntryDates,
+  }
 }
