@@ -220,7 +220,7 @@ export default function JournalCalendarPage() {
         </div>
 
         {/* Selected Date Entries */}
-        <div className="flex-1 min-w-0">
+        <div className="lg:w-[260px] lg:flex-none min-w-0">
           {selectedDate ? (
             <Card>
               <CardHeader>
@@ -267,7 +267,7 @@ export default function JournalCalendarPage() {
         </div>
 
         {/* Right Sidebar - Stats */}
-        <div className="lg:w-72 shrink-0">
+        <div className="lg:w-[340px] shrink-0">
           <JournalCalendarStats
             year={year}
             month={month}

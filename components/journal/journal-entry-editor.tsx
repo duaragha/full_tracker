@@ -2,7 +2,20 @@
 
 import { useState, useCallback } from 'react'
 import { format } from 'date-fns'
-import { X, Plus, MapPin, Cloud, Zap, Paperclip, FileText, Activity as ActivityIcon } from 'lucide-react'
+import {
+  X,
+  Plus,
+  MapPin,
+  Cloud,
+  Zap,
+  Paperclip,
+  FileText,
+  Activity as ActivityIcon,
+  Image,
+  Footprints,
+  Moon,
+  Scale,
+} from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
@@ -112,9 +125,11 @@ export function JournalEntryEditor({
   }
 
   return (
-    <div className="flex flex-col lg:flex-row">
-      {/* Main Editor Area */}
-      <form onSubmit={handleSubmit} className="flex-1 p-4 sm:p-6 space-y-6 max-w-4xl">
+    <div className="flex-1 overflow-auto">
+      <div className="max-w-6xl mx-auto px-4 py-6">
+        <div className="flex flex-col lg:flex-row">
+          {/* Main Editor Area */}
+          <form onSubmit={handleSubmit} className="flex-1 space-y-6">
         {/* Date & Time */}
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2">
@@ -340,51 +355,136 @@ export function JournalEntryEditor({
           </div>
         </div>
 
-        {/* Today's Health Stats - Placeholder */}
+        {/* Today's Health Stats */}
         <div>
           <h3 className="text-sm font-medium mb-3 flex items-center gap-2">
             <ActivityIcon className="w-4 h-4" />
             Today&apos;s Health Stats
           </h3>
-          <Card className="py-3">
-            <CardContent className="px-3 py-0">
-              <p className="text-xs text-muted-foreground text-center">
-                Coming soon
+          <Card className="border-dashed">
+            <CardContent className="p-3 space-y-2">
+              <p className="text-xs text-muted-foreground text-center mb-2">
+                (Coming soon)
               </p>
+
+              {/* Steps */}
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-muted-foreground flex items-center gap-2">
+                  <Footprints className="w-3.5 h-3.5" />
+                  Steps
+                </span>
+                <span className="text-muted-foreground">—</span>
+              </div>
+
+              {/* Sleep */}
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-muted-foreground flex items-center gap-2">
+                  <Moon className="w-3.5 h-3.5" />
+                  Sleep
+                </span>
+                <span className="text-muted-foreground">—</span>
+              </div>
+
+              {/* Weight */}
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-muted-foreground flex items-center gap-2">
+                  <Scale className="w-3.5 h-3.5" />
+                  Weight
+                </span>
+                <span className="text-muted-foreground">—</span>
+              </div>
+
+              {/* Attach button */}
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="w-full text-xs text-muted-foreground mt-2 pt-2 border-t border-dashed h-auto py-2"
+                disabled
+              >
+                <Plus className="w-3 h-3 mr-1" />
+                Attach to entry
+              </Button>
             </CardContent>
           </Card>
         </div>
 
-        {/* Attachments - Placeholder */}
+        {/* Attachments */}
         <div>
           <h3 className="text-sm font-medium mb-3 flex items-center gap-2">
             <Paperclip className="w-4 h-4" />
             Attachments
           </h3>
-          <Card className="py-3 border-dashed">
-            <CardContent className="px-3 py-0">
-              <p className="text-xs text-muted-foreground text-center">
-                Coming soon
-              </p>
-            </CardContent>
-          </Card>
+
+          {/* Placeholder grid for future attached images */}
+          <div className="grid grid-cols-3 gap-2 mb-2">
+            {/* Empty state - will show attached images in the future */}
+          </div>
+
+          {/* Add photo/file button */}
+          <Button
+            type="button"
+            variant="outline"
+            className="w-full h-20 border-dashed flex flex-col items-center justify-center gap-1 text-muted-foreground hover:text-foreground hover:border-foreground/50 transition-colors"
+            disabled
+          >
+            <Image className="w-5 h-5" />
+            <span className="text-xs">Add photo or file</span>
+            <span className="text-[10px] text-muted-foreground/70">(Coming soon)</span>
+          </Button>
         </div>
 
-        {/* Quick Templates - Placeholder */}
+        {/* Quick Templates */}
         <div>
           <h3 className="text-sm font-medium mb-3 flex items-center gap-2">
             <FileText className="w-4 h-4" />
             Quick Templates
           </h3>
-          <Card className="py-3">
-            <CardContent className="px-3 py-0">
-              <p className="text-xs text-muted-foreground text-center">
-                Coming soon
-              </p>
-            </CardContent>
-          </Card>
+          <div className="space-y-2">
+            <button
+              type="button"
+              className="w-full text-left p-3 rounded-lg border bg-muted/50 hover:bg-muted hover:border-foreground/20 transition-colors cursor-pointer group"
+              onClick={() => {}}
+            >
+              <div className="text-sm font-medium group-hover:text-foreground">
+                Daily Reflection
+              </div>
+              <div className="text-xs text-muted-foreground">
+                Gratitude, highlights, learnings
+              </div>
+            </button>
+            <button
+              type="button"
+              className="w-full text-left p-3 rounded-lg border bg-muted/50 hover:bg-muted hover:border-foreground/20 transition-colors cursor-pointer group"
+              onClick={() => {}}
+            >
+              <div className="text-sm font-medium group-hover:text-foreground">
+                Work Log
+              </div>
+              <div className="text-xs text-muted-foreground">
+                Tasks, meetings, blockers
+              </div>
+            </button>
+            <button
+              type="button"
+              className="w-full text-left p-3 rounded-lg border bg-muted/50 hover:bg-muted hover:border-foreground/20 transition-colors cursor-pointer group"
+              onClick={() => {}}
+            >
+              <div className="text-sm font-medium group-hover:text-foreground">
+                Workout Notes
+              </div>
+              <div className="text-xs text-muted-foreground">
+                Exercises, sets, feelings
+              </div>
+            </button>
+            <p className="text-[10px] text-muted-foreground text-center pt-1">
+              Click to insert template (coming soon)
+            </p>
+          </div>
         </div>
       </aside>
+      </div>
+      </div>
     </div>
   )
 }

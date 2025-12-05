@@ -1,6 +1,18 @@
 'use client'
 
-import { MapPin, Cloud, Zap, Paperclip, FileText, Activity as ActivityIcon } from 'lucide-react'
+import {
+  MapPin,
+  Cloud,
+  Zap,
+  Paperclip,
+  FileText,
+  Activity as ActivityIcon,
+  Image,
+  Plus,
+  Footprints,
+  Moon,
+  Scale
+} from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent } from '@/components/ui/card'
 import {
@@ -10,7 +22,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { Button } from '@/components/ui/button'
 import { Weather, Activity } from '@/types/journal'
+import { cn } from '@/lib/utils'
 
 const WEATHER_OPTIONS: { value: Weather; label: string }[] = [
   { value: 'sunny', label: 'Sunny' },
@@ -29,6 +43,24 @@ const ACTIVITY_OPTIONS: { value: Activity; label: string }[] = [
   { value: 'eating', label: 'Eating' },
 ]
 
+const QUICK_TEMPLATES = [
+  {
+    id: 'daily-reflection',
+    title: 'Daily Reflection',
+    description: 'Gratitude, highlights, learnings',
+  },
+  {
+    id: 'work-log',
+    title: 'Work Log',
+    description: 'Tasks, meetings, blockers',
+  },
+  {
+    id: 'workout-notes',
+    title: 'Workout Notes',
+    description: 'Exercises, sets, feelings',
+  },
+]
+
 interface JournalEntrySidebarProps {
   location: string
   onLocationChange: (value: string) => void
@@ -36,6 +68,8 @@ interface JournalEntrySidebarProps {
   onWeatherChange: (value: Weather) => void
   activity: Activity | undefined
   onActivityChange: (value: Activity) => void
+  onTemplateSelect?: (templateId: string) => void
+  className?: string
 }
 
 export function JournalEntrySidebar({
@@ -45,9 +79,17 @@ export function JournalEntrySidebar({
   onWeatherChange,
   activity,
   onActivityChange,
+  onTemplateSelect,
+  className,
 }: JournalEntrySidebarProps) {
+  const handleTemplateClick = (templateId: string) => {
+    if (onTemplateSelect) {
+      onTemplateSelect(templateId)
+    }
+  }
+
   return (
-    <aside className="w-72 border-l p-4 space-y-6 hidden lg:block">
+    <aside className={cn("w-72 border-l p-4 space-y-6 hidden lg:block", className)}>
       {/* Metadata Section */}
       <div>
         <h3 className="text-sm font-medium mb-3">Metadata</h3>
@@ -106,49 +148,108 @@ export function JournalEntrySidebar({
         </div>
       </div>
 
-      {/* Today's Health Stats - Placeholder */}
+      {/* Today's Health Stats */}
       <div>
         <h3 className="text-sm font-medium mb-3 flex items-center gap-2">
           <ActivityIcon className="w-4 h-4" />
           Today&apos;s Health Stats
         </h3>
-        <Card className="py-3">
-          <CardContent className="px-3 py-0">
-            <p className="text-xs text-muted-foreground text-center">
-              Coming soon
+        <Card className="border-dashed">
+          <CardContent className="p-3 space-y-2">
+            <p className="text-xs text-muted-foreground text-center mb-2">
+              (Coming soon)
             </p>
+
+            {/* Steps */}
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-muted-foreground flex items-center gap-2">
+                <Footprints className="w-3.5 h-3.5" />
+                Steps
+              </span>
+              <span className="text-muted-foreground">—</span>
+            </div>
+
+            {/* Sleep */}
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-muted-foreground flex items-center gap-2">
+                <Moon className="w-3.5 h-3.5" />
+                Sleep
+              </span>
+              <span className="text-muted-foreground">—</span>
+            </div>
+
+            {/* Weight */}
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-muted-foreground flex items-center gap-2">
+                <Scale className="w-3.5 h-3.5" />
+                Weight
+              </span>
+              <span className="text-muted-foreground">—</span>
+            </div>
+
+            {/* Attach button */}
+            <Button
+              variant="ghost"
+              size="sm"
+              className="w-full text-xs text-muted-foreground mt-2 pt-2 border-t border-dashed h-auto py-2"
+              disabled
+            >
+              <Plus className="w-3 h-3 mr-1" />
+              Attach to entry
+            </Button>
           </CardContent>
         </Card>
       </div>
 
-      {/* Attachments - Placeholder */}
+      {/* Attachments */}
       <div>
         <h3 className="text-sm font-medium mb-3 flex items-center gap-2">
           <Paperclip className="w-4 h-4" />
           Attachments
         </h3>
-        <Card className="py-3 border-dashed">
-          <CardContent className="px-3 py-0">
-            <p className="text-xs text-muted-foreground text-center">
-              Coming soon
-            </p>
-          </CardContent>
-        </Card>
+
+        {/* Placeholder grid for future attached images */}
+        <div className="grid grid-cols-3 gap-2 mb-2">
+          {/* Empty state - will show attached images in the future */}
+        </div>
+
+        {/* Add photo/file button */}
+        <Button
+          variant="outline"
+          className="w-full h-20 border-dashed flex flex-col items-center justify-center gap-1 text-muted-foreground hover:text-foreground hover:border-foreground/50 transition-colors"
+          disabled
+        >
+          <Image className="w-5 h-5" />
+          <span className="text-xs">Add photo or file</span>
+          <span className="text-[10px] text-muted-foreground/70">(Coming soon)</span>
+        </Button>
       </div>
 
-      {/* Quick Templates - Placeholder */}
+      {/* Quick Templates */}
       <div>
         <h3 className="text-sm font-medium mb-3 flex items-center gap-2">
           <FileText className="w-4 h-4" />
           Quick Templates
         </h3>
-        <Card className="py-3">
-          <CardContent className="px-3 py-0">
-            <p className="text-xs text-muted-foreground text-center">
-              Coming soon
-            </p>
-          </CardContent>
-        </Card>
+        <div className="space-y-2">
+          {QUICK_TEMPLATES.map((template) => (
+            <button
+              key={template.id}
+              onClick={() => handleTemplateClick(template.id)}
+              className="w-full text-left p-3 rounded-lg border bg-muted/50 hover:bg-muted hover:border-foreground/20 transition-colors cursor-pointer group"
+            >
+              <div className="text-sm font-medium group-hover:text-foreground">
+                {template.title}
+              </div>
+              <div className="text-xs text-muted-foreground">
+                {template.description}
+              </div>
+            </button>
+          ))}
+          <p className="text-[10px] text-muted-foreground text-center pt-1">
+            Click to insert template (coming soon)
+          </p>
+        </div>
       </div>
     </aside>
   )
