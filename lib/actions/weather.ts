@@ -1,7 +1,7 @@
 'use server';
 
 import { Weather } from '@/types/journal';
-import { getWeatherForLocation } from '@/lib/services/weather';
+import { getWeatherForLocation, getWeatherByCoordinates } from '@/lib/services/weather';
 
 /**
  * Weather result returned by the server action
@@ -104,6 +104,65 @@ export async function getWeatherWithLocationAction(
     };
   } catch (error) {
     console.error('getWeatherWithLocationAction error:', error);
+    return null;
+  }
+}
+
+/**
+ * Get weather by coordinates directly
+ * Use this when you already have latitude/longitude (e.g., from Photon location search)
+ *
+ * @param latitude - Latitude coordinate (-90 to 90)
+ * @param longitude - Longitude coordinate (-180 to 180)
+ * @returns Weather data or null if coordinates are invalid or API error
+ *
+ * @example
+ * const result = await getWeatherByCoordinatesAction(40.7128, -74.0060);
+ * // Returns: { weather: "cloudy", temperature: 15, description: "Partly cloudy" }
+ *
+ * @example
+ * // Use with Photon location suggestion
+ * const suggestion = await searchLocationsAction("New York");
+ * if (suggestion[0]) {
+ *   const weather = await getWeatherByCoordinatesAction(
+ *     suggestion[0].latitude,
+ *     suggestion[0].longitude
+ *   );
+ * }
+ */
+export async function getWeatherByCoordinatesAction(
+  latitude: number,
+  longitude: number
+): Promise<WeatherResult | null> {
+  // Validate input types
+  if (typeof latitude !== 'number' || typeof longitude !== 'number') {
+    console.warn('getWeatherByCoordinatesAction: Invalid coordinate types');
+    return null;
+  }
+
+  // Validate coordinate values
+  if (isNaN(latitude) || isNaN(longitude)) {
+    console.warn('getWeatherByCoordinatesAction: NaN coordinates provided');
+    return null;
+  }
+
+  try {
+    const result = await getWeatherByCoordinates(latitude, longitude);
+
+    if (!result) {
+      console.warn(
+        `getWeatherByCoordinatesAction: No weather data for coordinates (${latitude}, ${longitude})`
+      );
+      return null;
+    }
+
+    return {
+      weather: result.weather,
+      temperature: result.temperature,
+      description: result.description,
+    };
+  } catch (error) {
+    console.error('getWeatherByCoordinatesAction error:', error);
     return null;
   }
 }

@@ -268,3 +268,48 @@ export async function getWeatherForLocation(location: string): Promise<{
     country: coords.country,
   };
 }
+
+/**
+ * Get weather by coordinates directly
+ * Use this when you already have latitude/longitude (e.g., from Photon geocoding)
+ *
+ * @param latitude - Latitude coordinate
+ * @param longitude - Longitude coordinate
+ * @returns Weather data or null if failed
+ *
+ * @example
+ * const weather = await getWeatherByCoordinates(40.7128, -74.0060);
+ * // Returns: { weather: "cloudy", temperature: 15, description: "Partly cloudy" }
+ */
+export async function getWeatherByCoordinates(
+  latitude: number,
+  longitude: number
+): Promise<{
+  weather: Weather;
+  temperature: number;
+  description: string;
+} | null> {
+  // Validate coordinates
+  if (
+    typeof latitude !== 'number' ||
+    typeof longitude !== 'number' ||
+    isNaN(latitude) ||
+    isNaN(longitude)
+  ) {
+    console.error('getWeatherByCoordinates: Invalid coordinates provided');
+    return null;
+  }
+
+  // Validate coordinate ranges
+  if (latitude < -90 || latitude > 90) {
+    console.error(`getWeatherByCoordinates: Latitude ${latitude} out of range (-90 to 90)`);
+    return null;
+  }
+
+  if (longitude < -180 || longitude > 180) {
+    console.error(`getWeatherByCoordinates: Longitude ${longitude} out of range (-180 to 180)`);
+    return null;
+  }
+
+  return fetchWeatherByCoords(latitude, longitude);
+}

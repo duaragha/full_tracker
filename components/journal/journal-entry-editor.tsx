@@ -33,7 +33,8 @@ import {
 } from '@/types/journal'
 import { JournalMoodSelector } from './journal-mood-selector'
 import { JournalEntrySidebar } from './journal-entry-sidebar'
-import { getWeatherForLocationAction } from '@/lib/actions/weather'
+import { getWeatherForLocationAction, getWeatherByCoordinatesAction } from '@/lib/actions/weather'
+import { LocationSuggestion } from '@/lib/actions/location'
 
 const WEATHER_EMOJI: Record<Weather, string> = {
   sunny: '\u2600\uFE0F',
@@ -147,6 +148,29 @@ export function JournalEntryEditor({
       fetchWeather(location)
     }
   }, [location, fetchWeather])
+
+  // Handle location selection from autocomplete (uses coordinates for more reliable weather)
+  const handleLocationSelect = useCallback(async (suggestion: LocationSuggestion) => {
+    setIsLoadingWeather(true)
+    setWeatherError(null)
+
+    try {
+      const result = await getWeatherByCoordinatesAction(
+        suggestion.latitude,
+        suggestion.longitude
+      )
+      if (result) {
+        setWeather(result.weather)
+        setTemperature(result.temperature)
+      } else {
+        setWeatherError('Could not fetch weather')
+      }
+    } catch {
+      setWeatherError('Could not fetch weather')
+    } finally {
+      setIsLoadingWeather(false)
+    }
+  }, [])
 
   const handleAddTag = useCallback(() => {
     const trimmedTag = tagInput.trim().toLowerCase().replace(/^#/, '')
@@ -398,6 +422,7 @@ export function JournalEntryEditor({
       <JournalEntrySidebar
         location={location}
         onLocationChange={setLocation}
+        onLocationSelect={handleLocationSelect}
         weather={weather}
         onWeatherChange={setWeather}
         activity={activity}

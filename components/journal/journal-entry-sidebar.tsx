@@ -1,8 +1,7 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useCallback } from 'react'
 import {
-  MapPin,
   Cloud,
   Zap,
   Paperclip,
@@ -17,7 +16,6 @@ import {
   RefreshCw,
   AlertCircle,
 } from 'lucide-react'
-import { Input } from '@/components/ui/input'
 import { Card, CardContent } from '@/components/ui/card'
 import {
   Select,
@@ -29,7 +27,9 @@ import {
 import { Button } from '@/components/ui/button'
 import { Weather, Activity } from '@/types/journal'
 import { cn } from '@/lib/utils'
-import { getWeatherForLocationAction } from '@/lib/actions/weather'
+import { getWeatherByCoordinatesAction } from '@/lib/actions/weather'
+import { LocationAutocomplete } from './location-autocomplete'
+import { LocationSuggestion } from '@/lib/actions/location'
 
 const WEATHER_EMOJI: Record<Weather, string> = {
   sunny: '\u2600\uFE0F',
@@ -78,6 +78,7 @@ const QUICK_TEMPLATES = [
 interface JournalEntrySidebarProps {
   location: string
   onLocationChange: (value: string) => void
+  onLocationSelect?: (suggestion: LocationSuggestion) => void
   weather: Weather | undefined
   onWeatherChange: (value: Weather) => void
   activity: Activity | undefined
@@ -91,6 +92,7 @@ interface JournalEntrySidebarProps {
 export function JournalEntrySidebar({
   location,
   onLocationChange,
+  onLocationSelect,
   weather,
   onWeatherChange,
   activity,
@@ -102,22 +104,19 @@ export function JournalEntrySidebar({
 }: JournalEntrySidebarProps) {
   const [isLoadingWeather, setIsLoadingWeather] = useState(false)
   const [weatherError, setWeatherError] = useState<string | null>(null)
+  const [lastCoordinates, setLastCoordinates] = useState<{ lat: number; lon: number } | null>(null)
 
-  const fetchWeather = useCallback(async (locationToFetch: string) => {
-    if (!locationToFetch || locationToFetch.length < 2) {
-      return
-    }
-
+  const fetchWeatherByCoordinates = useCallback(async (lat: number, lon: number) => {
     setIsLoadingWeather(true)
     setWeatherError(null)
 
     try {
-      const result = await getWeatherForLocationAction(locationToFetch)
+      const result = await getWeatherByCoordinatesAction(lat, lon)
       if (result) {
         onWeatherChange(result.weather)
         onTemperatureChange?.(result.temperature)
       } else {
-        setWeatherError('Location not found')
+        setWeatherError('Could not fetch weather')
       }
     } catch {
       setWeatherError('Could not fetch weather')
@@ -126,28 +125,32 @@ export function JournalEntrySidebar({
     }
   }, [onWeatherChange, onTemperatureChange])
 
-  // Debounced weather fetch when location changes
-  useEffect(() => {
-    if (!location || location.length < 2) {
-      // Clear weather and temperature when location is cleared
-      if (!location) {
-        onTemperatureChange?.(null)
-      }
-      return
-    }
-
-    const timer = setTimeout(() => {
-      fetchWeather(location)
-    }, 800)
-
-    return () => clearTimeout(timer)
-  }, [location, fetchWeather, onTemperatureChange])
+  const handleLocationSelect = useCallback((suggestion: LocationSuggestion) => {
+    // Store coordinates for refresh
+    setLastCoordinates({ lat: suggestion.latitude, lon: suggestion.longitude })
+    // Clear any previous error
+    setWeatherError(null)
+    // Fetch weather using coordinates
+    fetchWeatherByCoordinates(suggestion.latitude, suggestion.longitude)
+    // Notify parent
+    onLocationSelect?.(suggestion)
+  }, [fetchWeatherByCoordinates, onLocationSelect])
 
   const handleRefreshWeather = useCallback(() => {
-    if (location && location.length >= 2) {
-      fetchWeather(location)
+    if (lastCoordinates) {
+      fetchWeatherByCoordinates(lastCoordinates.lat, lastCoordinates.lon)
     }
-  }, [location, fetchWeather])
+  }, [lastCoordinates, fetchWeatherByCoordinates])
+
+  const handleLocationChange = useCallback((value: string) => {
+    onLocationChange(value)
+    // Clear coordinates and weather when location is manually cleared
+    if (!value) {
+      setLastCoordinates(null)
+      onTemperatureChange?.(null)
+      setWeatherError(null)
+    }
+  }, [onLocationChange, onTemperatureChange])
 
   const handleTemplateClick = (templateId: string) => {
     if (onTemplateSelect) {
@@ -170,16 +173,13 @@ export function JournalEntrySidebar({
         <h3 className="text-sm font-medium mb-3">Metadata</h3>
         <div className="space-y-3">
           {/* Location */}
-          <div className="flex items-center gap-2">
-            <MapPin className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-            <Input
-              type="text"
-              placeholder="Add location..."
-              value={location}
-              onChange={(e) => onLocationChange(e.target.value)}
-              className="h-8 text-sm"
-            />
-          </div>
+          <LocationAutocomplete
+            value={location}
+            onChange={handleLocationChange}
+            onSelect={handleLocationSelect}
+            placeholder="Add location..."
+            className="w-full"
+          />
 
           {/* Weather with temperature */}
           <div className="flex items-center gap-2">
@@ -210,7 +210,7 @@ export function JournalEntrySidebar({
                   {temperature}°C
                 </span>
               )}
-              {location && !isLoadingWeather && (
+              {lastCoordinates && !isLoadingWeather && (
                 <Button
                   variant="ghost"
                   size="icon"
