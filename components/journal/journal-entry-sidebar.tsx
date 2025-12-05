@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import {
   Cloud,
   Zap,
@@ -28,6 +28,7 @@ import { Button } from '@/components/ui/button'
 import { Weather, Activity } from '@/types/journal'
 import { cn } from '@/lib/utils'
 import { getWeatherByCoordinatesAction } from '@/lib/actions/weather'
+import { getHealthStatsForDate, DailyHealthStats } from '@/lib/actions/health-stats'
 import { LocationAutocomplete } from './location-autocomplete'
 import { LocationDetails } from '@/lib/actions/location'
 
@@ -86,6 +87,7 @@ interface JournalEntrySidebarProps {
   temperature?: number | null
   onTemperatureChange?: (value: number | null) => void
   onTemplateSelect?: (templateId: string) => void
+  entryDate?: string // YYYY-MM-DD format for fetching health stats
   className?: string
 }
 
@@ -100,11 +102,35 @@ export function JournalEntrySidebar({
   temperature,
   onTemperatureChange,
   onTemplateSelect,
+  entryDate,
   className,
 }: JournalEntrySidebarProps) {
   const [isLoadingWeather, setIsLoadingWeather] = useState(false)
   const [weatherError, setWeatherError] = useState<string | null>(null)
   const [lastCoordinates, setLastCoordinates] = useState<{ lat: number; lon: number } | null>(null)
+
+  // Health stats state
+  const [healthStats, setHealthStats] = useState<DailyHealthStats | null>(null)
+  const [loadingHealth, setLoadingHealth] = useState(true)
+
+  // Fetch health stats when entry date changes
+  useEffect(() => {
+    async function fetchHealthStats() {
+      setLoadingHealth(true)
+      try {
+        const dateToFetch = entryDate ? new Date(entryDate) : new Date()
+        const stats = await getHealthStatsForDate(dateToFetch)
+        setHealthStats(stats)
+      } catch (error) {
+        console.error('Failed to fetch health stats:', error)
+        setHealthStats(null)
+      } finally {
+        setLoadingHealth(false)
+      }
+    }
+
+    fetchHealthStats()
+  }, [entryDate])
 
   const fetchWeatherByCoordinates = useCallback(async (lat: number, lon: number) => {
     setIsLoadingWeather(true)
@@ -164,6 +190,22 @@ export function JournalEntrySidebar({
     const option = WEATHER_OPTIONS.find((opt) => opt.value === weather)
     if (!option) return undefined
     return `${option.emoji} ${option.label}`
+  }
+
+  // Format health stats for display
+  const formatSteps = (steps: number | null) => {
+    if (steps === null) return null
+    return steps.toLocaleString()
+  }
+
+  const formatSleep = (hours: number | null) => {
+    if (hours === null) return null
+    return `${hours} hrs`
+  }
+
+  const formatWeight = (weight: number | null) => {
+    if (weight === null) return null
+    return `${weight.toFixed(1)} kg`
   }
 
   return (
@@ -258,21 +300,22 @@ export function JournalEntrySidebar({
       <div>
         <h3 className="text-sm font-medium mb-3 flex items-center gap-2">
           <ActivityIcon className="w-4 h-4" />
-          Today&apos;s Health Stats
+          Health Stats
+          {loadingHealth && (
+            <Loader2 className="w-3 h-3 animate-spin text-muted-foreground" />
+          )}
         </h3>
         <Card className="border-dashed">
           <CardContent className="p-3 space-y-2">
-            <p className="text-xs text-muted-foreground text-center mb-2">
-              (Coming soon)
-            </p>
-
             {/* Steps */}
             <div className="flex items-center justify-between text-sm">
               <span className="text-muted-foreground flex items-center gap-2">
                 <Footprints className="w-3.5 h-3.5" />
                 Steps
               </span>
-              <span className="text-muted-foreground">—</span>
+              <span className={healthStats?.steps ? 'font-medium' : 'text-muted-foreground'}>
+                {formatSteps(healthStats?.steps ?? null) ?? '—'}
+              </span>
             </div>
 
             {/* Sleep */}
@@ -281,7 +324,9 @@ export function JournalEntrySidebar({
                 <Moon className="w-3.5 h-3.5" />
                 Sleep
               </span>
-              <span className="text-muted-foreground">—</span>
+              <span className={healthStats?.sleepHours ? 'font-medium' : 'text-muted-foreground'}>
+                {formatSleep(healthStats?.sleepHours ?? null) ?? '—'}
+              </span>
             </div>
 
             {/* Weight */}
@@ -290,7 +335,9 @@ export function JournalEntrySidebar({
                 <Scale className="w-3.5 h-3.5" />
                 Weight
               </span>
-              <span className="text-muted-foreground">—</span>
+              <span className={healthStats?.weight ? 'font-medium' : 'text-muted-foreground'}>
+                {formatWeight(healthStats?.weight ?? null) ?? '—'}
+              </span>
             </div>
 
             {/* Attach button */}

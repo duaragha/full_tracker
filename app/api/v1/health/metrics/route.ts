@@ -11,6 +11,7 @@ const METRIC_TYPES = [
   'calories_burned',
   'sleep_duration',
   'vo2_max',
+  'weight',
 ] as const;
 
 const SOURCES = ['wear_os', 'health_connect', 'manual', 'ios', 'android'] as const;

@@ -365,6 +365,7 @@ export function JournalEntryEditor({
         onActivityChange={setActivity}
         temperature={temperature}
         onTemperatureChange={setTemperature}
+        entryDate={entryDate}
         className="flex-shrink-0"
       />
       </div>
