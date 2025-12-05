@@ -29,7 +29,7 @@ import { Weather, Activity } from '@/types/journal'
 import { cn } from '@/lib/utils'
 import { getWeatherByCoordinatesAction } from '@/lib/actions/weather'
 import { LocationAutocomplete } from './location-autocomplete'
-import { LocationSuggestion } from '@/lib/actions/location'
+import { LocationDetails } from '@/lib/actions/location'
 
 const WEATHER_EMOJI: Record<Weather, string> = {
   sunny: '\u2600\uFE0F',
@@ -78,7 +78,7 @@ const QUICK_TEMPLATES = [
 interface JournalEntrySidebarProps {
   location: string
   onLocationChange: (value: string) => void
-  onLocationSelect?: (suggestion: LocationSuggestion) => void
+  onLocationSelect?: (location: LocationDetails) => void
   weather: Weather | undefined
   onWeatherChange: (value: Weather) => void
   activity: Activity | undefined
@@ -125,15 +125,15 @@ export function JournalEntrySidebar({
     }
   }, [onWeatherChange, onTemperatureChange])
 
-  const handleLocationSelect = useCallback((suggestion: LocationSuggestion) => {
+  const handleLocationSelect = useCallback((location: LocationDetails) => {
     // Store coordinates for refresh
-    setLastCoordinates({ lat: suggestion.latitude, lon: suggestion.longitude })
+    setLastCoordinates({ lat: location.latitude, lon: location.longitude })
     // Clear any previous error
     setWeatherError(null)
     // Fetch weather using coordinates
-    fetchWeatherByCoordinates(suggestion.latitude, suggestion.longitude)
+    fetchWeatherByCoordinates(location.latitude, location.longitude)
     // Notify parent
-    onLocationSelect?.(suggestion)
+    onLocationSelect?.(location)
   }, [fetchWeatherByCoordinates, onLocationSelect])
 
   const handleRefreshWeather = useCallback(() => {

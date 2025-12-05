@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback, useEffect } from 'react'
+import { useState, useCallback } from 'react'
 import { format } from 'date-fns'
 import {
   X,
@@ -9,7 +9,6 @@ import {
   Cloud,
   Zap,
   Loader2,
-  RefreshCw,
   AlertCircle,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -33,8 +32,8 @@ import {
 } from '@/types/journal'
 import { JournalMoodSelector } from './journal-mood-selector'
 import { JournalEntrySidebar } from './journal-entry-sidebar'
-import { getWeatherForLocationAction, getWeatherByCoordinatesAction } from '@/lib/actions/weather'
-import { LocationSuggestion } from '@/lib/actions/location'
+import { getWeatherByCoordinatesAction } from '@/lib/actions/weather'
+import { LocationDetails } from '@/lib/actions/location'
 
 const WEATHER_EMOJI: Record<Weather, string> = {
   sunny: '\u2600\uFE0F',
@@ -94,70 +93,19 @@ export function JournalEntryEditor({
   )
   const [tagInput, setTagInput] = useState('')
 
-  // Weather loading state for mobile view
+  // Weather loading state
   const [isLoadingWeather, setIsLoadingWeather] = useState(false)
   const [weatherError, setWeatherError] = useState<string | null>(null)
 
-  const fetchWeather = useCallback(async (locationToFetch: string) => {
-    if (!locationToFetch || locationToFetch.length < 2) {
-      return
-    }
-
-    setIsLoadingWeather(true)
-    setWeatherError(null)
-
-    try {
-      const result = await getWeatherForLocationAction(locationToFetch)
-      if (result) {
-        setWeather(result.weather)
-        setTemperature(result.temperature)
-      } else {
-        setWeatherError('Location not found')
-      }
-    } catch {
-      setWeatherError('Could not fetch weather')
-    } finally {
-      setIsLoadingWeather(false)
-    }
-  }, [])
-
-  // Debounced weather fetch when location changes (for mobile view)
-  // Note: The sidebar component handles its own debouncing for desktop
-  useEffect(() => {
-    // Only run for mobile view - the sidebar handles desktop
-    if (typeof window !== 'undefined' && window.innerWidth >= 1024) {
-      return
-    }
-
-    if (!location || location.length < 2) {
-      if (!location) {
-        setTemperature(null)
-      }
-      return
-    }
-
-    const timer = setTimeout(() => {
-      fetchWeather(location)
-    }, 800)
-
-    return () => clearTimeout(timer)
-  }, [location, fetchWeather])
-
-  const handleRefreshWeather = useCallback(() => {
-    if (location && location.length >= 2) {
-      fetchWeather(location)
-    }
-  }, [location, fetchWeather])
-
   // Handle location selection from autocomplete (uses coordinates for more reliable weather)
-  const handleLocationSelect = useCallback(async (suggestion: LocationSuggestion) => {
+  const handleLocationSelect = useCallback(async (location: LocationDetails) => {
     setIsLoadingWeather(true)
     setWeatherError(null)
 
     try {
       const result = await getWeatherByCoordinatesAction(
-        suggestion.latitude,
-        suggestion.longitude
+        location.latitude,
+        location.longitude
       )
       if (result) {
         setWeather(result.weather)
@@ -356,18 +304,6 @@ export function JournalEntryEditor({
                 <span className="text-sm text-muted-foreground whitespace-nowrap">
                   {temperature}°C
                 </span>
-              )}
-              {location && !isLoadingWeather && (
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8 flex-shrink-0"
-                  onClick={handleRefreshWeather}
-                  title="Refresh weather"
-                >
-                  <RefreshCw className="w-4 h-4" />
-                </Button>
               )}
             </div>
             {weatherError && (

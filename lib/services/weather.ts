@@ -1,30 +1,14 @@
 import { Weather } from '@/types/journal';
 
 // ============================================
-// Open-Meteo Weather Service
+// Open-Meteo Weather Service (by coordinates only)
+// Location geocoding is handled by Photon in location.ts
 // ============================================
 
 /**
- * Open-Meteo API endpoints (free, no API key required)
+ * Open-Meteo Weather API endpoint (free, no API key required)
  */
-const GEOCODING_API = 'https://geocoding-api.open-meteo.com/v1/search';
 const WEATHER_API = 'https://api.open-meteo.com/v1/forecast';
-
-/**
- * Geocoding result from Open-Meteo
- */
-interface GeocodingResult {
-  id: number;
-  name: string;
-  latitude: number;
-  longitude: number;
-  country: string;
-  admin1?: string; // State/Province
-}
-
-interface GeocodingResponse {
-  results?: GeocodingResult[];
-}
 
 /**
  * Weather response from Open-Meteo
@@ -108,66 +92,6 @@ function getWeatherFromCode(code: number): WeatherCodeInfo {
 }
 
 /**
- * Geocode a location string to coordinates
- *
- * @param location - Location string (e.g., "Bangalore, India", "New York")
- * @returns Coordinates and location info, or null if not found
- *
- * @example
- * const coords = await geocodeLocation("Bangalore, India");
- * // Returns: { latitude: 12.9716, longitude: 77.5946, name: "Bengaluru", country: "India" }
- */
-export async function geocodeLocation(location: string): Promise<{
-  latitude: number;
-  longitude: number;
-  name: string;
-  country: string;
-} | null> {
-  if (!location || location.trim().length === 0) {
-    return null;
-  }
-
-  try {
-    const url = new URL(GEOCODING_API);
-    url.searchParams.set('name', location.trim());
-    url.searchParams.set('count', '1');
-    url.searchParams.set('language', 'en');
-    url.searchParams.set('format', 'json');
-
-    const response = await fetch(url.toString(), {
-      headers: {
-        'Accept': 'application/json',
-      },
-      // Cache for 1 hour since location coordinates don't change
-      next: { revalidate: 3600 },
-    });
-
-    if (!response.ok) {
-      console.error(`Geocoding API error: ${response.status} ${response.statusText}`);
-      return null;
-    }
-
-    const data: GeocodingResponse = await response.json();
-
-    if (!data.results || data.results.length === 0) {
-      console.warn(`No geocoding results for location: ${location}`);
-      return null;
-    }
-
-    const result = data.results[0];
-    return {
-      latitude: result.latitude,
-      longitude: result.longitude,
-      name: result.name,
-      country: result.country,
-    };
-  } catch (error) {
-    console.error('Geocoding error:', error);
-    return null;
-  }
-}
-
-/**
  * Fetch current weather for given coordinates
  *
  * @param latitude - Latitude coordinate
@@ -175,10 +99,10 @@ export async function geocodeLocation(location: string): Promise<{
  * @returns Weather data or null if failed
  *
  * @example
- * const weather = await fetchWeatherByCoords(12.9716, 77.5946);
- * // Returns: { weather: "sunny", temperature: 28, description: "Clear sky" }
+ * const weather = await fetchWeatherByCoords(43.685832, -79.7599366);
+ * // Returns: { weather: "cloudy", temperature: 5, description: "Partly cloudy" }
  */
-export async function fetchWeatherByCoords(
+async function fetchWeatherByCoords(
   latitude: number,
   longitude: number
 ): Promise<{
@@ -227,59 +151,22 @@ export async function fetchWeatherByCoords(
 }
 
 /**
- * Get weather for a location string
- * Combines geocoding and weather fetching into one call
+ * Get weather by coordinates
+ * Use with coordinates from Photon location autocomplete
  *
- * @param location - Location string (e.g., "Bangalore, India")
- * @returns Weather data with location info, or null if failed
- *
- * @example
- * const result = await getWeatherForLocation("Bangalore, India");
- * // Returns: {
- * //   weather: "sunny",
- * //   temperature: 28,
- * //   description: "Clear sky",
- * //   locationName: "Bengaluru",
- * //   country: "India"
- * // }
- */
-export async function getWeatherForLocation(location: string): Promise<{
-  weather: Weather;
-  temperature: number;
-  description: string;
-  locationName: string;
-  country: string;
-} | null> {
-  // First, geocode the location
-  const coords = await geocodeLocation(location);
-  if (!coords) {
-    return null;
-  }
-
-  // Then fetch the weather
-  const weatherData = await fetchWeatherByCoords(coords.latitude, coords.longitude);
-  if (!weatherData) {
-    return null;
-  }
-
-  return {
-    ...weatherData,
-    locationName: coords.name,
-    country: coords.country,
-  };
-}
-
-/**
- * Get weather by coordinates directly
- * Use this when you already have latitude/longitude (e.g., from Photon geocoding)
- *
- * @param latitude - Latitude coordinate
- * @param longitude - Longitude coordinate
+ * @param latitude - Latitude coordinate (-90 to 90)
+ * @param longitude - Longitude coordinate (-180 to 180)
  * @returns Weather data or null if failed
  *
  * @example
- * const weather = await getWeatherByCoordinates(40.7128, -74.0060);
- * // Returns: { weather: "cloudy", temperature: 15, description: "Partly cloudy" }
+ * // Use with Photon location suggestion
+ * const suggestion = await searchLocationsAction("8 Legacy Lane");
+ * if (suggestion[0]) {
+ *   const weather = await getWeatherByCoordinates(
+ *     suggestion[0].latitude,
+ *     suggestion[0].longitude
+ *   );
+ * }
  */
 export async function getWeatherByCoordinates(
   latitude: number,

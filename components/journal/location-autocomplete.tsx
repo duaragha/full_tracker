@@ -4,15 +4,21 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { MapPin, X, Loader2 } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { cn } from '@/lib/utils'
-import { searchLocationsAction, LocationSuggestion } from '@/lib/actions/location'
+import {
+  searchLocationsAction,
+  getLocationDetailsAction,
+  type LocationSuggestion,
+  type LocationDetails
+} from '@/lib/actions/location'
 
 interface LocationAutocompleteProps {
   value: string
   onChange: (location: string) => void
-  onSelect: (suggestion: LocationSuggestion) => void
+  onSelect: (location: LocationDetails) => void
   placeholder?: string
   className?: string
   inputClassName?: string
+  disabled?: boolean
 }
 
 export function LocationAutocomplete({
@@ -22,15 +28,17 @@ export function LocationAutocomplete({
   placeholder = 'Search location...',
   className,
   inputClassName,
+  disabled = false,
 }: LocationAutocompleteProps) {
   const [suggestions, setSuggestions] = useState<LocationSuggestion[]>([])
   const [isOpen, setIsOpen] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
+  const [isFetchingDetails, setIsFetchingDetails] = useState(false)
   const [highlightedIndex, setHighlightedIndex] = useState(-1)
   const containerRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
 
-  // Debounced search
+  // Debounced search for suggestions
   useEffect(() => {
     if (!value || value.length < 2) {
       setSuggestions([])
@@ -68,13 +76,34 @@ export function LocationAutocomplete({
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
 
-  const handleSelect = useCallback((suggestion: LocationSuggestion) => {
-    // Use the full display name (e.g., "8 Legacy Lane, Brampton, ON L6X 5C1")
-    onChange(suggestion.displayName)
-    onSelect(suggestion)
+  // Two-step selection: fetch full details when user selects a suggestion
+  const handleSelect = useCallback(async (suggestion: LocationSuggestion) => {
     setIsOpen(false)
     setSuggestions([])
     setHighlightedIndex(-1)
+    setIsFetchingDetails(true)
+
+    try {
+      // Fetch full location details using the placeId
+      const details = await getLocationDetailsAction(suggestion.placeId)
+
+      if (details) {
+        // Update the input with the full formatted address
+        onChange(details.displayName)
+        // Notify parent with full location details including coordinates
+        onSelect(details)
+      } else {
+        // Fallback: use the suggestion data if details fetch fails
+        onChange(suggestion.fullAddress)
+        console.error('Could not fetch location details for:', suggestion.placeId)
+      }
+    } catch (error) {
+      console.error('Error fetching location details:', error)
+      // Fallback to suggestion text
+      onChange(suggestion.fullAddress)
+    } finally {
+      setIsFetchingDetails(false)
+    }
   }, [onChange, onSelect])
 
   const handleClear = useCallback(() => {
@@ -125,6 +154,8 @@ export function LocationAutocomplete({
     }
   }, [suggestions.length])
 
+  const showLoading = isLoading || isFetchingDetails
+
   return (
     <div ref={containerRef} className={cn('relative', className)}>
       {/* Input with icons */}
@@ -140,17 +171,19 @@ export function LocationAutocomplete({
           placeholder={placeholder}
           className={cn('pl-8 pr-8 h-8 text-sm', inputClassName)}
           autoComplete="off"
+          disabled={disabled || isFetchingDetails}
         />
         {/* Loading indicator */}
-        {isLoading && (
+        {showLoading && (
           <Loader2 className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 animate-spin text-muted-foreground" />
         )}
         {/* Clear button */}
-        {value && !isLoading && (
+        {value && !showLoading && (
           <button
             type="button"
             onClick={handleClear}
             className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+            disabled={disabled}
           >
             <X className="w-4 h-4" />
           </button>
@@ -162,7 +195,7 @@ export function LocationAutocomplete({
         <div className="absolute top-full left-0 right-0 mt-1 bg-popover border rounded-md shadow-lg z-50 max-h-60 overflow-auto">
           {suggestions.map((suggestion, index) => (
             <button
-              key={suggestion.id}
+              key={suggestion.placeId}
               type="button"
               onClick={() => handleSelect(suggestion)}
               onMouseEnter={() => setHighlightedIndex(index)}
@@ -173,14 +206,21 @@ export function LocationAutocomplete({
                   : 'hover:bg-muted/50'
               )}
             >
-              <div className="font-medium truncate">{suggestion.name}</div>
-              {suggestion.subtitle && (
+              <div className="font-medium truncate">{suggestion.mainText}</div>
+              {suggestion.secondaryText && (
                 <div className="text-xs text-muted-foreground truncate">
-                  {suggestion.subtitle}
+                  {suggestion.secondaryText}
                 </div>
               )}
             </button>
           ))}
+        </div>
+      )}
+
+      {/* No results message */}
+      {isOpen && !isLoading && suggestions.length === 0 && value.length >= 2 && (
+        <div className="absolute top-full left-0 right-0 mt-1 bg-popover border rounded-md shadow-lg z-50 p-3">
+          <p className="text-sm text-muted-foreground text-center">No locations found</p>
         </div>
       )}
     </div>
