@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { format } from 'date-fns'
 import {
   X,
@@ -8,20 +8,15 @@ import {
   MapPin,
   Cloud,
   Zap,
-  Paperclip,
-  FileText,
-  Activity as ActivityIcon,
-  Image,
-  Footprints,
-  Moon,
-  Scale,
+  Loader2,
+  RefreshCw,
+  AlertCircle,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
-import { Card, CardContent } from '@/components/ui/card'
 import {
   Select,
   SelectContent,
@@ -29,7 +24,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { cn } from '@/lib/utils'
 import {
   JournalEntry,
   JournalEntryCreate,
@@ -38,14 +32,25 @@ import {
   Activity,
 } from '@/types/journal'
 import { JournalMoodSelector } from './journal-mood-selector'
+import { JournalEntrySidebar } from './journal-entry-sidebar'
+import { getWeatherForLocationAction } from '@/lib/actions/weather'
 
-const WEATHER_OPTIONS: { value: Weather; label: string }[] = [
-  { value: 'sunny', label: 'Sunny' },
-  { value: 'cloudy', label: 'Cloudy' },
-  { value: 'rainy', label: 'Rainy' },
-  { value: 'snowy', label: 'Snowy' },
-  { value: 'windy', label: 'Windy' },
-  { value: 'stormy', label: 'Stormy' },
+const WEATHER_EMOJI: Record<Weather, string> = {
+  sunny: '\u2600\uFE0F',
+  cloudy: '\u2601\uFE0F',
+  rainy: '\uD83C\uDF27\uFE0F',
+  snowy: '\u2744\uFE0F',
+  windy: '\uD83D\uDCA8',
+  stormy: '\u26C8\uFE0F',
+}
+
+const WEATHER_OPTIONS: { value: Weather; label: string; emoji: string }[] = [
+  { value: 'sunny', label: 'Sunny', emoji: WEATHER_EMOJI.sunny },
+  { value: 'cloudy', label: 'Cloudy', emoji: WEATHER_EMOJI.cloudy },
+  { value: 'rainy', label: 'Rainy', emoji: WEATHER_EMOJI.rainy },
+  { value: 'snowy', label: 'Snowy', emoji: WEATHER_EMOJI.snowy },
+  { value: 'windy', label: 'Windy', emoji: WEATHER_EMOJI.windy },
+  { value: 'stormy', label: 'Stormy', emoji: WEATHER_EMOJI.stormy },
 ]
 
 const ACTIVITY_OPTIONS: { value: Activity; label: string }[] = [
@@ -82,10 +87,66 @@ export function JournalEntryEditor({
   const [weather, setWeather] = useState<Weather | undefined>(entry?.weather)
   const [location, setLocation] = useState(entry?.location ?? '')
   const [activity, setActivity] = useState<Activity | undefined>(entry?.activity)
+  const [temperature, setTemperature] = useState<number | null>(null)
   const [tags, setTags] = useState<string[]>(
     entry?.tags.map((t) => t.name) ?? []
   )
   const [tagInput, setTagInput] = useState('')
+
+  // Weather loading state for mobile view
+  const [isLoadingWeather, setIsLoadingWeather] = useState(false)
+  const [weatherError, setWeatherError] = useState<string | null>(null)
+
+  const fetchWeather = useCallback(async (locationToFetch: string) => {
+    if (!locationToFetch || locationToFetch.length < 2) {
+      return
+    }
+
+    setIsLoadingWeather(true)
+    setWeatherError(null)
+
+    try {
+      const result = await getWeatherForLocationAction(locationToFetch)
+      if (result) {
+        setWeather(result.weather)
+        setTemperature(result.temperature)
+      } else {
+        setWeatherError('Location not found')
+      }
+    } catch {
+      setWeatherError('Could not fetch weather')
+    } finally {
+      setIsLoadingWeather(false)
+    }
+  }, [])
+
+  // Debounced weather fetch when location changes (for mobile view)
+  // Note: The sidebar component handles its own debouncing for desktop
+  useEffect(() => {
+    // Only run for mobile view - the sidebar handles desktop
+    if (typeof window !== 'undefined' && window.innerWidth >= 1024) {
+      return
+    }
+
+    if (!location || location.length < 2) {
+      if (!location) {
+        setTemperature(null)
+      }
+      return
+    }
+
+    const timer = setTimeout(() => {
+      fetchWeather(location)
+    }, 800)
+
+    return () => clearTimeout(timer)
+  }, [location, fetchWeather])
+
+  const handleRefreshWeather = useCallback(() => {
+    if (location && location.length >= 2) {
+      fetchWeather(location)
+    }
+  }, [location, fetchWeather])
 
   const handleAddTag = useCallback(() => {
     const trimmedTag = tagInput.trim().toLowerCase().replace(/^#/, '')
@@ -122,6 +183,14 @@ export function JournalEntryEditor({
     }
 
     await onSubmit(data)
+  }
+
+  // Get display text for weather select trigger
+  const getWeatherDisplayValue = () => {
+    if (!weather) return undefined
+    const option = WEATHER_OPTIONS.find((opt) => opt.value === weather)
+    if (!option) return undefined
+    return `${option.emoji} ${option.label}`
   }
 
   return (
@@ -237,22 +306,52 @@ export function JournalEntryEditor({
             <Label className="text-sm text-muted-foreground flex items-center gap-1">
               <Cloud className="w-4 h-4" />
               Weather
+              {isLoadingWeather && (
+                <Loader2 className="w-3 h-3 animate-spin ml-1" />
+              )}
             </Label>
-            <Select
-              value={weather}
-              onValueChange={(val) => setWeather(val as Weather)}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select weather..." />
-              </SelectTrigger>
-              <SelectContent>
-                {WEATHER_OPTIONS.map((opt) => (
-                  <SelectItem key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <div className="flex items-center gap-2">
+              <Select
+                value={weather}
+                onValueChange={(val) => setWeather(val as Weather)}
+              >
+                <SelectTrigger className="flex-1">
+                  <SelectValue placeholder="Select weather...">
+                    {getWeatherDisplayValue()}
+                  </SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  {WEATHER_OPTIONS.map((opt) => (
+                    <SelectItem key={opt.value} value={opt.value}>
+                      {opt.emoji} {opt.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {!isLoadingWeather && temperature !== null && (
+                <span className="text-sm text-muted-foreground whitespace-nowrap">
+                  {temperature}°C
+                </span>
+              )}
+              {location && !isLoadingWeather && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 flex-shrink-0"
+                  onClick={handleRefreshWeather}
+                  title="Refresh weather"
+                >
+                  <RefreshCw className="w-4 h-4" />
+                </Button>
+              )}
+            </div>
+            {weatherError && (
+              <div className="flex items-center gap-1 text-xs text-destructive">
+                <AlertCircle className="w-3 h-3" />
+                <span>{weatherError}</span>
+              </div>
+            )}
           </div>
 
           {/* Activity */}
@@ -296,193 +395,17 @@ export function JournalEntryEditor({
       </form>
 
       {/* Right Sidebar - visible only on desktop */}
-      <aside className="w-72 border-l p-4 space-y-6 hidden lg:block flex-shrink-0">
-        {/* Metadata Section */}
-        <div>
-          <h3 className="text-sm font-medium mb-3">Metadata</h3>
-          <div className="space-y-3">
-            {/* Location */}
-            <div className="flex items-center gap-2">
-              <MapPin className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-              <Input
-                type="text"
-                placeholder="Add location..."
-                value={location}
-                onChange={(e) => setLocation(e.target.value)}
-                className="h-8 text-sm"
-              />
-            </div>
-
-            {/* Weather */}
-            <div className="flex items-center gap-2">
-              <Cloud className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-              <Select
-                value={weather}
-                onValueChange={(val) => setWeather(val as Weather)}
-              >
-                <SelectTrigger className="h-8 text-sm">
-                  <SelectValue placeholder="Select weather..." />
-                </SelectTrigger>
-                <SelectContent>
-                  {WEATHER_OPTIONS.map((opt) => (
-                    <SelectItem key={opt.value} value={opt.value}>
-                      {opt.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Activity */}
-            <div className="flex items-center gap-2">
-              <Zap className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-              <Select
-                value={activity}
-                onValueChange={(val) => setActivity(val as Activity)}
-              >
-                <SelectTrigger className="h-8 text-sm">
-                  <SelectValue placeholder="Select activity..." />
-                </SelectTrigger>
-                <SelectContent>
-                  {ACTIVITY_OPTIONS.map((opt) => (
-                    <SelectItem key={opt.value} value={opt.value}>
-                      {opt.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-        </div>
-
-        {/* Today's Health Stats */}
-        <div>
-          <h3 className="text-sm font-medium mb-3 flex items-center gap-2">
-            <ActivityIcon className="w-4 h-4" />
-            Today&apos;s Health Stats
-          </h3>
-          <Card className="border-dashed">
-            <CardContent className="p-3 space-y-2">
-              <p className="text-xs text-muted-foreground text-center mb-2">
-                (Coming soon)
-              </p>
-
-              {/* Steps */}
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-muted-foreground flex items-center gap-2">
-                  <Footprints className="w-3.5 h-3.5" />
-                  Steps
-                </span>
-                <span className="text-muted-foreground">—</span>
-              </div>
-
-              {/* Sleep */}
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-muted-foreground flex items-center gap-2">
-                  <Moon className="w-3.5 h-3.5" />
-                  Sleep
-                </span>
-                <span className="text-muted-foreground">—</span>
-              </div>
-
-              {/* Weight */}
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-muted-foreground flex items-center gap-2">
-                  <Scale className="w-3.5 h-3.5" />
-                  Weight
-                </span>
-                <span className="text-muted-foreground">—</span>
-              </div>
-
-              {/* Attach button */}
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                className="w-full text-xs text-muted-foreground mt-2 pt-2 border-t border-dashed h-auto py-2"
-                disabled
-              >
-                <Plus className="w-3 h-3 mr-1" />
-                Attach to entry
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Attachments */}
-        <div>
-          <h3 className="text-sm font-medium mb-3 flex items-center gap-2">
-            <Paperclip className="w-4 h-4" />
-            Attachments
-          </h3>
-
-          {/* Placeholder grid for future attached images */}
-          <div className="grid grid-cols-3 gap-2 mb-2">
-            {/* Empty state - will show attached images in the future */}
-          </div>
-
-          {/* Add photo/file button */}
-          <Button
-            type="button"
-            variant="outline"
-            className="w-full h-20 border-dashed flex flex-col items-center justify-center gap-1 text-muted-foreground hover:text-foreground hover:border-foreground/50 transition-colors"
-            disabled
-          >
-            <Image className="w-5 h-5" />
-            <span className="text-xs">Add photo or file</span>
-            <span className="text-[10px] text-muted-foreground/70">(Coming soon)</span>
-          </Button>
-        </div>
-
-        {/* Quick Templates */}
-        <div>
-          <h3 className="text-sm font-medium mb-3 flex items-center gap-2">
-            <FileText className="w-4 h-4" />
-            Quick Templates
-          </h3>
-          <div className="space-y-2">
-            <button
-              type="button"
-              className="w-full text-left p-3 rounded-lg border bg-muted/50 hover:bg-muted hover:border-foreground/20 transition-colors cursor-pointer group"
-              onClick={() => {}}
-            >
-              <div className="text-sm font-medium group-hover:text-foreground">
-                Daily Reflection
-              </div>
-              <div className="text-xs text-muted-foreground">
-                Gratitude, highlights, learnings
-              </div>
-            </button>
-            <button
-              type="button"
-              className="w-full text-left p-3 rounded-lg border bg-muted/50 hover:bg-muted hover:border-foreground/20 transition-colors cursor-pointer group"
-              onClick={() => {}}
-            >
-              <div className="text-sm font-medium group-hover:text-foreground">
-                Work Log
-              </div>
-              <div className="text-xs text-muted-foreground">
-                Tasks, meetings, blockers
-              </div>
-            </button>
-            <button
-              type="button"
-              className="w-full text-left p-3 rounded-lg border bg-muted/50 hover:bg-muted hover:border-foreground/20 transition-colors cursor-pointer group"
-              onClick={() => {}}
-            >
-              <div className="text-sm font-medium group-hover:text-foreground">
-                Workout Notes
-              </div>
-              <div className="text-xs text-muted-foreground">
-                Exercises, sets, feelings
-              </div>
-            </button>
-            <p className="text-[10px] text-muted-foreground text-center pt-1">
-              Click to insert template (coming soon)
-            </p>
-          </div>
-        </div>
-      </aside>
+      <JournalEntrySidebar
+        location={location}
+        onLocationChange={setLocation}
+        weather={weather}
+        onWeatherChange={setWeather}
+        activity={activity}
+        onActivityChange={setActivity}
+        temperature={temperature}
+        onTemperatureChange={setTemperature}
+        className="flex-shrink-0"
+      />
       </div>
       </div>
     </div>

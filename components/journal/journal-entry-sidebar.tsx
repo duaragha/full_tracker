@@ -1,5 +1,6 @@
 'use client'
 
+import { useState, useEffect, useCallback } from 'react'
 import {
   MapPin,
   Cloud,
@@ -11,7 +12,10 @@ import {
   Plus,
   Footprints,
   Moon,
-  Scale
+  Scale,
+  Loader2,
+  RefreshCw,
+  AlertCircle,
 } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent } from '@/components/ui/card'
@@ -25,14 +29,24 @@ import {
 import { Button } from '@/components/ui/button'
 import { Weather, Activity } from '@/types/journal'
 import { cn } from '@/lib/utils'
+import { getWeatherForLocationAction } from '@/lib/actions/weather'
 
-const WEATHER_OPTIONS: { value: Weather; label: string }[] = [
-  { value: 'sunny', label: 'Sunny' },
-  { value: 'cloudy', label: 'Cloudy' },
-  { value: 'rainy', label: 'Rainy' },
-  { value: 'snowy', label: 'Snowy' },
-  { value: 'windy', label: 'Windy' },
-  { value: 'stormy', label: 'Stormy' },
+const WEATHER_EMOJI: Record<Weather, string> = {
+  sunny: '\u2600\uFE0F',
+  cloudy: '\u2601\uFE0F',
+  rainy: '\uD83C\uDF27\uFE0F',
+  snowy: '\u2744\uFE0F',
+  windy: '\uD83D\uDCA8',
+  stormy: '\u26C8\uFE0F',
+}
+
+const WEATHER_OPTIONS: { value: Weather; label: string; emoji: string }[] = [
+  { value: 'sunny', label: 'Sunny', emoji: WEATHER_EMOJI.sunny },
+  { value: 'cloudy', label: 'Cloudy', emoji: WEATHER_EMOJI.cloudy },
+  { value: 'rainy', label: 'Rainy', emoji: WEATHER_EMOJI.rainy },
+  { value: 'snowy', label: 'Snowy', emoji: WEATHER_EMOJI.snowy },
+  { value: 'windy', label: 'Windy', emoji: WEATHER_EMOJI.windy },
+  { value: 'stormy', label: 'Stormy', emoji: WEATHER_EMOJI.stormy },
 ]
 
 const ACTIVITY_OPTIONS: { value: Activity; label: string }[] = [
@@ -68,6 +82,8 @@ interface JournalEntrySidebarProps {
   onWeatherChange: (value: Weather) => void
   activity: Activity | undefined
   onActivityChange: (value: Activity) => void
+  temperature?: number | null
+  onTemperatureChange?: (value: number | null) => void
   onTemplateSelect?: (templateId: string) => void
   className?: string
 }
@@ -79,13 +95,72 @@ export function JournalEntrySidebar({
   onWeatherChange,
   activity,
   onActivityChange,
+  temperature,
+  onTemperatureChange,
   onTemplateSelect,
   className,
 }: JournalEntrySidebarProps) {
+  const [isLoadingWeather, setIsLoadingWeather] = useState(false)
+  const [weatherError, setWeatherError] = useState<string | null>(null)
+
+  const fetchWeather = useCallback(async (locationToFetch: string) => {
+    if (!locationToFetch || locationToFetch.length < 2) {
+      return
+    }
+
+    setIsLoadingWeather(true)
+    setWeatherError(null)
+
+    try {
+      const result = await getWeatherForLocationAction(locationToFetch)
+      if (result) {
+        onWeatherChange(result.weather)
+        onTemperatureChange?.(result.temperature)
+      } else {
+        setWeatherError('Location not found')
+      }
+    } catch {
+      setWeatherError('Could not fetch weather')
+    } finally {
+      setIsLoadingWeather(false)
+    }
+  }, [onWeatherChange, onTemperatureChange])
+
+  // Debounced weather fetch when location changes
+  useEffect(() => {
+    if (!location || location.length < 2) {
+      // Clear weather and temperature when location is cleared
+      if (!location) {
+        onTemperatureChange?.(null)
+      }
+      return
+    }
+
+    const timer = setTimeout(() => {
+      fetchWeather(location)
+    }, 800)
+
+    return () => clearTimeout(timer)
+  }, [location, fetchWeather, onTemperatureChange])
+
+  const handleRefreshWeather = useCallback(() => {
+    if (location && location.length >= 2) {
+      fetchWeather(location)
+    }
+  }, [location, fetchWeather])
+
   const handleTemplateClick = (templateId: string) => {
     if (onTemplateSelect) {
       onTemplateSelect(templateId)
     }
+  }
+
+  // Get display text for weather select trigger
+  const getWeatherDisplayValue = () => {
+    if (!weather) return undefined
+    const option = WEATHER_OPTIONS.find((opt) => opt.value === weather)
+    if (!option) return undefined
+    return `${option.emoji} ${option.label}`
   }
 
   return (
@@ -106,25 +181,56 @@ export function JournalEntrySidebar({
             />
           </div>
 
-          {/* Weather */}
+          {/* Weather with temperature */}
           <div className="flex items-center gap-2">
             <Cloud className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-            <Select
-              value={weather}
-              onValueChange={(val) => onWeatherChange(val as Weather)}
-            >
-              <SelectTrigger className="h-8 text-sm">
-                <SelectValue placeholder="Select weather..." />
-              </SelectTrigger>
-              <SelectContent>
-                {WEATHER_OPTIONS.map((opt) => (
-                  <SelectItem key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <div className="flex-1 flex items-center gap-2">
+              <Select
+                value={weather}
+                onValueChange={(val) => onWeatherChange(val as Weather)}
+              >
+                <SelectTrigger className="h-8 text-sm flex-1">
+                  <SelectValue placeholder="Select weather...">
+                    {getWeatherDisplayValue()}
+                  </SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  {WEATHER_OPTIONS.map((opt) => (
+                    <SelectItem key={opt.value} value={opt.value}>
+                      {opt.emoji} {opt.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {isLoadingWeather && (
+                <Loader2 className="w-4 h-4 animate-spin text-muted-foreground flex-shrink-0" />
+              )}
+              {!isLoadingWeather && temperature !== undefined && temperature !== null && (
+                <span className="text-sm text-muted-foreground whitespace-nowrap">
+                  {temperature}°C
+                </span>
+              )}
+              {location && !isLoadingWeather && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-6 w-6 flex-shrink-0"
+                  onClick={handleRefreshWeather}
+                  title="Refresh weather"
+                >
+                  <RefreshCw className="w-3 h-3" />
+                </Button>
+              )}
+            </div>
           </div>
+
+          {/* Weather error message */}
+          {weatherError && (
+            <div className="flex items-center gap-2 text-xs text-destructive ml-6">
+              <AlertCircle className="w-3 h-3" />
+              <span>{weatherError}</span>
+            </div>
+          )}
 
           {/* Activity */}
           <div className="flex items-center gap-2">
