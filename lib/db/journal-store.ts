@@ -401,21 +401,37 @@ export async function deleteJournalEntry(id: number): Promise<void> {
  * Get aggregated statistics about journal entries
  */
 export async function getJournalStats(): Promise<JournalStats> {
-  const result = await pool.query(`
+  // Get basic stats
+  const basicResult = await pool.query(`
     SELECT
       COUNT(*) as total_entries,
       COALESCE(SUM(word_count), 0) as total_words,
-      COALESCE(AVG(word_count), 0) as average_word_count,
-      json_object_agg(mood, mood_count) as mood_distribution
-    FROM (
-      SELECT
-        je.mood,
-        COUNT(*) as mood_count,
-        SUM(je.word_count) as word_count
-      FROM journal_entries je
-      GROUP BY je.mood
-    ) mood_stats
+      COALESCE(AVG(word_count), 0) as average_word_count
+    FROM journal_entries
   `)
+
+  // Get mood distribution separately (filter out NULL moods)
+  const moodResult = await pool.query(`
+    SELECT mood, COUNT(*) as count
+    FROM journal_entries
+    WHERE mood IS NOT NULL
+    GROUP BY mood
+  `)
+
+  // Build mood distribution object
+  const moodDistributionFromDb: Record<string, number> = {}
+  moodResult.rows.forEach(row => {
+    if (row.mood) {
+      moodDistributionFromDb[row.mood] = parseInt(row.count, 10)
+    }
+  })
+
+  const result = {
+    rows: [{
+      ...basicResult.rows[0],
+      mood_distribution: moodDistributionFromDb
+    }]
+  }
 
   const stats = result.rows[0]
 
